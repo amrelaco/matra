@@ -1,0 +1,236 @@
+/**
+ * @matra/core — public API surface.
+ *
+ * Design rule: no ProseMirror type appears in this file. The engine is an
+ * implementation detail reachable only through `editor.unsafe`.
+ */
+
+// ---------------------------------------------------------------------------
+// Document — plain JSON. Serializable, inspectable, framework-free.
+// ---------------------------------------------------------------------------
+
+export interface DocNode {
+  type: string
+  attrs?: Record<string, unknown>
+  content?: DocNode[]
+  marks?: DocMark[]
+  text?: string
+}
+
+export interface DocMark {
+  type: string
+  attrs?: Record<string, unknown>
+}
+
+/** A position in the document. Opaque on purpose — arithmetic on it is a bug. */
+export type Pos = number & { readonly __brand: unique symbol }
+
+export interface Range {
+  from: Pos
+  to: Pos
+}
+
+export interface Selection extends Range {
+  readonly empty: boolean
+  readonly anchor: Pos
+  readonly head: Pos
+}
+
+// ---------------------------------------------------------------------------
+// Command context — the only thing a command may touch.
+// ---------------------------------------------------------------------------
+
+export interface Ctx {
+  readonly doc: DocNode
+  readonly selection: Selection
+
+  /** True if the mark is active across the whole selection. */
+  hasMark(name: string, attrs?: Record<string, unknown>): boolean
+  /** True if the selection sits inside a node of this type. */
+  inNode(name: string, attrs?: Record<string, unknown>): boolean
+
+  addMark(name: string, attrs?: Record<string, unknown>, range?: Range): boolean
+  removeMark(name: string, range?: Range): boolean
+  toggleMark(name: string, attrs?: Record<string, unknown>): boolean
+
+  setBlockType(name: string, attrs?: Record<string, unknown>): boolean
+  wrapIn(name: string, attrs?: Record<string, unknown>): boolean
+  lift(): boolean
+
+  insert(content: DocNode | DocNode[] | string, at?: Pos): boolean
+  replace(range: Range, content: DocNode | DocNode[] | string): boolean
+  delete(range?: Range): boolean
+
+  select(range: Range | Pos): boolean
+  focus(): boolean
+
+  /**
+   * Map a position through every change applied since `mark()` was taken.
+   * This is what makes async work (AI streaming) safe against concurrent edits.
+   */
+  mark(): PosMarker
+}
+
+export interface PosMarker {
+  /** Re-resolve a position against the current document. */
+  map(pos: Pos): Pos
+  mapRange(range: Range): Range
+}
+
+/** A command is a plain function. No `this`, no currying, no nesting. */
+export type Command<A extends unknown[] = []> = (ctx: Ctx, ...args: A) => boolean
+
+/** Any command, regardless of arity. Used for constraints only. */
+export type AnyCommand = (ctx: Ctx, ...args: any[]) => boolean
+
+export type CommandMap = Record<string, AnyCommand>
+
+// ---------------------------------------------------------------------------
+// Definitions — three primitives, all plain objects.
+// ---------------------------------------------------------------------------
+
+export interface NodeDef<C extends CommandMap = CommandMap> {
+  kind: 'node'
+  name: string
+  /** ProseMirror content expression, e.g. 'inline*' or 'block+'. */
+  content?: string
+  group?: string
+  inline?: boolean
+  atom?: boolean
+  draggable?: boolean
+  selectable?: boolean
+  attrs?: Record<string, AttrSpec>
+  parseDOM?: ParseRule[]
+  toDOM?: (node: DocNode) => DomOutput
+  commands?: C
+  keys?: Record<string, keyof C | Command<never[]>>
+  inputRules?: InputRule[]
+  priority?: number
+}
+
+export interface MarkDef<C extends CommandMap = CommandMap> {
+  kind: 'mark'
+  name: string
+  inclusive?: boolean
+  excludes?: string
+  spanning?: boolean
+  attrs?: Record<string, AttrSpec>
+  parseDOM?: ParseRule[]
+  toDOM?: (mark: DocMark) => DomOutput
+  commands?: C
+  keys?: Record<string, keyof C | Command<never[]>>
+  inputRules?: InputRule[]
+  priority?: number
+}
+
+export interface ExtensionDef<C extends CommandMap = CommandMap, S = unknown> {
+  kind: 'extension'
+  name: string
+  commands?: C
+  keys?: Record<string, keyof C | Command<never[]>>
+  inputRules?: InputRule[]
+  /** Per-extension state, reduced on every change. */
+  state?: {
+    init(ctx: Ctx): S
+    apply(ctx: Ctx, prev: S): S
+  }
+  /** Lifecycle. All receive the editor explicitly — nothing is bound to `this`. */
+  onCreate?(editor: Editor): void
+  onChange?(editor: Editor): void
+  onDestroy?(editor: Editor): void
+  priority?: number
+}
+
+export type AnyDef = NodeDef | MarkDef | ExtensionDef
+
+export interface AttrSpec {
+  default?: unknown
+  required?: boolean
+  parse?: (dom: Element) => unknown
+  serialize?: (value: unknown) => string | null
+}
+
+export interface ParseRule {
+  tag?: string
+  style?: string
+  attrs?: Record<string, unknown>
+  getAttrs?: (dom: Element | string) => Record<string, unknown> | false | null
+  priority?: number
+}
+
+export type DomOutput = string | [string, ...unknown[]]
+
+export interface InputRule {
+  match: RegExp
+  handler: (ctx: Ctx, match: RegExpMatchArray, range: Range) => boolean
+}
+
+// ---------------------------------------------------------------------------
+// Editor
+// ---------------------------------------------------------------------------
+
+/** Collects the command maps of every definition into one typed surface. */
+export type CommandsOf<T extends readonly AnyDef[]> =
+  UnionToIntersection<DefCommands<T[number]>> extends infer R
+    ? [R] extends [never] ? EmptyCommands : unknown extends R ? EmptyCommands : R
+    : never
+
+type EmptyCommands = Record<never, never>
+
+/** `commands` is optional on every def, so the pattern must be optional too. */
+type DefCommands<D> = D extends { commands?: infer C }
+  ? [NonNullable<C>] extends [CommandMap]
+    ? BindCommands<NonNullable<C>>
+    : never
+  : never
+
+/** Strip the injected `ctx` param; keep the caller-facing arguments. */
+type BindCommands<C> = {
+  [K in keyof C]: C[K] extends (ctx: Ctx, ...args: infer A) => boolean
+    ? (...args: A) => boolean
+    : never
+}
+
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+  k: infer I,
+) => void
+  ? I
+  : never
+
+export interface EditorOptions<T extends readonly AnyDef[]> {
+  extensions: T
+  content?: DocNode | string
+  editable?: boolean
+  autofocus?: boolean | 'start' | 'end'
+}
+
+export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
+  readonly commands: CommandsOf<T>
+
+  /** Run several commands as one undo step. Rolls back entirely if any returns false. */
+  batch(run: (c: CommandsOf<T>) => void): boolean
+
+  getJSON(): DocNode
+  getHTML(): string
+  getText(): string
+  setContent(content: DocNode | string): void
+
+  readonly selection: Selection
+  readonly editable: boolean
+  setEditable(value: boolean): void
+
+  on(event: 'change' | 'focus' | 'blur' | 'selectionChange', fn: (editor: Editor<T>) => void): () => void
+
+  mount(element: HTMLElement): void
+  destroy(): void
+
+  /**
+   * Raw engine access. Everything here is unstable and excluded from semver.
+   * If you need this, open an issue — it means the public API has a gap.
+   */
+  readonly unsafe: {
+    readonly view: unknown
+    readonly state: unknown
+    readonly schema: unknown
+  }
+}
