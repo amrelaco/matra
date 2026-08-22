@@ -63,3 +63,26 @@ followed by its light equivalent.
 | Amrela | company, products, what we do, approach, contact |
 
 79 frames, zero overlaps, every colour a token.
+
+## V2 — "Aurora" (second design language, for comparison)
+
+Lives to the right of everything in `pencil-new.pen` (x ≥ 25000). Fully separate
+token namespace — nothing in V1 was touched. References: Linear, NestJS, Next.js,
+Nuxt, Notion.
+
+- **Shape:** rounded everywhere — cards 20–24, buttons/badges/nav pill 999.
+- **Colour:** deep indigo-black `--v2-bg #0A0A12`, glass surfaces (`#FFFFFF08/10`
+  over dark), aurora gradient `--v2-ga #6C8CFF → --v2-gb #A06CFF → --v2-gc #FF6CB5`,
+  cyan pop `#5CE1E6`. Gradient is used for: primary buttons, headline spans,
+  featured-card borders (1.5px gradient wrap), check dots, active pills.
+- **Type:** `Bricolage Grotesque` display (700/800, tight), `Inter` body,
+  `JetBrains Mono` code. Wordmark stays serif in V1 only; V2 wordmark is Bricolage.
+- **Texture:** `grain.glsl` noise layer at 10–16% on heroes and gradient CTA boxes;
+  in code use an SVG feTurbulence data URI.
+- **Imagery:** AI-generated set in `images/` — glass orbs (auth aside), caret
+  nebula (404 background), glass umbrella (Amrela hero). Mac-dot window chrome,
+  floating rotated chips, avatar stacks, icon tiles with per-feature colour washes.
+- **Marks:** same construction, rounded ends + gradient bar (V2/Mark/*).
+
+V2 components: `V2/Button/{Primary,Secondary,Code}`, `V2/Badge`, `V2/Kicker`
+(pill+icon), `V2/IconTile`, `V2/Avatar`, `V2/Input`, `V2/Mark/{Matra,Amrela,Rooktoo}`.
