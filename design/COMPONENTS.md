@@ -25,12 +25,41 @@ The Pencil name is the intended React component name.
 ## Rules baked into every component
 
 - **No shadows.** Anywhere. Separate surfaces with `--rule` borders or a `--surface` step.
-- **Square corners.** Only the Amrela canopy and Badge dots are rounded.
+- **Square corners everywhere.** `--radius` and `--radius-sm` are both `0`. The only round things are badge dots, avatars (circles) and the Amrela canopy (a semicircle) — those are shapes, not corners.
 - Colour comes from tokens only — never a hex in a component.
 - Dark mode is primary; every token is themed, so components switch automatically.
 
 ## Tokens
 
-`--paper --surface --ink --ink-soft --ink-faint --rule --rule-ink --indigo --indigo-deep --indigo-wash --blood`
+`--paper --surface --surface-2 --ink --ink-soft --ink-faint --rule --rule-strong --rule-ink`
+`--indigo --indigo-deep --indigo-wash --blood`
+`--invert-bg --invert-fg --invert-soft`  → dark in BOTH themes, for inverted sections
+`--code-bg --code-chrome --code-fg --code-key --code-str --code-com --code-rule` → follow the theme
+`--presence-a --presence-b --presence-c` → collaboration cursors
+
+**The one trap:** `--ink` is a *text* colour. In dark mode it is near-white. Never use
+it as a background — that is what `--invert-bg` is for. Code panels use `--code-bg`,
+which follows the theme, so light mode gets a cream panel with dark syntax.
 
 Type: `--font-display` Instrument Serif · `--font-ui` Inter · `--font-mono` JetBrains Mono
+
+
+## Section labels
+
+Kickers carry a label only — no `01 —` numbering. Numbers imply a sequence the
+sections do not have, and structural devices should encode something true.
+
+## Canvas layout in `pencil-new.pen`
+
+Ten labelled rows, top to bottom. Dark is the primary theme; each dark row is
+followed by its light equivalent.
+
+| Row | Contents |
+|---|---|
+| Brand | logo system — Matra, Amrela, Rooktoo, each Primary / Reversed / Monochrome / 16px |
+| System | component library, style guide |
+| Matra — product | landing, pricing, extensions, playground, checkout, account, changelog, blog, sign in, sign up, 404, editor UI |
+| Matra — docs | 14 content pages |
+| Amrela | company, products, what we do, approach, contact |
+
+79 frames, zero overlaps, every colour a token.
