@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { Fragment } from '../model/fragment'
 import { Schema } from '../model/schema'
 import { Slice } from './slice'
+import { AddMarkStep, ReplaceStep, rebaseSteps } from './step'
 import { Transform } from './transform'
 
 const schema = new Schema({
@@ -214,5 +215,72 @@ describe('slices', () => {
     const a = new Slice(Fragment.from([schema.text('x')]))
     const b = new Slice(Fragment.from([schema.text('x')]))
     expect(a.eq(b)).toBe(true)
+  })
+})
+
+describe('rebasing', () => {
+  it('moves a step past a change that happened before it', () => {
+    const doc = docOf('the quick fox')
+    // Someone else inserts at the start while our step was in flight.
+    const other = new Transform(doc)
+    other.replaceWith(1, 1, schema.text('WAIT '))
+
+    // Our step targeted "quick" at 5..10 in the original document.
+    const ours = new ReplaceStep(5, 10, new Slice(Fragment.from([schema.text('nimble')])))
+    const rebased = ours.map(other.mapping)
+    expect(rebased).not.toBeNull()
+
+    const applied = new Transform(other.doc)
+    applied.step(rebased as ReplaceStep)
+    expect(applied.doc.textContent).toBe('WAIT the nimble fox')
+  })
+
+  it('drops a step whose range was deleted underneath it', () => {
+    const doc = docOf('the quick fox')
+    const other = new Transform(doc)
+    other.delete(4, 10) // removes " quick"
+
+    const ours = new ReplaceStep(5, 10, new Slice(Fragment.from([schema.text('nimble')])))
+    expect(ours.map(other.mapping)).toBeNull()
+  })
+
+  it('shrinks a mark step rather than swallowing new text', () => {
+    const doc = docOf('hello world')
+    const other = new Transform(doc)
+    other.delete(2, 5) // "hello" becomes "ho"
+
+    const ours = new AddMarkStep(1, 6, schema.mark('bold'))
+    const rebased = ours.map(other.mapping) as AddMarkStep
+    expect(rebased.from).toBe(1)
+    expect(rebased.to).toBe(3)
+  })
+
+  it('drops a mark step that collapsed to nothing', () => {
+    const doc = docOf('hello world')
+    const other = new Transform(doc)
+    other.delete(1, 6)
+    expect(new AddMarkStep(2, 5, schema.mark('bold')).map(other.mapping)).toBeNull()
+  })
+
+  it('rebases a run of steps, keeping the survivors', () => {
+    const doc = docOf('one two three')
+    const other = new Transform(doc)
+    other.delete(4, 8) // remove " two"
+
+    const steps = [
+      new AddMarkStep(1, 4, schema.mark('bold')),
+      new AddMarkStep(5, 8, schema.mark('italic')),
+    ]
+    const rebased = rebaseSteps(steps, other.mapping)
+    expect(rebased).toHaveLength(1)
+
+    const applied = new Transform(other.doc)
+    for (const step of rebased) applied.step(step)
+    expect(
+      applied.doc
+        .child(0)
+        .child(0)
+        .marks.map((m) => m.type.name),
+    ).toEqual(['bold'])
   })
 })

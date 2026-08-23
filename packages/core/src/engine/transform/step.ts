@@ -3,6 +3,7 @@ import type { Mark } from '../model/mark'
 import type { Node } from '../model/node'
 import type { ResolvedPos } from '../model/resolved-pos'
 import { Slice } from './slice'
+import type { Mapping } from './step-map'
 import { StepMap } from './step-map'
 
 /** What applying a step produced, or why it could not be applied. */
@@ -22,7 +23,25 @@ export abstract class Step {
   abstract apply(doc: Node): StepResult
   abstract getMap(): StepMap
   abstract invert(doc: Node): Step
+  /**
+   * Move this step's positions through changes that happened underneath it.
+   *
+   * Returns null when the step no longer has anything to act on — its range
+   * was deleted by the other changes. This is what rebasing a local edit over
+   * remote ones amounts to.
+   */
+  abstract map(mapping: Mapping): Step | null
   abstract toJSON(): Record<string, unknown>
+}
+
+/** Rebase a run of steps over changes made since they were created. */
+export function rebaseSteps(steps: readonly Step[], over: Mapping): Step[] {
+  const out: Step[] = []
+  for (const step of steps) {
+    const mapped = step.map(over)
+    if (mapped) out.push(mapped)
+  }
+  return out
 }
 
 /** Replace everything between two positions with a slice. */
@@ -46,6 +65,22 @@ export class ReplaceStep extends Step {
 
   getMap(): StepMap {
     return new StepMap([this.from, this.to - this.from, this.slice.size])
+  }
+
+  map(mapping: Mapping): Step | null {
+    // The start leans forward and the end leans back, so a range shrinks to
+    // nothing rather than swallowing text that arrived beside it.
+    const from = mapping.mapResult(this.from, 1)
+    const to = mapping.mapResult(this.to, -1)
+    if (from.deleted && to.deleted) return null
+
+    // A step that meant "replace this text" whose text is now gone must not
+    // become "insert this text here" — that would paste a rewrite into a
+    // paragraph the user already deleted.
+    const wasRange = this.to > this.from
+    if (wasRange && from.pos >= to.pos && (from.deleted || to.deleted)) return null
+
+    return new ReplaceStep(Math.min(from.pos, to.pos), Math.max(from.pos, to.pos), this.slice)
   }
 
   /**
@@ -114,6 +149,13 @@ export class AddMarkStep extends Step {
     return StepMap.empty
   }
 
+  map(mapping: Mapping): Step | null {
+    const from = mapping.mapResult(this.from, 1)
+    const to = mapping.mapResult(this.to, -1)
+    if (from.pos >= to.pos) return null
+    return new AddMarkStep(from.pos, to.pos, this.mark)
+  }
+
   invert(): Step {
     return new RemoveMarkStep(this.from, this.to, this.mark)
   }
@@ -143,6 +185,13 @@ export class RemoveMarkStep extends Step {
 
   getMap(): StepMap {
     return StepMap.empty
+  }
+
+  map(mapping: Mapping): Step | null {
+    const from = mapping.mapResult(this.from, 1)
+    const to = mapping.mapResult(this.to, -1)
+    if (from.pos >= to.pos) return null
+    return new RemoveMarkStep(from.pos, to.pos, this.mark)
   }
 
   invert(): Step {

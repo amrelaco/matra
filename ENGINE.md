@@ -38,8 +38,8 @@ honest:
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
 | 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **done** |
-| 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | **in progress** — mapping, steps, Transform done; rebasing left |
-| 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | |
+| 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | **done** |
+| 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | **done** |
 | 5 | view — contenteditable, IME, mutation observer, selection sync | ~6,000 | 59 kB | last |
 
 ## Phase 2 notes
@@ -107,8 +107,25 @@ means), one end inside, or both on boundaries. Anything deeper than one level
 of nesting returns null so the step fails loudly rather than producing a
 malformed document.
 
-Still to write for phase 3: rebasing steps over concurrent changes, which is
-what collaborative editing needs.
+Rebasing is done. `Step.map` moves a step over changes made underneath it and
+returns null when there is nothing left to act on. One rule there is worth
+keeping: a step that meant *replace this text* whose text has since been
+deleted must not degrade into *insert this text here*. Without that check, a
+rebased AI rewrite pastes itself into a paragraph the user already deleted.
+
+## Phase 4 notes
+
+`selection.ts`, `transaction.ts`, `state.ts` and `plugin.ts`.
+
+- Selections snap to positions text can actually occupy, so nothing downstream
+  has to re-check. A NodeSelection whose node is deleted degrades to a caret
+  rather than pointing at nothing.
+- A transaction remaps its own selection after every step, so the caret stays
+  where the user would expect as the document moves under it.
+- Setting the selection clears stored marks: typing after moving the caret
+  should not inherit bold from somewhere else.
+- `state.apply` returns *the same state object* when a plugin vetoes, so callers
+  can compare by identity to know whether anything happened.
 
 ## Where the risk actually is
 
