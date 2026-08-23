@@ -20,10 +20,25 @@ A layer is only done when the dependency is gone from `package.json`.
 | Phase | Layer | Lines | gz | Status |
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
-| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | next |
+| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **in progress** — content expressions done |
 | 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | |
 | 5 | view — contenteditable, IME, mutation observer, selection sync | ~6,000 | 59 kB | last |
+
+## Phase 2 notes
+
+`engine/model/content-expression.ts` is done: a tokenizer and parser for the
+content language (`paragraph block*`, `(text | image)+`, `heading{1,3}`), an NFA
+compiler, and a subset construction to a DFA of `ContentMatch` states.
+
+`fillBefore` is the piece worth pointing at. When a match cannot legally end, it
+breadth-first searches for the shortest run of fillable types that would close
+it — which is how the editor repairs a document instead of refusing an edit. A
+type marked `fillable: false` is never used to repair, so a node that needs real
+attributes is never invented out of nothing.
+
+Still to write for phase 2: Fragment, Node, Mark, ResolvedPos, Schema assembly,
+and DOM parse/serialize.
 
 ## Where the risk actually is
 
