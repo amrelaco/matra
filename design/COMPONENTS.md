@@ -76,13 +76,45 @@ followed by its light equivalent.
 - **1200px content grid, never exceeded.** 120px gutters at 1440. App shells
   (docs, editor, playground, account, auth) are full-width by design; every
   marketing section is measured against the 120→1320 band.
-- **Shaped backgrounds, not photography.** 33 sections carry a `ShapeBG` layer:
-  1.2px outlined circles, concentric rects, arcs and crosses in `--rule`,
-  clipped by the section. Four variants — arc / rings / stack / grid — rotated
-  so adjacent sections never repeat. No images anywhere.
+- **Shaped backgrounds are rare.** Only 5 sections in the whole design carry a
+  `ShapeBG` layer (landing quote band, pricing head, extensions head, Amrela
+  contact, Amrela what-we-do). 1.2px outlined circles/arcs in `--rule`, clipped
+  by the section. Used as punctuation on otherwise quiet sections — never on
+  dense ones. No images anywhere.
 - **Mac-dot window chrome** on all code windows (`--dot-r/--dot-y/--dot-g`).
 - **Icons are load-bearing** — section kickers, hero facts, FAQ topics,
   comparison rows, pricing tiers, changelog kinds, blog rows, docs sidebar
   groups, footer columns, info rails, approach principles.
 - **Every section must earn its place.** The Amrela structure band is a labelled
   canopy diagram (Amrela over Matra / Rooktoo / next), not decoration.
+
+## Responsive
+
+Three breakpoints. The design file holds the 1440 and 390 ends; 768 interpolates.
+
+| | mobile | tablet | desktop |
+|---|---|---|---|
+| viewport | ≤ 640 | 641–1023 | ≥ 1024 |
+| gutters | 20px | 40px | 120px (1200 max) |
+| columns | 1 | 2 | up to 4 |
+
+**Rules applied to every mobile frame (390px):**
+
+1. **Every multi-column row stacks.** Two-column splits and 3–4-up card grids
+   become a single column; the vertical dividers are dropped and each item gets
+   a dashed bottom rule instead — separation stays, direction rotates.
+2. **Nav collapses** to brand + search + menu icon. The link row is a sheet.
+3. **Type steps down**: 54→32, 44→28, 32→24, 26→20, 18→17. Body stays 16.5.
+4. **App shells lose their rails.** Docs drops sidebar and TOC (they become the
+   menu); the editor drops the sidebar and AI panel and gains a bottom toolbar;
+   the playground stacks code over preview.
+5. **Comparison tables become labelled cards** — each feature is a heading with
+   `Matra / Tiptap / Lexical` prefixed lines. Never a horizontally scrolling table.
+6. **Code windows clip and scroll horizontally**; they never force page width.
+7. **Nothing exceeds the viewport.** Every mobile frame is audited to 390px:
+   0 nodes overflow across all 20.
+
+Mobile frames exist for all 20 unique screens. The 16 remaining docs pages share
+the Introduction shell exactly, so they inherit its mobile layout.
+Light mode is not duplicated at mobile size — every colour is a token, so the
+light theme follows automatically.
