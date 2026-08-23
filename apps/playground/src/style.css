@@ -1,0 +1,123 @@
+:root {
+  --paper: #111114;
+  --surface: #19191f;
+  --ink: #edebe6;
+  --ink-soft: #a8a49b;
+  --rule: #2a2a33;
+  --indigo: #a2a7ff;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px / 1.7 Inter, system-ui, sans-serif;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px;
+  border-bottom: 1px dashed var(--rule);
+}
+.bar h1 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+.tag {
+  font: 11px / 1 ui-monospace, monospace;
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+  padding: 5px 8px;
+}
+.mark {
+  width: 16px;
+  height: 14px;
+  background: var(--indigo);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 16px 0;
+  border-bottom: 1px dashed var(--rule);
+}
+.toolbar button {
+  height: 32px;
+  padding: 0 11px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+  font: 12.5px / 1 Inter, system-ui, sans-serif;
+  cursor: pointer;
+}
+.toolbar button:hover {
+  color: var(--ink);
+  border-color: #4a4a58;
+}
+.toolbar button[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--indigo);
+}
+
+.editor {
+  padding: 28px 0;
+  min-height: 320px;
+}
+.editor .ProseMirror {
+  outline: none;
+}
+.editor h1,
+.editor h2,
+.editor h3 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+.editor blockquote {
+  margin: 0;
+  padding-left: 18px;
+  border-left: 2px solid var(--indigo);
+  color: var(--ink-soft);
+}
+.editor pre {
+  background: #0d0d11;
+  border: 1px solid var(--rule);
+  padding: 14px;
+  overflow-x: auto;
+}
+.editor code {
+  font: 13px / 1.6 ui-monospace, monospace;
+  color: var(--indigo);
+}
+.editor hr {
+  border: 0;
+  border-top: 1px dashed var(--rule);
+}
+.editor a {
+  color: var(--indigo);
+}
+
+.out {
+  border-top: 1px dashed var(--rule);
+  padding-top: 16px;
+  font: 11.5px / 1.7 ui-monospace, monospace;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  word-break: break-all;
+}

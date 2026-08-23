@@ -10,9 +10,13 @@
     "url": "git+https://github.com/amrelaco/matra.git",
     "directory": "packages/core"
   },
-  "bugs": { "url": "https://github.com/amrelaco/matra/issues" },
+  "bugs": {
+    "url": "https://github.com/amrelaco/matra/issues"
+  },
   "keywords": ["editor", "rich-text", "prosemirror", "wysiwyg", "matra", "extensions"],
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -36,6 +40,7 @@
     "prosemirror-inputrules": "^1.4.0",
     "prosemirror-keymap": "^1.2.2",
     "prosemirror-model": "^1.24.1",
+    "prosemirror-schema-list": "^1.5.1",
     "prosemirror-state": "^1.4.3",
     "prosemirror-transform": "^1.10.2",
     "prosemirror-view": "^1.37.0"

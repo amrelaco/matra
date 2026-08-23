@@ -2,6 +2,7 @@ import { Fragment, type Node as PMNode, type Schema } from 'prosemirror-model'
 import { type EditorState, TextSelection, type Transaction } from 'prosemirror-state'
 import type { Mapping } from 'prosemirror-transform'
 import { findWrapping, liftTarget } from 'prosemirror-transform'
+import { attachEngine } from './internal'
 import type { Ctx, DocNode, Pos, PosMarker, Range, Selection } from './types'
 
 /** The editor internals a Ctx is allowed to see. Deliberately tiny. */
@@ -189,6 +190,24 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       return markerFrom(host.mappings.length)
     },
   }
+
+  // ProseMirror commands build their own transaction from `state.tr`; hand them
+  // a state whose `tr` is the one we are already accumulating, so their steps
+  // join ours instead of racing them.
+  const proxyState = new Proxy(state, {
+    get(target, prop, receiver) {
+      if (prop === 'tr') return tr
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+
+  attachEngine(ctx, {
+    state,
+    tr,
+    run(command) {
+      return command(proxyState, () => undefined)
+    },
+  })
 
   return ctx
 }
