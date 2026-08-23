@@ -49,6 +49,12 @@ importers:
         specifier: ^5.4.11
         version: 5.4.21
 
+  packages/ai:
+    dependencies:
+      '@matra/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/core:
     dependencies:
       prosemirror-commands:

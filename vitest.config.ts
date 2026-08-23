@@ -5,7 +5,10 @@ export default defineConfig({
   // esbuild handles JSX; no framework plugin needed for these tests.
   esbuild: { jsx: 'automatic' },
   resolve: {
-    alias: { '@matra/core': resolve(__dirname, 'packages/core/src/index.ts') },
+    alias: {
+      '@matra/core': resolve(__dirname, 'packages/core/src/index.ts'),
+      '@matra/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
+    },
   },
   test: {
     environment: 'happy-dom',

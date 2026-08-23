@@ -14,7 +14,8 @@
     "types": ["vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@matra/core": ["packages/core/src/index.ts"]
+      "@matra/core": ["packages/core/src/index.ts"],
+      "@matra/ai": ["packages/ai/src/index.ts"]
     },
     "jsx": "react-jsx"
   },
