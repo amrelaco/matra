@@ -1,5 +1,6 @@
 import { Fragment } from './fragment'
 import { Mark, sameAttrs } from './mark'
+import { ResolvedPos } from './resolved-pos'
 import type { NodeType } from './schema'
 
 /** A document node. Immutable; every change returns a new one. */
@@ -130,6 +131,11 @@ export class Node {
       if (fn(child, pos) === false) continue
       if (!child.isText) child.descendants(fn, pos + 1)
     }
+  }
+
+  /** Resolve a position inside this node. */
+  resolve(pos: number): ResolvedPos {
+    return ResolvedPos.resolve(this, pos)
   }
 
   toJSON(): Record<string, unknown> {

@@ -38,7 +38,7 @@ honest:
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
 | 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **done** |
-| 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | |
+| 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | **in progress** — mapping, steps, Transform done; rebasing left |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | |
 | 5 | view — contenteditable, IME, mutation observer, selection sync | ~6,000 | 59 kB | last |
 
@@ -81,6 +81,34 @@ Two behaviours in the DOM layer are deliberate and worth keeping:
   discarded, because discarding them loses the paste.
 
 Next: phase 3, transform — steps and position mapping.
+
+## Phase 3 notes
+
+`step-map.ts` is the crown jewel: flat `[start, oldSize, newSize]` triples, an
+`assoc` argument deciding which side of an insertion point a position lands on,
+and `deleted` reporting when a position was inside a span that no longer exists.
+
+It is fuzzed, not just sampled — 500 deterministic seeds asserting that mapping
+never moves a position backwards past an earlier one, that inverting returns
+every position outside a change exactly, and that a chain of maps equals
+applying them one at a time.
+
+**A property the fuzz forced us to state honestly:** a deletion collapses both
+edges of its span onto one point. Deleting `[5,6)` sends both 5 and 6 to 5, and
+inverting cannot know which it came from — that information is genuinely gone.
+Round-trip is exact only for positions strictly outside the changed span; on the
+boundary, `assoc` picks a side. The first version of the test asserted a
+stronger property than reality allows and had to be corrected, not the code.
+
+`step.ts` covers replace, addMark and removeMark, each able to invert itself.
+The replacement planner handles all four shapes a cross-block range can take —
+both ends inside blocks (the blocks join, which is what backspace at a boundary
+means), one end inside, or both on boundaries. Anything deeper than one level
+of nesting returns null so the step fails loudly rather than producing a
+malformed document.
+
+Still to write for phase 3: rebasing steps over concurrent changes, which is
+what collaborative editing needs.
 
 ## Where the risk actually is
 
