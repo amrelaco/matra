@@ -85,6 +85,12 @@ followed by its light equivalent.
 - **Icons are load-bearing** — section kickers, hero facts, FAQ topics,
   comparison rows, pricing tiers, changelog kinds, blog rows, docs sidebar
   groups, footer columns, info rails, approach principles.
+- **No two adjacent sections share a layout.** Amrela's Approach uses the
+  heading-left / titled-list-right pattern; The Problem next to it was the same
+  shape with different words, so it is now a 2x2 failure grid — full-width head
+  (heading left, lede right), four cards each with an outlined icon tile in
+  `--blood` and a mono consequence line. When a new section repeats its
+  neighbour's skeleton, change the skeleton, not the copy.
 - **Every section must earn its place.** The Amrela structure band is a labelled
   canopy diagram (Amrela over Matra / Rooktoo / next), not decoration.
 
