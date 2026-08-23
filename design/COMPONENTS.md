@@ -64,29 +64,25 @@ followed by its light equivalent.
 
 79 frames, zero overlaps, every colour a token.
 
-## Final visual rules (after the Aurora experiment)
+## Final visual rules
 
-The rounded/gradient V2 exploration was built, reviewed, and deleted. What
-actually survived, as revised by review:
-
-- **No gradients anywhere.** Solid colour only. The CTA band is solid
-  `--invert-bg` with 12% grain; accents are flat `--indigo`.
-- **Dashed borders on every long separator** (≥400px edges): section dividers,
-  column dividers, card/tier edges, table-row rules — 1px lines with a compact rhythm (≈5px dash / 4px gap) overlaid on the border line. Short borders (buttons, badges,
-  inputs, small tiles) stay solid hairline. In CSS this is simply
-  `border-style: dashed` — do NOT ship the segment hack. The matra rule under
-  the nav is the one deliberate solid exception (it is the brand line, not a
-  border).
-- **No photography.** Decorative sections use **outlined geometry** instead:
-  1.5–2px stroked rectangles, circles, crosses and dashed drops in
-  `--rule-strong` with a single `--indigo` accent element. Current placements:
-  auth asides (oversized outlined Matra mark), 404 media card (concentric
-  circles + caret), Amrela studio band (arc + three squares), CTA corner.
-- **Mac-dot window chrome** on all code windows — muted dot tokens
-  `--dot-r/--dot-y/--dot-g`, never full traffic-light saturation.
-- **Content max-width 1200px** (120px gutters at 1440). App shells (docs,
-  editor, playground, account) stay full-width; the landing hero's editor
-  window intentionally bleeds right.
-- **Icons are load-bearing**: section kickers, hero facts, FAQ topics,
+- **No gradients.** Solid colour only. The CTA band is solid `--invert-bg` + 12% grain.
+- **Every section carries a dashed top border** — that is the only separator.
+  Sections never carry bottom borders (it produced doubled rules), and the first
+  section on a page has none because the nav's own bottom rule already separates it.
+- **Dashes are 1px** with a compact rhythm (~5px dash / 4px gap). In production
+  this is `border-top: 1px dashed var(--rule-strong)` — the segment construction
+  in the design file is a tool workaround, not something to ship.
+- **1200px content grid, never exceeded.** 120px gutters at 1440. App shells
+  (docs, editor, playground, account, auth) are full-width by design; every
+  marketing section is measured against the 120→1320 band.
+- **Shaped backgrounds, not photography.** 33 sections carry a `ShapeBG` layer:
+  1.2px outlined circles, concentric rects, arcs and crosses in `--rule`,
+  clipped by the section. Four variants — arc / rings / stack / grid — rotated
+  so adjacent sections never repeat. No images anywhere.
+- **Mac-dot window chrome** on all code windows (`--dot-r/--dot-y/--dot-g`).
+- **Icons are load-bearing** — section kickers, hero facts, FAQ topics,
   comparison rows, pricing tiers, changelog kinds, blog rows, docs sidebar
-  groups, footer columns, info rails. 500+ icon placements, all lucide.
+  groups, footer columns, info rails, approach principles.
+- **Every section must earn its place.** The Amrela structure band is a labelled
+  canopy diagram (Amrela over Matra / Rooktoo / next), not decoration.
