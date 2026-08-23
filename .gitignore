@@ -7,3 +7,4 @@ dist
 dist/
 node_modules
 node_modules/
+.publish-attempt/

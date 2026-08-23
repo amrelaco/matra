@@ -6,21 +6,38 @@ swapped without users noticing.
 
 ## Method
 
-Strangler, not rewrite-in-a-branch. For every layer:
+Phase 1 was a true strangler: keymap, input rules, history and list commands
+each replaced a package and each dropped a dependency, with the suite green
+throughout.
 
-1. Write ours under `packages/core/src/engine/` (published as `matra`).
-2. Point the editor at it.
-3. The existing suite must stay green — it is the contract.
-4. Drop the ProseMirror package from `dependencies`.
+**Phases 2–5 cannot work that way.** The remaining packages are mutually coupled
+through the document model:
 
-A layer is only done when the dependency is gone from `package.json`.
+    prosemirror-transform  →  prosemirror-model
+    prosemirror-state      →  prosemirror-model, transform, view
+    prosemirror-view       →  prosemirror-model, state, transform
+
+PM's transform builds and consumes PM `Node` instances, so our model cannot be
+handed to it. Model, transform, state and view therefore land together as a
+parallel engine and flip in one cutover.
+
+That means no dependency count moves until the whole thing is done, and the
+cutover is the risky moment rather than a series of small ones. To keep it
+honest:
+
+1. Build the parallel engine under `packages/core/src/engine/`.
+2. Test each layer directly, in isolation, as it is written.
+3. Before the flip, run the entire existing suite against the new engine behind
+   a switch — both engines pass, or the flip does not happen.
+4. Keep the ProseMirror view available behind a flag until the new view has
+   survived real users on iOS Safari and Android Chrome.
 
 ## Phases
 
 | Phase | Layer | Lines | gz | Status |
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
-| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **in progress** — content expressions done |
+| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **in progress** — expressions, Mark, Fragment, Node, Schema done; DOM parse/serialize left |
 | 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | |
 | 5 | view — contenteditable, IME, mutation observer, selection sync | ~6,000 | 59 kB | last |
@@ -37,8 +54,21 @@ it — which is how the editor repairs a document instead of refusing an edit. A
 type marked `fillable: false` is never used to repair, so a node that needs real
 attributes is never invented out of nothing.
 
-Still to write for phase 2: Fragment, Node, Mark, ResolvedPos, Schema assembly,
-and DOM parse/serialize.
+Written since: `mark.ts` (mark sets, rank ordering, exclusion), `fragment.ts`
+(immutable runs, text joining, cutting, boundary-correct `findIndex`),
+`node.ts` (sizes, classification, text extraction, descendant walking) and
+`schema.ts` (NodeType, content compilation, `createAndFill`).
+
+Two decisions worth remembering:
+
+- **Text nodes are canonicalised on construction.** Adjacent text carrying
+  identical marks is merged and empty text is dropped, so two documents that
+  mean the same thing compare equal.
+- **`createAndFill` returns null rather than guessing.** If closing a content
+  gap would need a node whose attributes have no defaults, the caller is told
+  the edit is impossible instead of receiving a malformed document.
+
+Still to write for phase 2: ResolvedPos and DOM parse/serialize.
 
 ## Where the risk actually is
 
