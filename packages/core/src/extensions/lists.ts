@@ -1,21 +1,17 @@
-import { liftListItem, sinkListItem, splitListItem } from 'prosemirror-schema-list'
+import { liftListItem, sinkListItem, splitListItem } from '../engine/list-commands'
 import { engine } from '../internal'
 import type { Command, NodeDef } from '../types'
 
-/** List editing needs the engine's own commands; the bridge stays internal. */
+/** List editing works on the transaction the command is already building. */
 const runList =
   (name: 'split' | 'lift' | 'sink'): Command =>
   (ctx) => {
-    const { state, run } = engine(ctx)
+    const { state, tr } = engine(ctx)
     const itemType = state.schema.nodes.listItem
     if (!itemType) return false
-    const command =
-      name === 'split'
-        ? splitListItem(itemType)
-        : name === 'lift'
-          ? liftListItem(itemType)
-          : sinkListItem(itemType)
-    return run(command)
+    const apply =
+      name === 'split' ? splitListItem : name === 'lift' ? liftListItem : sinkListItem
+    return apply(state, tr, itemType)
   }
 
 export const listItem: NodeDef<{

@@ -14,6 +14,8 @@ export interface EngineAccess {
   readonly tr: Transaction
   /** Run a ProseMirror command against the transaction this ctx is building. */
   run(command: PMCommand): boolean
+  /** Rewind or replay one history entry. */
+  replay(direction: 'undo' | 'redo'): boolean
 }
 
 const ENGINE = Symbol.for('matra.engine')

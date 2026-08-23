@@ -11,6 +11,7 @@ export interface CtxHost {
   /** One Mapping per transaction ever applied, in order. */
   readonly mappings: Mapping[]
   focus(): void
+  replay(direction: 'undo' | 'redo'): boolean
 }
 
 const asPos = (n: number) => n as Pos
@@ -206,6 +207,9 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     tr,
     run(command) {
       return command(proxyState, () => undefined)
+    },
+    replay(direction) {
+      return host.replay(direction)
     },
   })
 

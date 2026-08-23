@@ -1,11 +1,11 @@
-import { history, redo, undo } from 'prosemirror-history'
-import { InputRule as PMInputRule, inputRules } from 'prosemirror-inputrules'
-import { keymap } from 'prosemirror-keymap'
 import { DOMParser, DOMSerializer, type Schema } from 'prosemirror-model'
-import { EditorState, type Transaction } from 'prosemirror-state'
+import { EditorState, TextSelection, type Transaction } from 'prosemirror-state'
 import type { Mapping } from 'prosemirror-transform'
 import { EditorView } from 'prosemirror-view'
 import { type CtxHost, createCtx } from './ctx'
+import { History } from './engine/history'
+import { InputRules, type TextContext } from './engine/input-rules'
+import { Keymap } from './engine/keys'
 import { core } from './extensions/core'
 import { buildSchema, sortByPriority } from './schema'
 import type {
@@ -43,6 +43,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
     schema,
     mappings,
     focus: () => view?.focus(),
+    replay: (direction) => replay(direction),
   }
 
   function emit(event: EventName) {
@@ -52,6 +53,9 @@ export function createEditor<const T extends readonly AnyDef[]>(
   /** Single funnel for every state change — view-mounted or headless. */
   function apply(tr: Transaction) {
     const selectionMoved = !tr.selection.eq(state.selection)
+    const before = state.doc
+    const selectionBefore = { anchor: state.selection.anchor, head: state.selection.head }
+    if (tr.docChanged) history.record(tr, before, selectionBefore, Date.now())
     state = state.apply(tr)
     mappings.push(tr.mapping)
     if (view) view.updateState(state)
@@ -97,47 +101,60 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
   const commands = bind(rawCommands)
 
-  // --- keymap and input rules ----------------------------------------------
+  // --- keymap, input rules and history ---------------------------------------
 
-  function buildKeymap(): Record<string, () => boolean> {
-    const keys: Record<string, () => boolean> = {}
-    for (const def of defs) {
-      if (!def.keys) continue
-      for (const [combo, target] of Object.entries(def.keys)) {
-        const command =
-          typeof target === 'function' ? (target as AnyCommand) : rawCommands[target as string]
-        if (!command) continue
-        keys[combo] = () => run((ctx) => command(ctx))
-      }
+  const history = new History()
+  const keys = new Keymap()
+  for (const def of defs) {
+    if (!def.keys) continue
+    for (const [combo, target] of Object.entries(def.keys)) {
+      const command =
+        typeof target === 'function' ? (target as AnyCommand) : rawCommands[target as string]
+      if (!command) continue
+      keys.add(combo, () => run((ctx) => command(ctx)))
     }
-    keys['Mod-z'] = () => undo(state, (tr) => apply(tr))
-    keys['Mod-y'] = () => redo(state, (tr) => apply(tr))
-    keys['Shift-Mod-z'] = keys['Mod-y']
-    return keys
+  }
+  keys.add('Mod-z', () => replay('undo'))
+  keys.add('Mod-y', () => replay('redo'))
+  keys.add('Shift-Mod-z', () => replay('redo'))
+
+  const rules = new InputRules(defs.flatMap((def) => def.inputRules ?? []))
+
+  /** Rewind or replay one history entry as a single transaction. */
+  function replay(direction: 'undo' | 'redo'): boolean {
+    const entry = history.take(direction)
+    if (!entry) return false
+    const tr = state.tr
+    for (const step of entry.steps) tr.step(step)
+    tr.setSelection(TextSelection.create(tr.doc, entry.selection.anchor, entry.selection.head))
+    apply(tr)
+    history.finish()
+    return true
   }
 
-  function buildInputRules(): PMInputRule[] {
-    const rules: PMInputRule[] = []
-    for (const def of defs) {
-      for (const rule of def.inputRules ?? []) {
-        rules.push(
-          new PMInputRule(rule.match, (_state, match, from, to) => {
-            let handled = false
-            run((ctx) => {
-              handled = rule.handler(ctx, match, { from: asPos(from), to: asPos(to) })
-              return handled
-            })
-            return handled ? state.tr : null
-          }),
-        )
-      }
+  /** Text before the caret inside the current block, for input-rule matching. */
+  function textContext(): TextContext {
+    const { $from, from, to } = state.selection
+    const start = $from.start()
+    return {
+      before: state.doc.textBetween(start, from, '\n', '\ufffc'),
+      start: asPos(start),
+      from: asPos(from),
+      to: asPos(to),
     }
-    return rules
   }
 
-  state = state.reconfigure({
-    plugins: [history(), keymap(buildKeymap()), inputRules({ rules: buildInputRules() })],
-  })
+  function handleTextInput(typed: string): boolean {
+    if (!rules.size) return false
+    return rules.handle(textContext(), typed, (rule, match, range) => {
+      let handled = false
+      run((ctx) => {
+        handled = rule.handler(ctx, match, range)
+        return handled
+      })
+      return handled
+    })
+  }
 
   // --- public surface -------------------------------------------------------
 
@@ -215,6 +232,8 @@ export function createEditor<const T extends readonly AnyDef[]>(
         dispatchTransaction(tr) {
           apply(tr)
         },
+        handleKeyDown: (_view, event) => keys.handle(event),
+        handleTextInput: (_view, _from, _to, typed) => handleTextInput(typed),
         handleDOMEvents: {
           focus: () => {
             emit('focus')
