@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A headless rich text editor framework with a first-class extension API. Zero dependencies.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
