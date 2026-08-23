@@ -64,19 +64,26 @@ followed by its light equivalent.
 
 79 frames, zero overlaps, every colour a token.
 
-## Merged from the Aurora experiment (V2 is retired)
+## Final visual rules (after the Aurora experiment)
 
-The rounded/gradient V2 exploration was built, reviewed, and deleted. Three ideas
-survived into V1:
+The rounded/gradient V2 exploration was built, reviewed, and deleted. What
+actually survived, as revised by review:
 
-1. **Mac-dot window chrome** on every code block, the playground, and the hero's
-   rendered-editor panel — dots use muted tokens `--dot-r/--dot-y/--dot-g`, not
-   full traffic-light saturation.
-2. **A restrained gradient**, deliberately uncommon: indigo → viridian
-   (`--grad-a #33357E → --grad-b #2E6E62`, dark `#8F95E8 → #7FC2B0`). Applied only
-   to: the matra rule under the nav, the extensions hanging line, text carets, and
-   the final CTA band (deep indigo→teal with 13% grain). Never on buttons.
-3. **Photography** — three generated stills in the brand's own world (paper, ink,
-   indigo on charcoal): a lone caret (404 media card), floating deckle-edged paper
-   with an indigo edge (auth asides), an ivory canopy sheltering cubes (Amrela
-   studio band). All contained in framed media cards, so both themes stay valid.
+- **No gradients anywhere.** Solid colour only. The CTA band is solid
+  `--invert-bg` with 12% grain; accents are flat `--indigo`.
+- **Dashed lines for decorative rules** — built from 2px segments (no native
+  dash in the design tool; in CSS use `border-style: dashed` / dashed SVG
+  strokes). Solid hairlines remain for card borders and table rows.
+- **No photography.** Decorative sections use **outlined geometry** instead:
+  1.5–2px stroked rectangles, circles, crosses and dashed drops in
+  `--rule-strong` with a single `--indigo` accent element. Current placements:
+  auth asides (oversized outlined Matra mark), 404 media card (concentric
+  circles + caret), Amrela studio band (arc + three squares), CTA corner.
+- **Mac-dot window chrome** on all code windows — muted dot tokens
+  `--dot-r/--dot-y/--dot-g`, never full traffic-light saturation.
+- **Content max-width 1200px** (120px gutters at 1440). App shells (docs,
+  editor, playground, account) stay full-width; the landing hero's editor
+  window intentionally bleeds right.
+- **Icons are load-bearing**: section kickers, hero facts, FAQ topics,
+  comparison rows, pricing tiers, changelog kinds, blog rows, docs sidebar
+  groups, footer columns, info rails. 500+ icon placements, all lucide.
