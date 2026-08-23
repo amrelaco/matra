@@ -141,3 +141,28 @@ Mobile frames exist for all 20 unique screens. The 16 remaining docs pages share
 the Introduction shell exactly, so they inherit its mobile layout.
 Light mode is not duplicated at mobile size — every colour is a token, so the
 light theme follows automatically.
+
+## Package names
+
+The `@matra` npm scope belongs to an unrelated project (`matralang/matra`), so:
+
+- the engine ships as the unscoped **`matra`** — which is what every code sample
+  already says to install
+- bindings and official extensions live under **`@matrajs/*`**, matching matrajs.com
+- extension packages in the directory read `@matrajs/extension-bold`, not `@matra/…`
+
+Any mockup showing a package name must use these. The canvas was swept once;
+keep it swept.
+
+## Amrela is not an editor company
+
+Amrela sells AI product work; Matra is one product, not the thesis. The service
+list is four items and only one is editor-specific:
+
+1. AI features that hold up — streaming, retries, cost ceilings, failure states
+2. **Agents that touch real systems** — tool calling, server-derived identity, audit trail
+3. Editors and document systems — the deep specialism, not the whole offer
+4. Hardening what already exists — the fixed-price audit
+
+If a future edit leaves editors as the loudest thing on amrela.co, the balance
+has drifted.
