@@ -1,5 +1,5 @@
-import { createEditor } from 'matra'
-import type { AnyDef, Editor, EditorOptions } from 'matra'
+import { createEditor } from '@matrajs/core'
+import type { AnyDef, Editor, EditorOptions } from '@matrajs/core'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 /**

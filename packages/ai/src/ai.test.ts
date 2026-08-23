@@ -1,5 +1,5 @@
-import { createEditor, starterKit } from 'matra'
-import type { Pos } from 'matra'
+import { createEditor, starterKit } from '@matrajs/core'
+import type { Pos } from '@matrajs/core'
 import { describe, expect, it, vi } from 'vitest'
 import { ai } from './extension'
 import type { AiSession, AiStream } from './types'

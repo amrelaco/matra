@@ -3,7 +3,7 @@
 React bindings: `useEditor`, `useEditorState`, `useEditorFocus` and `EditorContent`.
 
 ```bash
-npm i matra @matrajs/react
+npm i @matrajs/core @matrajs/react
 ```
 
 - Docs: https://matrajs.com

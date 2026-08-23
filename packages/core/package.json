@@ -1,5 +1,5 @@
 {
-  "name": "matra",
+  "name": "@matrajs/core",
   "version": "0.0.1",
   "description": "A headless rich text editor framework with a first-class extension API. Engine, extension system and starter kit.",
   "license": "MIT",

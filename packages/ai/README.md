@@ -3,7 +3,7 @@
 Streaming AI edits that survive concurrent typing, built on `ctx.mark()`.
 
 ```bash
-npm i matra @matrajs/ai
+npm i @matrajs/core @matrajs/ai
 ```
 
 - Docs: https://matrajs.com

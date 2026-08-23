@@ -1,14 +1,14 @@
-# matra
+# @matrajs/core
 
 A headless rich text editor framework. Engine, document model, extension API and
 starter kit — framework-agnostic and MIT.
 
 ```bash
-npm i matra
+npm i @matrajs/core
 ```
 
 ```ts
-import { createEditor, starterKit } from 'matra'
+import { createEditor, starterKit } from '@matrajs/core'
 
 const editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
 editor.mount(element)

@@ -41,7 +41,7 @@ importers:
 
   apps/playground:
     dependencies:
-      matra:
+      '@matrajs/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -51,7 +51,7 @@ importers:
 
   packages/ai:
     dependencies:
-      matra:
+      '@matrajs/core':
         specifier: workspace:*
         version: link:../core
 
@@ -72,7 +72,7 @@ importers:
 
   packages/react:
     dependencies:
-      matra:
+      '@matrajs/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

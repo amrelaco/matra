@@ -6,7 +6,7 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   resolve: {
     alias: {
-      '@matra/core': resolve(__dirname, 'packages/core/src/index.ts'),
+      '@matrajs/core': resolve(__dirname, 'packages/core/src/index.ts'),
       '@matrajs/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
     },
   },

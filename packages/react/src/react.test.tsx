@@ -1,5 +1,5 @@
+import { starterKit } from '@matrajs/core'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { starterKit } from 'matra'
 import { StrictMode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { EditorContent } from './editor-content'
