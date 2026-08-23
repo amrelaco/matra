@@ -72,8 +72,7 @@ actually survived, as revised by review:
 - **No gradients anywhere.** Solid colour only. The CTA band is solid
   `--invert-bg` with 12% grain; accents are flat `--indigo`.
 - **Dashed borders on every long separator** (≥400px edges): section dividers,
-  column dividers, card/tier edges, table-row rules — built from 12px segments
-  with 9px gaps overlaid on the border line. Short borders (buttons, badges,
+  column dividers, card/tier edges, table-row rules — 1px lines with a compact rhythm (≈5px dash / 4px gap) overlaid on the border line. Short borders (buttons, badges,
   inputs, small tiles) stay solid hairline. In CSS this is simply
   `border-style: dashed` — do NOT ship the segment hack. The matra rule under
   the nav is the one deliberate solid exception (it is the brand line, not a
