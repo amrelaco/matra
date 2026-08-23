@@ -1,0 +1,27 @@
+export { createEditor } from './editor'
+export { buildSchema } from './schema'
+export * from './extensions'
+export type {
+  AnyCommand,
+  AnyDef,
+  AttrSpec,
+  Command,
+  CommandMap,
+  CommandsOf,
+  CoreCommands,
+  Ctx,
+  DocMark,
+  DocNode,
+  DomOutput,
+  Editor,
+  EditorOptions,
+  ExtensionDef,
+  InputRule,
+  MarkDef,
+  NodeDef,
+  ParseRule,
+  Pos,
+  PosMarker,
+  Range,
+  Selection,
+} from './types'

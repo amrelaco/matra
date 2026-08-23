@@ -1,13 +1,43 @@
 {
   "name": "@matra/core",
   "version": "0.0.1",
-  "description": "Matra — a headless rich text editor framework with a first-class extension API. Placeholder release; implementation in progress.",
+  "description": "The Matra editor engine — document model, extension API and command system. Headless, framework-agnostic, MIT.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",
-  "repository": { "type": "git", "url": "git+https://github.com/amrelaco/matra.git", "directory": "packages/core" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amrelaco/matra.git",
+    "directory": "packages/core"
+  },
   "bugs": { "url": "https://github.com/amrelaco/matra/issues" },
   "keywords": ["editor", "rich-text", "prosemirror", "wysiwyg", "matra", "extensions"],
   "publishConfig": { "access": "public" },
-  "files": ["README.md"]
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "prosemirror-commands": "^1.6.2",
+    "prosemirror-history": "^1.4.1",
+    "prosemirror-inputrules": "^1.4.0",
+    "prosemirror-keymap": "^1.2.2",
+    "prosemirror-model": "^1.24.1",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-transform": "^1.10.2",
+    "prosemirror-view": "^1.37.0"
+  }
 }

@@ -80,7 +80,11 @@ export interface PosMarker {
 /** A command is a plain function. No `this`, no currying, no nesting. */
 export type Command<A extends unknown[] = []> = (ctx: Ctx, ...args: A) => boolean
 
-/** Any command, regardless of arity. Used for constraints only. */
+/**
+ * Any command, regardless of arity. Used for constraints only.
+ * biome-ignore lint/suspicious/noExplicitAny: variance here needs `any`;
+ * `unknown[]` would reject commands that take concrete argument types.
+ */
 export type AnyCommand = (ctx: Ctx, ...args: any[]) => boolean
 
 export type CommandMap = Record<string, AnyCommand>
@@ -170,10 +174,15 @@ export interface InputRule {
 // ---------------------------------------------------------------------------
 
 /** Collects the command maps of every definition into one typed surface. */
-export type CommandsOf<T extends readonly AnyDef[]> =
-  UnionToIntersection<DefCommands<T[number]>> extends infer R
-    ? [R] extends [never] ? EmptyCommands : unknown extends R ? EmptyCommands : R
-    : never
+export type CommandsOf<T extends readonly AnyDef[]> = UnionToIntersection<
+  DefCommands<T[number]>
+> extends infer R
+  ? [R] extends [never]
+    ? EmptyCommands
+    : unknown extends R
+      ? EmptyCommands
+      : R
+  : never
 
 type EmptyCommands = Record<never, never>
 
@@ -204,11 +213,20 @@ export interface EditorOptions<T extends readonly AnyDef[]> {
   autofocus?: boolean | 'start' | 'end'
 }
 
+/** Commands the engine always provides, whatever definitions you pass. */
+export interface CoreCommands {
+  select(target: Range | Pos): boolean
+  insert(content: DocNode | DocNode[] | string, at?: Pos): boolean
+  replace(range: Range, content: DocNode | DocNode[] | string): boolean
+  remove(range?: Range): boolean
+  focus(): boolean
+}
+
 export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
-  readonly commands: CommandsOf<T>
+  readonly commands: CommandsOf<T> & CoreCommands
 
   /** Run several commands as one undo step. Rolls back entirely if any returns false. */
-  batch(run: (c: CommandsOf<T>) => void): boolean
+  batch(run: (c: CommandsOf<T> & CoreCommands) => void): boolean
 
   getJSON(): DocNode
   getHTML(): string
@@ -219,7 +237,10 @@ export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
   readonly editable: boolean
   setEditable(value: boolean): void
 
-  on(event: 'change' | 'focus' | 'blur' | 'selectionChange', fn: (editor: Editor<T>) => void): () => void
+  on(
+    event: 'change' | 'focus' | 'blur' | 'selectionChange',
+    fn: (editor: Editor<T>) => void,
+  ): () => void
 
   mount(element: HTMLElement): void
   destroy(): void
