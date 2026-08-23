@@ -1,7 +1,7 @@
 {
-  "name": "@matra/core",
+  "name": "matra",
   "version": "0.0.1",
-  "description": "The Matra editor engine — document model, extension API and command system. Headless, framework-agnostic, MIT.",
+  "description": "A headless rich text editor framework with a first-class extension API. Engine, extension system and starter kit.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",

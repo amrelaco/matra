@@ -1,5 +1,5 @@
 /**
- * @matra/core — public API surface.
+ * matra — public API surface.
  *
  * Design rule: no ProseMirror type appears in this file. The engine is an
  * implementation detail reachable only through `editor.unsafe`.

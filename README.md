@@ -13,10 +13,12 @@ See [DESIGN.md](./DESIGN.md) for the API rationale.
 
 | Package | Purpose |
 |---|---|
-| `@matra/core` | Engine, document model, extension API, starter kit |
-| `@matra/react` | `useEditor`, `useEditorState`, `EditorContent` |
-| `@matra/ai` | Streaming edits that survive concurrent typing |
-| `matra` | Convenience meta-package re-exporting `@matra/core` |
+| `matra` | Engine, document model, extension API, starter kit |
+| `@matrajs/react` | `useEditor`, `useEditorState`, `EditorContent` |
+| `@matrajs/ai` | Streaming edits that survive concurrent typing |
+
+> The `@matra` npm scope belongs to an unrelated project, so bindings live under
+> `@matrajs`, matching matrajs.com. The headline install stays `npm i matra`.
 
 ## Quick start
 

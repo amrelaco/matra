@@ -1,7 +1,7 @@
 {
-  "name": "@matra/react",
+  "name": "@matrajs/react",
   "version": "0.0.1",
-  "description": "React bindings for Matra — useEditor and EditorContent.",
+  "description": "React bindings for Matra \u2014 useEditor and EditorContent.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",
@@ -35,7 +35,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@matra/core": "workspace:*"
+    "matra": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18 || ^19"

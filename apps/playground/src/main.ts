@@ -1,4 +1,4 @@
-import { createEditor, starterKit } from '@matra/core'
+import { createEditor, starterKit } from 'matra'
 import './style.css'
 
 function need<T extends Element>(selector: string): T {

@@ -1,4 +1,4 @@
-import type { Range } from '@matra/core'
+import type { Range } from 'matra'
 
 /** What the model is asked to do and what it streams back. */
 export interface AiRequest {

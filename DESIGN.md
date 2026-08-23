@@ -95,7 +95,7 @@ separate package. Retrofitting position mapping later is not possible.
 - **`batch()` rollback.** Rolling back when any command returns false is stated
   in the types but interacts with input rules in ways not yet worked out.
 - **Node views.** Framework-specific by nature. Core should expose a renderer
-  interface that `@matra/vue` and `@matra/react` implement, but the shape of
+  interface that `@matrajs/vue` and `@matrajs/react` implement, but the shape of
   that interface is undecided.
 - **Schema ordering.** ProseMirror's first node becomes the doc's default content.
   Currently implicit via `priority`; may need to be explicit.

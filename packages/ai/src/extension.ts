@@ -1,4 +1,4 @@
-import type { Command, Ctx, Editor, ExtensionDef, PosMarker, Range } from '@matra/core'
+import type { Command, Ctx, Editor, ExtensionDef, PosMarker, Range } from 'matra'
 import type { AiRequest, AiSession, AiStatus, AiStream } from './types'
 
 export interface AiOptions {

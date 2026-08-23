@@ -3,6 +3,6 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   resolve: {
-    alias: { '@matra/core': resolve(__dirname, '../../packages/core/src/index.ts') },
+    alias: { matra: resolve(__dirname, '../../packages/core/src/index.ts') },
   },
 })

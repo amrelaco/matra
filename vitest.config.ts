@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@matra/core': resolve(__dirname, 'packages/core/src/index.ts'),
-      '@matra/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
+      '@matrajs/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
     },
   },
   test: {

@@ -8,7 +8,7 @@ swapped without users noticing.
 
 Strangler, not rewrite-in-a-branch. For every layer:
 
-1. Write ours under `packages/core/src/engine/`.
+1. Write ours under `packages/core/src/engine/` (published as `matra`).
 2. Point the editor at it.
 3. The existing suite must stay green — it is the contract.
 4. Drop the ProseMirror package from `dependencies`.

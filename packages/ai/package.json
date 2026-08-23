@@ -1,5 +1,5 @@
 {
-  "name": "@matra/ai",
+  "name": "@matrajs/ai",
   "version": "0.0.1",
   "description": "AI extension for Matra \u2014 streaming edits that survive concurrent typing.",
   "license": "MIT",
@@ -35,6 +35,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@matra/core": "workspace:*"
+    "matra": "workspace:*"
   }
 }

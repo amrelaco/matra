@@ -1,4 +1,4 @@
-import type { AnyDef, Editor } from '@matra/core'
+import type { AnyDef, Editor } from 'matra'
 import { useEffect, useRef } from 'react'
 
 export interface EditorContentProps<T extends readonly AnyDef[] = readonly AnyDef[]>
