@@ -1,7 +1,7 @@
-import { Fragment, type Node as PMNode, type Schema } from 'prosemirror-model'
-import { type EditorState, TextSelection, type Transaction } from 'prosemirror-state'
-import type { Mapping } from 'prosemirror-transform'
-import { findWrapping, liftTarget } from 'prosemirror-transform'
+import { Fragment, type Node, type Schema } from './engine/model'
+import type { EditorState, Transaction } from './engine/state'
+import { TextSelection } from './engine/state'
+import { type Mapping, findWrapping, liftTarget } from './engine/transform'
 import { attachEngine } from './internal'
 import type { Ctx, DocNode, Pos, PosMarker, Range, Selection } from './types'
 
@@ -33,12 +33,12 @@ function resolveRange(tr: Transaction, range?: Range): { from: number; to: numbe
 }
 
 /**
- * Turn user content into ProseMirror nodes.
+ * Turn user content into nodes.
  *
  * A string is inline text — `insert('hi')` types, it does not create a block.
  * Structure is expressed with DocNode objects, which say what they are.
  */
-function toNodes(schema: Schema, content: DocNode | DocNode[] | string): PMNode[] {
+function toNodes(schema: Schema, content: DocNode | DocNode[] | string): Node[] {
   if (typeof content === 'string') {
     return content.length ? [schema.text(content)] : []
   }
@@ -65,7 +65,7 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
 
   const ctx: Ctx = {
     get doc() {
-      return tr.doc.toJSON() as DocNode
+      return tr.doc.toJSON() as unknown as DocNode
     },
     get selection() {
       return toSelection(tr)
@@ -76,10 +76,21 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       if (!type) return false
       const { from, to, empty } = tr.selection
       if (empty) {
-        const stored = tr.storedMarks ?? state.storedMarks ?? tr.selection.$from.marks()
-        return type.isInSet(stored) != null
+        const stored = tr.storedMarks ?? tr.selection.$head.marks()
+        return stored.some((mark) => mark.type === type)
       }
-      return tr.doc.rangeHasMark(from, to, attrs ? type.create(attrs) : type)
+      let found = false
+      let allMarked = true
+      tr.doc.descendants((node, pos) => {
+        if (pos + node.nodeSize <= from || pos >= to || !node.isText) return undefined
+        found = true
+        const mark = node.marks.find((m) => m.type === type)
+        const matches =
+          mark && (!attrs || Object.entries(attrs).every(([k, v]) => mark.attrs[k] === v))
+        if (!matches) allMarked = false
+        return undefined
+      })
+      return found && allMarked
     },
 
     inNode(name, attrs) {
@@ -112,10 +123,10 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       if (!type) return false
       const { from, to } = resolveRange(tr, range)
       if (from === to) {
-        tr.removeStoredMark(type)
+        tr.removeStoredMark(type.create())
         return true
       }
-      tr.removeMark(from, to, type)
+      tr.removeMark(from, to, type.create())
       return true
     },
 
@@ -146,7 +157,7 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       const range = tr.selection.$from.blockRange(tr.selection.$to)
       if (!range) return false
       const target = liftTarget(range)
-      if (target == null) return false
+      if (target === null) return false
       tr.lift(range, target)
       return true
     },
@@ -160,8 +171,7 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     },
 
     replace(range, content) {
-      const nodes = toNodes(schema, content)
-      tr.replaceWith(range.from, range.to, Fragment.from(nodes))
+      tr.replaceWith(range.from, range.to, Fragment.from(toNodes(schema, content)))
       return true
     },
 
@@ -192,25 +202,10 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     },
   }
 
-  // ProseMirror commands build their own transaction from `state.tr`; hand them
-  // a state whose `tr` is the one we are already accumulating, so their steps
-  // join ours instead of racing them.
-  const proxyState = new Proxy(state, {
-    get(target, prop, receiver) {
-      if (prop === 'tr') return tr
-      return Reflect.get(target, prop, receiver)
-    },
-  })
-
   attachEngine(ctx, {
     state,
     tr,
-    run(command) {
-      return command(proxyState, () => undefined)
-    },
-    replay(direction) {
-      return host.replay(direction)
-    },
+    replay: (direction) => host.replay(direction),
   })
 
   return ctx

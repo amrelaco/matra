@@ -35,6 +35,16 @@ export abstract class Selection {
     return this.anchor === this.head
   }
 
+  /** Resolved position of the earlier end, whichever way round the drag went. */
+  get $from(): ResolvedPos {
+    return this.anchor <= this.head ? this.$anchor : this.$head
+  }
+
+  /** Resolved position of the later end. */
+  get $to(): ResolvedPos {
+    return this.anchor <= this.head ? this.$head : this.$anchor
+  }
+
   abstract map(doc: Node, mapping: Mapping): Selection
   abstract eq(other: Selection): boolean
 

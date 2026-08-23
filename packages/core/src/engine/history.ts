@@ -1,5 +1,6 @@
-import type { Node as PMNode } from 'prosemirror-model'
-import type { Step, Transform } from 'prosemirror-transform'
+import type { Node } from './model/node'
+import type { Step } from './transform/step'
+import type { Transform } from './transform/transform'
 
 export interface HistoryEntry {
   /** Steps that undo the change, in the order they must be applied. */
@@ -58,7 +59,7 @@ export class History {
    */
   record(
     tr: Transform,
-    before: PMNode,
+    before: Node,
     selection: { anchor: number; head: number },
     now: number,
   ): void {

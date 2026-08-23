@@ -1,11 +1,11 @@
-import { DOMParser, DOMSerializer, type Schema } from 'prosemirror-model'
-import { EditorState, TextSelection, type Transaction } from 'prosemirror-state'
-import type { Mapping } from 'prosemirror-transform'
-import { EditorView } from 'prosemirror-view'
 import { type CtxHost, createCtx } from './ctx'
 import { History } from './engine/history'
 import { InputRules, type TextContext } from './engine/input-rules'
 import { Keymap } from './engine/keys'
+import { DOMParser, DOMSerializer, Fragment, type Node, type Schema } from './engine/model'
+import { EditorState, TextSelection, type Transaction } from './engine/state'
+import type { Mapping } from './engine/transform'
+import { EditorView } from './engine/view'
 import { core } from './extensions/core'
 import { buildSchema, sortByPriority } from './schema'
 import type {
@@ -31,12 +31,13 @@ export function createEditor<const T extends readonly AnyDef[]>(
   const schema = buildSchema(defs)
   const mappings: Mapping[] = []
   const listeners = new Map<EventName, Set<(editor: Editor<T>) => void>>()
+  const serializer = DOMSerializer.fromSchema(schema)
+  const parser = DOMParser.fromSchema(schema)
 
   let view: EditorView | null = null
   let state = EditorState.create({
     schema,
-    doc: options.content ? parseContent(schema, options.content) : undefined,
-    plugins: [],
+    doc: options.content ? parseContent(schema, parser, options.content) : undefined,
   })
 
   const host: CtxHost = {
@@ -56,9 +57,14 @@ export function createEditor<const T extends readonly AnyDef[]>(
     const before = state.doc
     const selectionBefore = { anchor: state.selection.anchor, head: state.selection.head }
     if (tr.docChanged) history.record(tr, before, selectionBefore, Date.now())
-    state = state.apply(tr)
+
+    const next = state.apply(tr)
+    // A plugin refusing the transaction returns the same state object.
+    if (next === state && tr.docChanged) return
+
+    state = next
     mappings.push(tr.mapping)
-    if (view) view.updateState(state)
+    view?.updateState(state)
     if (tr.docChanged) emit('change')
     if (selectionMoved) emit('selectionChange')
   }
@@ -137,7 +143,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
     const { $from, from, to } = state.selection
     const start = $from.start()
     return {
-      before: state.doc.textBetween(start, from, '\n', '\ufffc'),
+      before: state.doc.textBetween(start, from, '\n'),
       start: asPos(start),
       from: asPos(from),
       to: asPos(to),
@@ -180,20 +186,16 @@ export function createEditor<const T extends readonly AnyDef[]>(
       return true
     },
 
-    getJSON: () => state.doc.toJSON() as DocNode,
+    getJSON: () => state.doc.toJSON() as unknown as DocNode,
 
-    getHTML() {
-      const fragment = DOMSerializer.fromSchema(schema).serializeFragment(state.doc.content)
-      const container = document.createElement('div')
-      container.appendChild(fragment)
-      return container.innerHTML
-    },
+    getHTML: () => serializer.serializeHTML(state.doc.content),
 
     getText: () => state.doc.textBetween(0, state.doc.content.size, '\n'),
 
     setContent(content) {
       const tr = state.tr
-      tr.replaceWith(0, state.doc.content.size, parseContent(schema, content).content)
+      const parsed = parseContent(schema, parser, content)
+      tr.replaceWith(0, state.doc.content.size, parsed.content)
       apply(tr)
     },
 
@@ -214,7 +216,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
     setEditable(value) {
       options.editable = value
-      view?.setProps({ editable: () => value })
+      view?.setEditable(value)
     },
 
     on(event, fn) {
@@ -226,25 +228,17 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
     mount(element) {
       if (view) throw new Error('Matra: editor is already mounted')
-      view = new EditorView(element, {
+      view = new EditorView(element, schema, {
         state,
         editable: () => options.editable ?? true,
-        dispatchTransaction(tr) {
-          apply(tr)
-        },
-        handleKeyDown: (_view, event) => keys.handle(event),
-        handleTextInput: (_view, _from, _to, typed) => handleTextInput(typed),
-        handleDOMEvents: {
-          focus: () => {
-            emit('focus')
-            return false
-          },
-          blur: () => {
-            emit('blur')
-            return false
-          },
+        dispatchTransaction: (tr) => apply(tr),
+        handleKeyDown: (event) => keys.handle(event),
+        handlers: {
+          onTextInput: (text) => handleTextInput(text),
         },
       })
+      element.addEventListener('focus', () => emit('focus'))
+      element.addEventListener('blur', () => emit('blur'))
       for (const def of defs) def.kind === 'extension' && def.onCreate?.(editor)
       if (options.autofocus) view.focus()
     },
@@ -276,9 +270,11 @@ export function createEditor<const T extends readonly AnyDef[]>(
   return editor
 }
 
-function parseContent(schema: Schema, content: DocNode | string) {
+function parseContent(schema: Schema, parser: DOMParser, content: DocNode | string): Node {
   if (typeof content !== 'string') return schema.nodeFromJSON(content)
   const container = document.createElement('div')
   container.innerHTML = content
-  return DOMParser.fromSchema(schema).parse(container)
+  return parser.parse(container)
 }
+
+export { Fragment }

@@ -4,7 +4,7 @@ export { DOMSerializer } from './dom-serializer'
 export { Fragment } from './fragment'
 export { Mark, type MarkSpec, MarkType } from './mark'
 export { Node } from './node'
-export { ResolvedPos } from './resolved-pos'
+export { type NodeRange, ResolvedPos } from './resolved-pos'
 export {
   type DOMOutputSpec,
   type NodeSpec,

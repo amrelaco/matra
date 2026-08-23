@@ -36,7 +36,9 @@ describe('@matra/react', () => {
   it('mounts the editor into the content element', () => {
     render(<Toolbar />)
     const content = screen.getByTestId('content')
-    expect(content.querySelector('.ProseMirror')).not.toBeNull()
+    // The view takes over the element it is given rather than adding a child.
+    expect(content.classList.contains('matra-editor')).toBe(true)
+    expect(content.getAttribute('contenteditable')).toBe('true')
     expect(content.textContent).toContain('hello')
   })
 
@@ -47,7 +49,8 @@ describe('@matra/react', () => {
       </StrictMode>,
     )
     const content = screen.getByTestId('content')
-    expect(content.querySelectorAll('.ProseMirror')).toHaveLength(1)
+    // A second mount would render the document twice.
+    expect(content.querySelectorAll('p')).toHaveLength(1)
   })
 
   it('re-renders a toolbar when the document changes', () => {

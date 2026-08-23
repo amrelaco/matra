@@ -1,6 +1,21 @@
 import type { Mark } from './mark'
 import type { Node } from './node'
 
+/** A run of whole children inside one parent. */
+export interface NodeRange {
+  $from: ResolvedPos
+  $to: ResolvedPos
+  /** Depth of the shared parent. */
+  depth: number
+  parent: Node
+  startIndex: number
+  endIndex: number
+  /** Position immediately before the first covered child. */
+  start: number
+  /** Position immediately after the last covered child. */
+  end: number
+}
+
 /** One level of the ancestor chain a position sits inside. */
 interface Frame {
   node: Node
@@ -158,30 +173,29 @@ export class ResolvedPos {
   /**
    * The shallowest block range covering this position and `other`.
    *
-   * `wrapIn` and `lift` both need this: it is the span that can be wrapped or
-   * unwrapped as a unit.
+   * `wrapIn` and `lift` both need this: it is the span of whole children that
+   * can be wrapped or unwrapped as a unit, reported as the positions either
+   * side of them and their indices in the shared parent.
    */
-  blockRange(
-    other: ResolvedPos = this,
-    predicate?: (node: Node) => boolean,
-  ): {
-    $from: ResolvedPos
-    $to: ResolvedPos
-    depth: number
-    start: number
-    end: number
-  } | null {
+  blockRange(other: ResolvedPos = this, predicate?: (node: Node) => boolean): NodeRange | null {
     if (other.pos < this.pos) return other.blockRange(this, predicate)
+
     for (let depth = this.depth - (this.parent.isTextblock ? 1 : 0); depth >= 0; depth--) {
-      if (other.pos <= this.end(depth) && (!predicate || predicate(this.node(depth)))) {
-        return {
-          $from: this,
-          $to: other,
-          depth,
-          start: this.start(depth),
-          end: this.end(depth),
-        }
+      if (other.pos > this.end(depth)) continue
+      if (predicate && !predicate(this.node(depth))) continue
+
+      const parent = this.node(depth)
+      const startIndex = this.index(depth)
+      const endIndex = Math.max(startIndex + 1, other.indexAfter(depth))
+
+      let start = this.start(depth)
+      for (let i = 0; i < startIndex; i++) start += parent.child(i).nodeSize
+      let end = start
+      for (let i = startIndex; i < endIndex && i < parent.childCount; i++) {
+        end += parent.child(i).nodeSize
       }
+
+      return { $from: this, $to: other, depth, parent, startIndex, endIndex, start, end }
     }
     return null
   }

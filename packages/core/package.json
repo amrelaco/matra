@@ -33,11 +33,5 @@
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "prosemirror-model": "^1.24.1",
-    "prosemirror-state": "^1.4.3",
-    "prosemirror-transform": "^1.10.2",
-    "prosemirror-view": "^1.37.0"
   }
 }

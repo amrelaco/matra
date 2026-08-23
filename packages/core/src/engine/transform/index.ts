@@ -8,4 +8,5 @@ export {
   type StepResult,
 } from './step'
 export { Mapping, type MapResult, StepMap } from './step-map'
+export { canSplit, findWrapping, liftTarget, type Wrapper } from './structure'
 export { Transform } from './transform'

@@ -40,7 +40,7 @@ honest:
 | 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **done** |
 | 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | **done** |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | **done** |
-| 5 | view — contenteditable, IME, mutation observer, selection sync | ~6,000 | 59 kB | last |
+| 5 | view — contenteditable, IME, selection sync | ~6,000 | 59 kB | **done** |
 
 ## Phase 2 notes
 
@@ -127,6 +127,53 @@ rebased AI rewrite pastes itself into a paragraph the user already deleted.
 - `state.apply` returns *the same state object* when a plugin vetoes, so callers
   can compare by identity to know whether anything happened.
 
+## Phase 5 notes — and the cutover
+
+The view is built on `beforeinput` rather than mutation reconciliation. The
+browser announces what it is about to do, the view cancels it, applies the
+equivalent change to the model, and re-renders. The DOM is therefore a
+projection of the document rather than a second source of truth that has to be
+diffed back.
+
+Composition is the deliberate exception. While an IME candidate window is open
+the browser is left completely alone — cancelling input mid-composition breaks
+Japanese, Chinese and Korean entry outright — and the affected content is read
+back when composition ends.
+
+**One behavioural difference from ProseMirror:** the view takes over the element
+it is given rather than creating a child. `editor.mount(el)` makes `el` itself
+the editable surface.
+
+### Cutover, done
+
+    dependencies: {}
+
+All four ProseMirror packages are gone and the entire suite passes on our
+engine: 178 tests, unchanged in intent from when they ran against ProseMirror.
+That was the contract, and it held.
+
+| | before | after |
+|---|---|---|
+| runtime dependencies | 9 | **0** |
+| `@matrajs/core` gzipped | 5.9 kB | 25.9 kB |
+| full app bundle gzipped | 66.4 kB | **18.4 kB** |
+
+The core package grew because the engine is now inside it. What matters to a
+user is the last row: an app ships 18.4 kB instead of 66.4 kB, because nothing
+is pulled in that the editor does not use.
+
+## What is deliberately not built yet
+
+Honesty about the gaps, since "no dependencies" can read as "complete":
+
+- **Collaborative editing.** Steps rebase, which is the hard half, but there is
+  no transport, no version vector and no cursor presence.
+- **Node views.** No way yet to render a node with custom interactive DOM.
+- **Decorations.** No inline highlights or widgets independent of the document.
+- **Drag and drop**, and **tables**.
+- **Deep nesting in replace.** A cross-block range nested more than one level
+  deep returns null rather than guessing; it fails loudly, but it fails.
+
 ## Where the risk actually is
 
 **Phase 3 is the correctness risk.** Position mapping is what makes a late AI
@@ -135,13 +182,13 @@ which is the exact failure Matra is sold against. It needs property-based tests:
 invert-and-reapply round-trips, mapping associativity, and fuzzed step sequences
 compared against a reference implementation.
 
-**Phase 5 is the schedule risk.** `prosemirror-view` is ten years of
-contenteditable work: IME composition for CJK input, Android GBoard's
-after-the-fact corrections, spellcheck and autocorrect mutating the DOM behind
-your back, selection sync, paste normalisation, and browser-specific bugs. The
-code volume is not the problem; discovering the bugs is. Plan for a long tail
-after "it works on my machine", and keep the ProseMirror view behind a flag
-until ours has survived real users on iOS Safari and Android Chrome.
+**Phase 5 remains the schedule risk, and shipping it does not end that.** The
+view passes its tests in happy-dom, which is not a browser. IME composition for
+CJK input, Android GBoard's after-the-fact corrections, spellcheck and
+autocorrect mutating the DOM, and browser-specific selection bugs are found by
+real users on real devices, not by unit tests. Treat the current view as
+working-but-unproven until it has survived iOS Safari and Android Chrome, and
+expect a tail of fixes there rather than a clean finish.
 
 ## Rules while this is in progress
 
