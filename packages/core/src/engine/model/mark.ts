@@ -9,6 +9,8 @@ export interface MarkSpec {
   excludes?: string
   spanning?: boolean
   attrs?: Record<string, { default?: unknown; required?: boolean }>
+  toDOM?: (mark: Mark) => unknown
+  parseDOM?: unknown[]
 }
 
 export class MarkType {

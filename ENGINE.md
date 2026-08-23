@@ -37,7 +37,7 @@ honest:
 | Phase | Layer | Lines | gz | Status |
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
-| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **in progress** — expressions, Mark, Fragment, Node, Schema done; DOM parse/serialize left |
+| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **done** |
 | 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | |
 | 5 | view — contenteditable, IME, mutation observer, selection sync | ~6,000 | 59 kB | last |
@@ -68,7 +68,19 @@ Two decisions worth remembering:
   gap would need a node whose attributes have no defaults, the caller is told
   the edit is impossible instead of receiving a malformed document.
 
-Still to write for phase 2: ResolvedPos and DOM parse/serialize.
+Phase 2 is complete: `resolved-pos.ts` (ancestor chains, neighbours, marks at a
+position, shared depth, block ranges) and the DOM layer.
+
+Two behaviours in the DOM layer are deliberate and worth keeping:
+
+- **An unrecognised element is transparent.** The parser descends into it rather
+  than dropping it, so pasting from a word processor keeps the text instead of
+  losing it to a `<div>` nobody wrote a rule for.
+- **Loose inline content gets wrapped.** Pasting bare text produces inline nodes
+  with no parent block; they are wrapped in the default textblock rather than
+  discarded, because discarding them loses the paste.
+
+Next: phase 3, transform — steps and position mapping.
 
 ## Where the risk actually is
 

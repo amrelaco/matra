@@ -3,6 +3,20 @@ import { Fragment } from './fragment'
 import { Mark, type MarkSpec, MarkType, resolveAttrs } from './mark'
 import { Node } from './node'
 
+/** What a toDOM function may return: a tag name, or a tag with attrs/children. */
+export type DOMOutputSpec = string | DOMOutputArray
+type DOMOutputArray = [string, ...(Record<string, unknown> | DOMOutputSpec | 0)[]]
+
+export interface ParseRule {
+  tag?: string
+  style?: string
+  attrs?: Record<string, unknown>
+  getAttrs?: (value: Element | string) => Record<string, unknown> | false | null
+  priority?: number
+  /** Drop the element and everything inside it. */
+  ignore?: boolean
+}
+
 export interface NodeSpec {
   name: string
   content?: string
@@ -12,6 +26,8 @@ export interface NodeSpec {
   /** Space-separated mark names allowed inside; `_` all, `''` none. */
   marks?: string
   attrs?: Record<string, { default?: unknown; required?: boolean }>
+  toDOM?: (node: Node) => DOMOutputSpec
+  parseDOM?: ParseRule[]
 }
 
 export class NodeType implements MatchableType {
