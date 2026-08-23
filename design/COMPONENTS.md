@@ -88,6 +88,23 @@ followed by its light equivalent.
 - **Every section must earn its place.** The Amrela structure band is a labelled
   canopy diagram (Amrela over Matra / Rooktoo / next), not decoration.
 
+## Control heights
+
+One scale, no exceptions:
+
+| control | height |
+|---|---|
+| Button (primary / secondary / ghost / code) | 43 |
+| Input, search field, select | 43 |
+| Segmented control (tab group **and** each cell) | 43 |
+| Badge / status pill | 24 (label, not a control — never matched to controls) |
+| Kicker | 15 |
+
+Anything sitting in the same row as a button or input is 43. Segmented cells use
+`height: fill_container` inside their 43px group so the active cell's fill lands
+exactly inside the group border, and the last cell drops its right divider so it
+doesn't double with the group's own border.
+
 ## Responsive
 
 Three breakpoints. The design file holds the 1440 and 390 ends; 768 interpolates.
