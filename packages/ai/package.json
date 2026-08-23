@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/ai",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "AI extension for Matra \u2014 streaming edits that survive concurrent typing.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
@@ -45,6 +45,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@matrajs/core": "workspace:*"
+    "@matrajs/core": "workspace:^"
   }
 }

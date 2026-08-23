@@ -50,7 +50,17 @@ pnpm build      # tsup, all packages
 
 ## Status
 
-Early but real: the engine, starter kit, React bindings and AI extension are
-implemented and tested. APIs may still move before 0.1.
+0.1 — the engine is ours end to end. Document model, transforms, position
+mapping, editor state and the editable view are written from scratch, with
+**zero runtime dependencies**. 178 tests.
+
+An app bundles **18.4 kB gzipped**, because nothing arrives that the editor
+does not use.
+
+Not built yet, and worth knowing before you pick it: collaborative transport
+(steps rebase, but there is no wire protocol or presence), node views,
+decorations, drag and drop, and tables. The view passes its tests but has not
+yet met real IME users on iOS Safari or Android Chrome — see
+[ENGINE.md](./ENGINE.md).
 
 MIT.

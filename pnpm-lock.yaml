@@ -52,7 +52,7 @@ importers:
   packages/ai:
     dependencies:
       '@matrajs/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
 
   packages/core: {}
@@ -60,7 +60,7 @@ importers:
   packages/react:
     dependencies:
       '@matrajs/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@types/react':
