@@ -71,9 +71,13 @@ actually survived, as revised by review:
 
 - **No gradients anywhere.** Solid colour only. The CTA band is solid
   `--invert-bg` with 12% grain; accents are flat `--indigo`.
-- **Dashed lines for decorative rules** — built from 2px segments (no native
-  dash in the design tool; in CSS use `border-style: dashed` / dashed SVG
-  strokes). Solid hairlines remain for card borders and table rows.
+- **Dashed borders on every long separator** (≥400px edges): section dividers,
+  column dividers, card/tier edges, table-row rules — built from 12px segments
+  with 9px gaps overlaid on the border line. Short borders (buttons, badges,
+  inputs, small tiles) stay solid hairline. In CSS this is simply
+  `border-style: dashed` — do NOT ship the segment hack. The matra rule under
+  the nav is the one deliberate solid exception (it is the brand line, not a
+  border).
 - **No photography.** Decorative sections use **outlined geometry** instead:
   1.5–2px stroked rectangles, circles, crosses and dashed drops in
   `--rule-strong` with a single `--indigo` accent element. Current placements:
