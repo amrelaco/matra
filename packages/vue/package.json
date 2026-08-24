@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/vue",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Vue 3 bindings for Matra \u2014 useEditor and EditorContent.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
@@ -13,12 +13,7 @@
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": [
-    "editor",
-    "rich-text",
-    "vue",
-    "matra"
-  ],
+  "keywords": ["editor", "rich-text", "vue", "matra"],
   "publishConfig": {
     "access": "public"
   },
@@ -34,10 +29,7 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"

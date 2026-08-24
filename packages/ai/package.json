@@ -1,8 +1,8 @@
 {
   "name": "@matrajs/ai",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "AI extension for Matra \u2014 streaming edits that survive concurrent typing.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",
   "repository": {
@@ -13,14 +13,7 @@
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": [
-    "editor",
-    "rich-text",
-    "ai",
-    "streaming",
-    "matra",
-    "prosemirror"
-  ],
+  "keywords": ["editor", "rich-text", "ai", "streaming", "matra", "prosemirror"],
   "publishConfig": {
     "access": "public"
   },
@@ -36,10 +29,7 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"
