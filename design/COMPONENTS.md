@@ -185,18 +185,33 @@ advertises installs which 404 is worse than no directory.
 
 What actually ships:
 
-| shown as | really is |
-|---|---|
-| bold, heading, lists, tables, comments, code, highlight | `@matrajs/core` |
-| AI | `@matrajs/ai` |
-| Collaboration | `@matrajs/collab` |
+| shown as | really is | badge |
+|---|---|---|
+| bold, heading, lists, tables, comments, code, highlight | `@matrajs/core` | free |
+| AI | `@matrajs/ai` | pro |
+| Collaboration | `@matrajs/collab` | pro |
+
+The badge is not decoration: exactly two rows carry `pro`, and they are the two
+packages under the commercial licence. If a third badge ever appears, a package
+has to appear with it.
 
 Sizes in the mockups are now real: "in core" for bundled extensions, measured
 gzipped sizes for the separate ones. `Math` was replaced with `Highlight`
 because Math is not built.
 
-**Open question for the business, not for design:** every extension shipped so
-far is MIT, including tables, comments and collaboration. Nothing sits behind a
-licence key, so the "pro" badges and the paid tier on the pricing page describe
-a product that does not exist yet. Either something moves behind the licence, or
-the pricing page changes to sell support and sponsorship instead.
+**Resolved.** From 0.6.0, `@matrajs/ai` and `@matrajs/collab` are commercially
+licensed and everything else stays MIT, so the Pro tier now describes something
+real. Two consequences for the design:
+
+- **Nothing mentions licence keys.** There is no key and nothing phones home —
+  the licence is an agreement, not a mechanism. Copy promising keys was wrong
+  and has been removed; the account page manages seats and billing only.
+- **The comparison table stopped flattering us.** It had claimed Matra was
+  "MIT, fully" at "$0" against Tiptap's "MIT core, paid Pro". Those rows now
+  read the same for both, because they now *are* the same. The row that still
+  differs is "Cloud account required", and that one is true.
+
+Four capability claims were false against what shipped and are gone: Y.js CRDT
+and offline sync in collaboration (it is an authority plus step rebasing, no
+CRDT, no dependency), lowlight syntax highlighting, task lists, and resizable
+table columns. The rule stands: if the mockup says it, the code has to do it.
