@@ -58,11 +58,21 @@ followed by its light equivalent.
 |---|---|
 | Brand | logo system — Matra, Amrela, Rooktoo, each Primary / Reversed / Monochrome / 16px |
 | System | component library, style guide |
-| Matra — product | landing, pricing, extensions, playground, checkout, account, changelog, blog, sign in, sign up, 404, editor UI |
-| Matra — docs | 14 content pages |
+| Matra — product | landing, pricing, extensions, playground, checkout, account, changelog, blog, sign in, sign up, 404, editor UI, licence, privacy, terms |
+| Matra — docs | 16 content pages |
 | Amrela | company, products, what we do, approach, contact |
 
-79 frames, zero overlaps, every colour a token.
+Zero overlaps, every colour a token.
+
+Privacy and Terms exist because the site takes payment: there is a checkout, a
+sign-up and a billing page, and a payment processor will ask for both. They are
+built on the Licence page's layout — a left column that states the position in
+four lines, and a right column holding the document itself in a code window —
+because a legal page people actually read is one that looks like something a
+developer already trusts.
+
+`Position mapping` sits under CONCEPTS. Every docs sidebar had already listed
+it; for a while the link went nowhere.
 
 ## Final visual rules
 
@@ -135,9 +145,9 @@ Three breakpoints. The design file holds the 1440 and 390 ends; 768 interpolates
    `Matra / Tiptap / Lexical` prefixed lines. Never a horizontally scrolling table.
 6. **Code windows clip and scroll horizontally**; they never force page width.
 7. **Nothing exceeds the viewport.** Every mobile frame is audited to 390px:
-   0 nodes overflow across all 20.
+   0 nodes overflow across all 22.
 
-Mobile frames exist for all 20 unique screens. The 16 remaining docs pages share
+Mobile frames exist for all 22 unique screens. The remaining docs pages share
 the Introduction shell exactly, so they inherit its mobile layout.
 Light mode is not duplicated at mobile size — every colour is a token, so the
 light theme follows automatically.
