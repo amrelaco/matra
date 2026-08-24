@@ -72,6 +72,31 @@ Not built yet, and worth knowing before you pick it: **drag and drop**.
 The view passes its tests but has not yet met real IME users on iOS Safari or
 Android Chrome. See [ENGINE.md](./ENGINE.md) for where the risk actually sits.
 
+## Extensions
+
+Everything in the box, and everything free unless marked.
+
+| | | |
+|---|---|---|
+| **Text** | bold, italic, strike, code, underline, highlight, subscript, superscript, link | |
+| **Blocks** | paragraph, heading, blockquote, code block, horizontal rule, hard break, image | |
+| **Lists** | bulleted, ordered, **task lists** with real checkboxes | |
+| **Tables** | insert, delete, header rows, colspan and rowspan | |
+| **Writing** | placeholder, character count, text align, **typography** | smart quotes, dashes, arrows |
+| **Structure** | **table of contents**, **unique block ids** | Tiptap charges for both |
+| **Interchange** | **Markdown in and out**, with no DOM | runs on a server |
+| **Review** | threaded comments anchored to ranges | Tiptap charges for these |
+| **Paid** | AI streaming, collaboration with remote cursors | |
+
+The four in bold that Tiptap puts behind its Pro tier — table of contents,
+unique ids, drag-handle-adjacent structure work, and comments — are free here.
+That is the deliberate shape of it: the things that take a week are free and
+drive adoption, and the two that took months are what you pay for.
+
+`toMarkdown` and `fromMarkdown` are pure string work rather than a trip through
+HTML, so they run in Node, in a worker, and at the edge. Turning a document into
+Markdown on a server does not need a DOM polyfill.
+
 ## Licence
 
 **The core is MIT and stays that way.** `@matrajs/core`, `@matrajs/react` and

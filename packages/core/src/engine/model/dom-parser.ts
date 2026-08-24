@@ -172,12 +172,35 @@ export class DOMParser {
 }
 
 /** `p`, `h[1-6]`, `a[href]` — the small selector subset rules actually use. */
+/**
+ * The selector subset parse rules actually use.
+ *
+ * `tag`, `*`, `tag[attr]`, `tag[attr="value"]` and `tag.class`. Attribute-value
+ * selectors matter more than they look: they are how one tag carries two node
+ * types — a `<ul data-type="taskList">` is a checklist and a bare `<ul>` is a
+ * bulleted one, and without the value the specific rule can never win.
+ */
 function matchesSelector(element: Element, selector: string, tag: string): boolean {
-  const attrMatch = /^([\w-]+)\[([\w-]+)\]$/.exec(selector)
-  if (attrMatch) {
-    return tag === attrMatch[1] && element.hasAttribute(attrMatch[2] as string)
-  }
   if (selector === '*') return true
+
+  const withValue = /^([\w-]+)?\[([\w-]+)\s*=\s*["']?([^\]"']*)["']?\]$/.exec(selector)
+  if (withValue) {
+    if (withValue[1] && tag !== withValue[1]) return false
+    return element.getAttribute(withValue[2] as string) === withValue[3]
+  }
+
+  const presence = /^([\w-]+)?\[([\w-]+)\]$/.exec(selector)
+  if (presence) {
+    if (presence[1] && tag !== presence[1]) return false
+    return element.hasAttribute(presence[2] as string)
+  }
+
+  const withClass = /^([\w-]+)?\.([\w-]+)$/.exec(selector)
+  if (withClass) {
+    if (withClass[1] && tag !== withClass[1]) return false
+    return element.classList.contains(withClass[2] as string)
+  }
+
   return tag === selector
 }
 

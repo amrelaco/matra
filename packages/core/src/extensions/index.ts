@@ -28,3 +28,8 @@ export {
 export { table, tableCell, tableHeader, tableKit, tableRow } from './table'
 export { comment, commentCSS, commentRanges, type CommentRange } from './comments'
 export { starterKit } from './starter-kit'
+export { taskItem, taskList, taskListCSS } from './task-list'
+export { typography } from './typography'
+export { tableOfContents, type TocEntry } from './table-of-contents'
+export { assignIds, uniqueId, type UniqueIdOptions } from './unique-id'
+export { fromMarkdown, toMarkdown } from './markdown'
