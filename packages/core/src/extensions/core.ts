@@ -11,6 +11,7 @@ export const core: ExtensionDef<{
   insert: Command<[DocNode | DocNode[] | string, Pos?]>
   replace: Command<[Range, DocNode | DocNode[] | string]>
   remove: Command<[Range?]>
+  moveBlock: Command<[Pos, Pos]>
   focus: Command
 }> = {
   kind: 'extension',
@@ -21,6 +22,7 @@ export const core: ExtensionDef<{
     insert: (ctx, content, at) => ctx.insert(content, at),
     replace: (ctx, range, content) => ctx.replace(range, content),
     remove: (ctx, range) => ctx.delete(range),
+    moveBlock: (ctx, from, to) => ctx.moveBlock(from, to),
     focus: (ctx) => ctx.focus(),
   },
 }

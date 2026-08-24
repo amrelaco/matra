@@ -231,6 +231,25 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       return true
     },
 
+    moveBlock(from, to) {
+      const size = tr.doc.content.size
+      if (!validPos(from, size) || !validPos(to, size)) return false
+      const { index, offset } = tr.doc.content.findIndex(from)
+      // Only whole blocks move. A position inside one is not a boundary, and
+      // silently moving the block it happens to be in is a surprise.
+      if (offset !== from || index >= tr.doc.content.childCount) return false
+      const node = tr.doc.content.child(index)
+      const cut = { from, to: from + node.nodeSize }
+      // Dropping a block inside itself is a no-op, not a delete.
+      if (to >= cut.from && to <= cut.to) return false
+      // Everything after the removed block shifts back by its size, so the
+      // target is mapped through the deletion rather than recomputed.
+      const insertAt = to > cut.to ? to - node.nodeSize : to
+      tr.delete(cut.from, cut.to)
+      tr.insert(insertAt, node)
+      return true
+    },
+
     focus() {
       host.focus()
       return true

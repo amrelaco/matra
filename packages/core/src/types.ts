@@ -69,6 +69,8 @@ export interface Ctx {
   delete(range?: Range): boolean
 
   select(range: Range | Pos): boolean
+  /** Move a whole block to another position, as a drag does. */
+  moveBlock(from: Pos, to: Pos): boolean
   focus(): boolean
 
   /**
@@ -267,6 +269,7 @@ export interface CoreCommands {
   insert(content: DocNode | DocNode[] | string, at?: Pos): boolean
   replace(range: Range, content: DocNode | DocNode[] | string): boolean
   remove(range?: Range): boolean
+  moveBlock(from: Pos, to: Pos): boolean
   focus(): boolean
 }
 

@@ -67,7 +67,8 @@ mapping, editor state and the editable view are written from scratch, with
 An app bundles **18.4 kB gzipped**, because nothing arrives that the editor
 does not use.
 
-Not built yet, and worth knowing before you pick it: **drag and drop**.
+Drag and drop landed in 0.9.0: blocks drag with a handle, a line shows where
+they will land, and the move is one undo step.
 
 The view passes its tests but has not yet met real IME users on iOS Safari or
 Android Chrome. See [ENGINE.md](./ENGINE.md) for where the risk actually sits.
@@ -85,6 +86,7 @@ Everything in the box, and everything free unless marked.
 | **Writing** | placeholder, character count, text align, **typography** | smart quotes, dashes, arrows |
 | **Structure** | **table of contents**, **unique block ids** | Tiptap charges for both |
 | **Interchange** | **Markdown in and out**, with no DOM | runs on a server |
+| **Dragging** | block drag and drop, **drag handle**, drop cursor | Tiptap charges for the handle |
 | **Review** | threaded comments anchored to ranges | Tiptap charges for these |
 | **Paid** | AI streaming, collaboration with remote cursors | |
 
@@ -96,6 +98,32 @@ drive adoption, and the two that took months are what you pay for.
 `toMarkdown` and `fromMarkdown` are pure string work rather than a trip through
 HTML, so they run in Node, in a worker, and at the edge. Turning a document into
 Markdown on a server does not need a DOM polyfill.
+
+## Against the alternatives
+
+Measured, not asserted — see [BENCHMARKS.md](./BENCHMARKS.md) for the method and
+what the numbers are not.
+
+| | Matra | Tiptap | Lexical | Slate |
+|---|---|---|---|---|
+| Bundle, gzipped | **21 kB** | 117 kB | ~35 kB | ~50 kB |
+| Runtime dependencies | **0** | 51 packages | few | several |
+| Engine types in your code | **none** | ProseMirror | Lexical | Slate |
+| Command types | **inferred** | module augmentation | manual | manual |
+| Async position safety | **built in** | manual | manual | manual |
+| Vue | **first-class** | community | none | community |
+| Markdown without a DOM | **yes** | no | no | no |
+| Table of contents | **free** | paid | build it | build it |
+| Unique block ids | **free** | paid | build it | build it |
+| Drag handle | **free** | paid | build it | build it |
+| Comments | **free** | paid | build it | build it |
+| Cloud account for AI or collaboration | **never** | required | n/a | n/a |
+
+Where the alternatives win, and it is worth saying so: ProseMirror's ecosystem
+is a decade deep and Tiptap inherits all of it, Lexical has been hardened by
+Meta's traffic, and both have met far more real IME users than this has. If you
+need a mature extension for something exotic today, they have it and this does
+not.
 
 ## Licence
 

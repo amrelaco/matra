@@ -9,10 +9,10 @@ minified, gzipped:
 
 | | minified | gzipped |
 |---|---|---|
-| **Matra** | 65.3 kB | **20.7 kB** |
+| **Matra** | 68.6 kB | **21.9 kB** |
 | Tiptap 3.30 | 370.5 kB | 117.2 kB |
 
-**5.7× smaller.** Matra has no runtime dependencies; Tiptap brings ProseMirror,
+**5.4× smaller.** Matra has no runtime dependencies; Tiptap brings ProseMirror,
 which is 51 packages in `node_modules`.
 
 ## Speed

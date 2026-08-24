@@ -5,6 +5,7 @@ import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
 import type { Mapping } from '../transform/step-map'
 import { DecorationSet } from './decoration'
+import { DropCursor, blockDropTarget } from './drag'
 import { type InputHandlers, type InputIntent, applyIntent } from './input'
 import type { NodeViewFactory } from './node-view'
 import { Renderer } from './render'
@@ -19,6 +20,13 @@ export interface EditorViewOptions {
   /** Called with every transaction the view produces. */
   dispatchTransaction(tr: Transaction): void
   editable?: () => boolean
+  /**
+   * Move a block. Returns true if the move happened.
+   *
+   * The view knows where a drop landed; what a move *means* is the editor's
+   * business, so the arithmetic stays out of here.
+   */
+  moveBlock?(from: number, to: number): boolean
   handlers?: InputHandlers
   /** Return true to say a key was handled. */
   handleKeyDown?(event: KeyboardEvent): boolean
@@ -112,8 +120,66 @@ export class EditorView {
     this.dom.setAttribute('contenteditable', String(editable))
   }
 
+  /** The block being dragged, as a document range. */
+  private dragged: { from: number; to: number } | null = null
+  private dropCursor: DropCursor | null = null
+
+  private onDragStart(event: DragEvent): void {
+    const block = this.blockAt(event.clientY)
+    if (!block) return
+    this.dragged = block
+    event.dataTransfer?.setData(
+      'text/plain',
+      this.stateValue.doc.textBetween(block.from, block.to),
+    )
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+    this.dropCursor = this.dropCursor ?? new DropCursor(this.dom.ownerDocument)
+  }
+
+  private onDragOver(event: DragEvent): void {
+    if (!this.dragged) return
+    // Preventing the default is what makes an element a drop target at all.
+    event.preventDefault()
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+    const target = blockDropTarget(this.dom, this.stateValue.doc, event.clientY)
+    if (target) this.dropCursor?.show(target.rect)
+  }
+
+  private onDrop(event: DragEvent): void {
+    const dragged = this.dragged
+    if (!dragged) return
+    event.preventDefault()
+    const target = blockDropTarget(this.dom, this.stateValue.doc, event.clientY)
+    this.endDrag()
+    if (!target) return
+    // Dropping a block back into itself is a no-op, not a delete.
+    if (target.pos >= dragged.from && target.pos <= dragged.to) return
+    this.options.moveBlock?.(dragged.from, target.pos)
+  }
+
+  private endDrag(): void {
+    this.dragged = null
+    this.dropCursor?.hide()
+  }
+
+  /** The top-level block whose box contains this y, as a document range. */
+  private blockAt(y: number): { from: number; to: number } | null {
+    const children = Array.from(this.dom.children) as HTMLElement[]
+    let found: { from: number; to: number } | null = null
+    this.stateValue.doc.content.forEach((child, offset, index) => {
+      if (found) return
+      const dom = children[index]
+      if (!dom) return
+      const box = dom.getBoundingClientRect()
+      if (y >= box.top && y <= box.bottom) found = { from: offset, to: offset + child.nodeSize }
+    })
+    return found
+  }
+
   destroy(): void {
     this.destroyed = true
+    this.dropCursor?.destroy()
+    this.dropCursor = null
     this.renderer.reset()
     for (const cleanup of this.cleanups) cleanup()
     this.cleanups.length = 0
@@ -155,6 +221,11 @@ export class EditorView {
       this.readBackComposition()
     })
     this.on('paste', (event) => this.onPaste(event as ClipboardEvent))
+    this.on('dragstart', (event) => this.onDragStart(event as DragEvent))
+    this.on('dragover', (event) => this.onDragOver(event as DragEvent))
+    this.on('dragleave', () => this.dropCursor?.hide())
+    this.on('drop', (event) => this.onDrop(event as DragEvent))
+    this.on('dragend', () => this.endDrag())
 
     const onSelectionChange = () => {
       if (this.composing || !this.hasFocus) return

@@ -199,6 +199,12 @@ export function createEditor<const T extends readonly AnyDef[]>(
     })
   }
 
+  /**
+   * Move a whole block, as a drop does.
+   *
+   * One transaction, so it is one undo step: dragging a paragraph and pressing
+   * Mod-Z should put it back, not half back.
+   */
   /** Ask every extension what it wants drawn, right now. */
   function collectDecorations(): DecorationSet {
     const specs: DecorationSpec[] = []
@@ -310,6 +316,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
         editable: () => options.editable ?? true,
         dispatchTransaction: (tr) => apply(tr),
         handleKeyDown: (event) => keys.handle(event),
+        moveBlock: (from, to) => commands.moveBlock(from as Pos, to as Pos),
         handlers: {
           onTextInput: (text) => handleTextInput(text),
         },
