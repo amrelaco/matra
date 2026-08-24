@@ -14,4 +14,16 @@ export { strike } from './strike'
 export { code } from './code'
 export { link, type LinkAttrs } from './link'
 export { history } from './history'
+export { underline } from './underline'
+export { highlight } from './highlight'
+export { subscript, superscript } from './subscript'
+export { image, type ImageAttrs } from './image'
+export { textAlign, type TextAlign } from './text-align'
+export { placeholder, placeholderCSS, type PlaceholderOptions } from './placeholder'
+export {
+  characterCount,
+  type CharacterCount,
+  type CharacterCountOptions,
+} from './character-count'
+export { table, tableCell, tableHeader, tableKit, tableRow } from './table'
 export { starterKit } from './starter-kit'

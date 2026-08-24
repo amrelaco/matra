@@ -114,7 +114,15 @@ export class Transform {
     const targets: Array<{ pos: number; node: Node }> = []
     this.doc.descendants((node, pos) => {
       if (pos + node.nodeSize <= from || pos >= to) return undefined
-      if (node.isTextblock && node.type !== type) targets.push({ pos, node })
+      if (!node.isTextblock) return undefined
+      // Same type with different attributes still needs rewriting — that is
+      // how alignment and heading levels change.
+      const sameType = node.type === type
+      const sameAttrs =
+        attrs === undefined ||
+        Object.entries(attrs ?? {}).every(([key, value]) => node.attrs[key] === value)
+      if (sameType && sameAttrs) return undefined
+      targets.push({ pos, node })
       return undefined
     })
 

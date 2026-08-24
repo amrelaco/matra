@@ -1,19 +1,19 @@
 {
-  "name": "@matrajs/react",
+  "name": "@matrajs/vue",
   "version": "0.2.0",
-  "description": "React bindings for Matra \u2014 useEditor and EditorContent.",
+  "description": "Vue 3 bindings for Matra \u2014 useEditor and EditorContent.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/amrelaco/matra.git",
-    "directory": "packages/react"
+    "directory": "packages/vue"
   },
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": ["editor", "rich-text", "react", "matra", "prosemirror"],
+  "keywords": ["editor", "rich-text", "vue", "matra"],
   "publishConfig": {
     "access": "public"
   },
@@ -38,11 +38,9 @@
     "@matrajs/core": "workspace:^"
   },
   "peerDependencies": {
-    "react": "^18 || ^19"
+    "vue": "^3.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "vue": "^3.5.41"
   }
 }
