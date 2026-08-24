@@ -140,7 +140,10 @@ export class Node {
 
   toJSON(): Record<string, unknown> {
     const out: Record<string, unknown> = { type: this.type.name }
-    if (Object.keys(this.attrs).length) out.attrs = this.attrs
+    // `Object.keys(x).length` allocates an array to ask whether one is empty.
+    // Serialising a long document asks that once per node, and the allocations
+    // cost more than the serialising.
+    if (hasAny(this.attrs)) out.attrs = this.attrs
     if (this.isText) out.text = this.text
     else if (this.content.childCount) out.content = this.content.toJSON()
     if (this.marks.length) out.marks = this.marks.map((mark) => mark.toJSON())
@@ -151,4 +154,10 @@ export class Node {
     if (this.isText) return JSON.stringify(this.text)
     return this.content.childCount ? `${this.type.name}(${this.content})` : this.type.name
   }
+}
+
+/** Does this object have any own enumerable key? Asked without allocating. */
+function hasAny(value: Record<string, unknown>): boolean {
+  for (const _key in value) return true
+  return false
 }

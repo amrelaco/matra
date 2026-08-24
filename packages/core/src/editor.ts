@@ -88,7 +88,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
     state = next
     mappings.push(tr.mapping)
-    view?.updateState(state)
+    view?.updateState(state, tr.mapping)
     if (tr.docChanged) emit('change')
     if (selectionMoved) emit('selectionChange')
   }

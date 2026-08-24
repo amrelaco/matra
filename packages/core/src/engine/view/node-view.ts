@@ -55,6 +55,11 @@ export class NodeViewManager {
     return Boolean(this.host && Object.keys(this.host.factories).length)
   }
 
+  /** Are any views currently mounted? Nothing to reposition if not. */
+  get empty(): boolean {
+    return this.live.size === 0
+  }
+
   /** Build a view for this node, or null when no factory claims its type. */
   create(node: Node, pos: number): NodeViewSpec | null {
     const factory = this.host?.factories[node.type.name]

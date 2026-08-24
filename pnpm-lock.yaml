@@ -24,7 +24,7 @@ importers:
         specifier: ^2.4.6
         version: 2.4.11(@vue/compiler-dom@3.5.41)(@vue/server-renderer@3.5.41)(vue@3.5.41(typescript@5.9.3))
       happy-dom:
-        specifier: ^15.11.6
+        specifier: ^15.11.7
         version: 15.11.7
       react:
         specifier: ^18.3.1

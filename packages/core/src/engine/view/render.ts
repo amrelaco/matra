@@ -21,6 +21,8 @@ export class Renderer {
   readonly nodeViews: NodeViewManager
   private previous: Node | null = null
   private previousDecorations = DecorationSet.empty
+  /** The span this render is allowed to confine itself to, if any. */
+  private dirty: { from: number; to: number } | null = null
   private decorations = DecorationSet.empty
   private root: HTMLElement | null = null
 
@@ -31,10 +33,23 @@ export class Renderer {
     this.nodeViews = new NodeViewManager(host)
   }
 
-  render(doc: Node, target: HTMLElement, decorations = DecorationSet.empty): void {
+  render(
+    doc: Node,
+    target: HTMLElement,
+    decorations = DecorationSet.empty,
+    dirty: { from: number; to: number } | null = null,
+  ): void {
+    // A span is only safe to trust when the decorations are the same as last
+    // time. A remote cursor moving is a change no step accounts for, and
+    // skipping past it would leave it undrawn.
+    this.dirty = dirty && decorations.eq(this.previousDecorations) ? dirty : null
     this.decorations = decorations
-    const canPatch = this.previous !== null && this.root === target
-    this.map.clear()
+    // Enough edits have piled up that replaying them costs more than starting
+    // over, so the next patch re-records everything and resets the backlog.
+    const canPatch = this.previous !== null && this.root === target && !this.map.stale
+    // Only a full rebuild may drop the index: on a patch, entries for subtrees
+    // that kept their position are the ones deliberately not rewritten.
+    if (!canPatch) this.map.clear()
     this.root = target
     this.map.record(target, 0)
 
@@ -266,6 +281,19 @@ export class Renderer {
         continue
       }
 
+      // Outside the edit entirely: same node, same DOM, and the position map
+      // already accounts for the shift. There is nothing to ask about, so the
+      // loop just steps over it. This is what makes a keystroke cost the size
+      // of the paragraph rather than the size of the document.
+      if (
+        oldChild === newChild &&
+        this.nodeViews.empty &&
+        this.untouched(contentStart + offset, newChild.nodeSize)
+      ) {
+        offset += newChild.nodeSize
+        continue
+      }
+
       // Immutability pays here: an untouched subtree is the same object — but
       // only the *document* is untouched. Decorations are drawn over it and
       // change on their own: a remote cursor moves, a search highlight lands,
@@ -281,7 +309,27 @@ export class Renderer {
           contentStart + offset + newChild.nodeSize,
         )
       ) {
-        this.recordNode(newChild, dom, contentStart + offset)
+        // Same node, same decorations — and if the map already places it here,
+        // then so are all of its descendants, because their positions are this
+        // one's plus offsets that did not change either. Walking in would write
+        // back the values already there.
+        //
+        // This is what keeps typing off the document's size: re-recording every
+        // node on every keystroke cost a 4000-paragraph document eight thousand
+        // map writes per character.
+        //
+        // Node views are the exception. They hold a position of their own and
+        // are told when it moves, so a mounted view inside a skipped subtree
+        // would keep reporting where it used to be — and a node view that
+        // reports a stale position edits the wrong part of the document. When
+        // any view is mounted the subtree is walked as before; the fast path is
+        // for the ordinary document, which is most of them.
+        if (
+          !this.nodeViews.empty ||
+          !this.positionUnchanged(newChild, dom, contentStart + offset)
+        ) {
+          this.recordNode(newChild, dom, contentStart + offset)
+        }
         offset += newChild.nodeSize
         continue
       }
@@ -307,6 +355,27 @@ export class Renderer {
       target.replaceChild(replacement, dom)
       offset += newChild.nodeSize
     }
+  }
+
+  /** Did the edit leave this span completely alone? */
+  private untouched(from: number, size: number): boolean {
+    const dirty = this.dirty
+    if (!dirty) return false
+    // Touching the border counts as touching it: a node that gained or lost
+    // content at its very edge still has to be looked at.
+    return from + size < dirty.from || from > dirty.to
+  }
+
+  /**
+   * Is this node already recorded at exactly this position?
+   *
+   * Only meaningful next to node identity: the same node object at the same
+   * position has an unchanged interior, so the whole subtree can be skipped.
+   */
+  private positionUnchanged(node: Node, dom: globalThis.Node, pos: number): boolean {
+    if (node.isText || dom.nodeType !== 1) return true
+    const contentDOM = this.nodeViews.contentDOM(dom) ?? dom
+    return this.map.contentStart(contentDOM) === pos + 1
   }
 
   /** Re-register positions for a subtree whose DOM was left untouched. */

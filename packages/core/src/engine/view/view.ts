@@ -3,6 +3,7 @@ import type { Node } from '../model/node'
 import type { Schema } from '../model/schema'
 import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
+import type { Mapping } from '../transform/step-map'
 import { DecorationSet } from './decoration'
 import { type InputHandlers, type InputIntent, applyIntent } from './input'
 import type { NodeViewFactory } from './node-view'
@@ -69,8 +70,14 @@ export class EditorView {
   }
 
   /** Swap in a new state and bring the DOM to match. */
-  updateState(state: EditorState): void {
+  updateState(state: EditorState, mapping?: Mapping): void {
     const docChanged = !state.doc.eq(this.stateValue.doc)
+    // Told what moved, the position map shifts what it already knows instead of
+    // being rebuilt from the document on every keystroke.
+    if (mapping && docChanged) {
+      this.renderer.map.shift(mapping)
+      this.dirty = touchedSpan(mapping)
+    }
     this.stateValue = state
     if (this.destroyed) return
     // Never redraw mid-composition: it would tear the candidate window down.
@@ -82,6 +89,8 @@ export class EditorView {
   }
 
   private lastDecorations = DecorationSet.empty
+  /** The document span this update touched, in new coordinates. */
+  private dirty: { from: number; to: number } | null = null
 
   private decorationsChanged(): boolean {
     const next = this.options.decorations?.() ?? DecorationSet.empty
@@ -116,7 +125,9 @@ export class EditorView {
       this.stateValue.doc,
       this.dom,
       this.options.decorations?.() ?? DecorationSet.empty,
+      this.dirty,
     )
+    this.dirty = null
   }
 
   private syncSelection(): void {
@@ -274,4 +285,25 @@ const KNOWN_INTENTS = new Set([
 
 function dataFromClipboard(event: InputEvent): string | null {
   return event.dataTransfer?.getData('text/plain') ?? null
+}
+
+/**
+ * The span an edit touched, in the coordinates of the document after it.
+ *
+ * Everything outside it holds the same nodes in the same DOM, so the renderer
+ * can walk past it without asking any questions. Without this the diff visits
+ * every block on every keystroke, and typing costs the size of the document
+ * however cheap each visit is.
+ */
+function touchedSpan(mapping: Mapping): { from: number; to: number } | null {
+  let from = Number.POSITIVE_INFINITY
+  let to = Number.NEGATIVE_INFINITY
+  for (const map of mapping.maps) {
+    map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
+      if (newStart < from) from = newStart
+      if (newEnd > to) to = newEnd
+    })
+  }
+  if (from > to) return null
+  return { from, to }
 }

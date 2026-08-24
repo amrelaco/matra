@@ -1,32 +1,111 @@
 import type { Node } from '../model/node'
+import type { Mapping, StepMap } from '../transform/step-map'
+
+/** How many edits may pile up before replaying them costs more than rebuilding. */
+const MAX_PENDING = 64
+
+/** Where a DOM node sat, and which edit it was current as of. */
+interface Entry {
+  pos: number
+  gen: number
+}
 
 /**
  * The bridge between model positions and the DOM.
  *
  * Rendering records where each node's DOM lives; everything else — selection,
  * input, decorations — asks this map rather than guessing from the DOM shape.
+ *
+ * Entries are written in the coordinates of the moment they were recorded and
+ * carry the generation they belong to. Reading replays the edits since. That is
+ * what keeps typing off the size of the document: rewriting every entry on
+ * every keystroke made a four-thousand-paragraph document do eight thousand
+ * writes per character, all to say the same thing shifted by one.
+ *
+ * Writes are always in current coordinates. An earlier version stored them
+ * rebased backwards through an inverted mapping, which is lossy across
+ * deletions and quietly produced positions that were numbers rather than
+ * answers.
  */
 export class DOMMap {
-  /** DOM node → model position of the *start of its content*. */
-  private readonly starts = new WeakMap<globalThis.Node, number>()
-  /** Model position → the DOM node representing that node. */
+  private readonly starts = new WeakMap<globalThis.Node, Entry>()
+  /** Current-coordinate position → DOM. A cache; every read is verified. */
   private readonly nodes = new Map<number, globalThis.Node>()
+  /** One StepMap per edit since the last full record. */
+  private maps: StepMap[] = []
+  private root: globalThis.Node | null = null
+
+  get stale(): boolean {
+    return this.maps.length >= MAX_PENDING
+  }
+
+  /** Absorb an edit rather than rewriting the map for it. */
+  shift(mapping: Mapping): void {
+    for (const map of mapping.maps) this.maps.push(map)
+  }
 
   record(dom: globalThis.Node, contentStart: number): void {
-    this.starts.set(dom, contentStart)
+    if (contentStart === 0) this.root = dom
+    this.starts.set(dom, { pos: contentStart, gen: this.maps.length })
     this.nodes.set(contentStart, dom)
   }
 
   clear(): void {
     this.nodes.clear()
+    this.maps = []
+    this.root = null
   }
 
+  /**
+   * Where this DOM node's content starts, now.
+   *
+   * Left bias is deliberate: typing at the very start of a paragraph inserts
+   * text *at* its content start, and the content still starts where it did.
+   * Right bias would shift the paragraph's coordinates and put the caret in the
+   * paragraph before it.
+   */
   contentStart(dom: globalThis.Node): number | undefined {
-    return this.starts.get(dom)
+    const entry = this.starts.get(dom)
+    if (entry === undefined) return undefined
+    if (entry.gen === this.maps.length) return entry.pos
+
+    let pos = entry.pos
+    for (let i = entry.gen; i < this.maps.length; i++) {
+      pos = (this.maps[i] as StepMap).map(pos, -1)
+    }
+    // Write the answer back, so the next read is a lookup rather than a replay.
+    entry.pos = pos
+    entry.gen = this.maps.length
+    return pos
   }
 
   domAt(contentStart: number): globalThis.Node | undefined {
-    return this.nodes.get(contentStart)
+    const hit = this.nodes.get(contentStart)
+    // Verify rather than trust: the cache is keyed by positions that edits move.
+    if (hit && this.contentStart(hit) === contentStart) return hit
+    return this.repair(contentStart)
+  }
+
+  /**
+   * Find the element for a position by looking, then remember it.
+   *
+   * Reached when the cache is wrong, which happens after structural change
+   * rather than after typing — the rare path paying for the common one.
+   */
+  private repair(contentStart: number): globalThis.Node | undefined {
+    if (!this.root) return undefined
+    const stack: globalThis.Node[] = [this.root]
+    while (stack.length > 0) {
+      const dom = stack.pop() as globalThis.Node
+      if (this.starts.has(dom) && this.contentStart(dom) === contentStart) {
+        this.nodes.set(contentStart, dom)
+        return dom
+      }
+      for (const child of Array.from(dom.childNodes)) {
+        if (child.nodeType === 1) stack.push(child)
+      }
+    }
+    return undefined
   }
 
   /**
@@ -41,7 +120,9 @@ export class DOMMap {
     let start: number | undefined
 
     while (container) {
-      start = this.starts.get(container)
+      // contentStart, not the raw table: entries are held in the coordinates of
+      // the last full record and only become current on the way out.
+      start = this.contentStart(container)
       if (start !== undefined) break
       container = container.parentNode
     }
@@ -128,7 +209,7 @@ export class DOMMap {
   domFromPos(doc: Node, pos: number): { node: globalThis.Node; offset: number } | null {
     const $pos = doc.resolve(pos)
     const parentStart = $pos.start()
-    const dom = this.nodes.get(parentStart)
+    const dom = this.domAt(parentStart)
     if (!dom) return null
 
     let remaining = pos - parentStart
