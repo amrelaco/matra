@@ -20,6 +20,8 @@ export class Transaction extends Transform {
   /** True once something set the selection explicitly. */
   selectionSet = false
   storedMarksSet = false
+  /** True once anything attached metadata — a meta-only transaction is real. */
+  metaSet = false
 
   constructor(state: EditorState) {
     super(state.doc)
@@ -62,6 +64,7 @@ export class Transaction extends Transform {
 
   setMeta(key: string, value: unknown): this {
     this.meta.set(key, value)
+    this.metaSet = true
     return this
   }
 

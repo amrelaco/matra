@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { createEditor } from './editor'
 import {
   characterCount,
+  comment,
+  commentRanges,
   highlight,
   image,
   placeholder,
@@ -200,5 +202,85 @@ describe('character count', () => {
     editor.commands.select({ from: 12 as Pos, to: 12 as Pos })
     editor.commands.insert('!!!!!!')
     expect(editor.getText().length).toBeLessThanOrEqual(12)
+  })
+})
+
+describe('comments', () => {
+  const commentEditor = (content = '<p>hello world</p>') =>
+    createEditor({ extensions: [...starterKit, comment] as const, content })
+
+  it('anchors a thread to a range', () => {
+    const editor = commentEditor()
+    editor.commands.select({ from: 1 as Pos, to: 6 as Pos })
+    expect(editor.commands.addComment('t1')).toBe(true)
+    expect(editor.getHTML()).toContain('data-comment="t1"')
+  })
+
+  it('refuses a comment with nothing to point at', () => {
+    const editor = commentEditor()
+    editor.commands.select({ from: 3 as Pos, to: 3 as Pos })
+    expect(editor.commands.addComment('t1')).toBe(false)
+  })
+
+  it('lets two threads overlap', () => {
+    const editor = commentEditor()
+    editor.commands.select({ from: 1 as Pos, to: 8 as Pos })
+    editor.commands.addComment('t1')
+    editor.commands.select({ from: 4 as Pos, to: 12 as Pos })
+    editor.commands.addComment('t2')
+
+    const ranges = commentRanges(editor.getJSON())
+    expect(ranges.map((r) => r.threadId).sort()).toEqual(['t1', 't2'])
+  })
+
+  it('reports where each thread currently sits', () => {
+    const editor = commentEditor()
+    editor.commands.select({ from: 1 as Pos, to: 6 as Pos })
+    editor.commands.addComment('t1')
+
+    const [range] = commentRanges(editor.getJSON())
+    expect(range?.text).toBe('hello')
+    expect(range?.from).toBe(1)
+    expect(range?.to).toBe(6)
+  })
+
+  it('follows the words when the text around it changes', () => {
+    const editor = commentEditor()
+    editor.commands.select({ from: 7 as Pos, to: 12 as Pos })
+    editor.commands.addComment('t1')
+    expect(commentRanges(editor.getJSON())[0]?.text).toBe('world')
+
+    // Type before the comment; the anchor should move with the words.
+    editor.commands.select({ from: 1 as Pos, to: 1 as Pos })
+    editor.commands.insert('OH ')
+
+    const moved = commentRanges(editor.getJSON())[0]
+    expect(moved?.text).toBe('world')
+    expect(moved?.from).toBe(10)
+  })
+
+  it('removes a thread by id, leaving others alone', () => {
+    const editor = commentEditor()
+    editor.commands.select({ from: 1 as Pos, to: 6 as Pos })
+    editor.commands.addComment('t1')
+    editor.commands.select({ from: 7 as Pos, to: 12 as Pos })
+    editor.commands.addComment('t2')
+
+    expect(editor.commands.removeComment('t1')).toBe(true)
+    const left = commentRanges(editor.getJSON())
+    expect(left.map((r) => r.threadId)).toEqual(['t2'])
+  })
+
+  it('reports nothing to remove for an unknown thread', () => {
+    const editor = commentEditor()
+    expect(editor.commands.removeComment('nope')).toBe(false)
+  })
+
+  it('keeps a thread through a paste round trip', () => {
+    const editor = createEditor({
+      extensions: [...starterKit, comment] as const,
+      content: '<p><span data-comment="t9">flagged</span> text</p>',
+    })
+    expect(commentRanges(editor.getJSON())[0]?.threadId).toBe('t9')
   })
 })

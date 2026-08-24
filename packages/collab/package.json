@@ -1,19 +1,19 @@
 {
-  "name": "@matrajs/react",
+  "name": "@matrajs/collab",
   "version": "0.3.0",
-  "description": "React bindings for Matra \u2014 useEditor and EditorContent.",
+  "description": "Collaborative editing for Matra \u2014 step exchange, rebasing and presence. No CRDT dependency.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/amrelaco/matra.git",
-    "directory": "packages/react"
+    "directory": "packages/collab"
   },
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": ["editor", "rich-text", "react", "matra", "prosemirror"],
+  "keywords": ["editor", "rich-text", "collaborative", "matra", "ot"],
   "publishConfig": {
     "access": "public"
   },
@@ -36,13 +36,5 @@
   },
   "dependencies": {
     "@matrajs/core": "workspace:^"
-  },
-  "peerDependencies": {
-    "react": "^18 || ^19"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.12",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
   }
 }

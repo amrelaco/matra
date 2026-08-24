@@ -2,6 +2,7 @@ import { Fragment } from '../model/fragment'
 import type { Mark } from '../model/mark'
 import type { Node } from '../model/node'
 import type { ResolvedPos } from '../model/resolved-pos'
+import type { Schema } from '../model/schema'
 import { Slice } from './slice'
 import type { Mapping } from './step-map'
 import { StepMap } from './step-map'
@@ -340,4 +341,43 @@ function mapTextRange(doc: Node, from: number, to: number, fn: (node: Node) => N
     return node.copy(Fragment.from(children))
   }
   return rebuild(doc, 0)
+}
+
+/**
+ * Rebuild a step from JSON.
+ *
+ * Collaboration needs this: steps travel between clients as data, and a client
+ * that cannot reconstruct them cannot apply anyone else's work. Unknown step
+ * types return null rather than throwing, so one bad message from a peer does
+ * not take the editor down.
+ */
+export function stepFromJSON(schema: Schema, json: Record<string, unknown>): Step | null {
+  const from = Number(json.from)
+  const to = Number(json.to)
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return null
+
+  switch (json.stepType) {
+    case 'replace': {
+      const slice = json.slice as
+        | { content?: unknown[]; openStart?: number; openEnd?: number }
+        | undefined
+      const content = (slice?.content ?? []).map((node) => schema.nodeFromJSON(node))
+      return new ReplaceStep(
+        from,
+        to,
+        new Slice(Fragment.from(content), slice?.openStart ?? 0, slice?.openEnd ?? 0),
+      )
+    }
+    case 'addMark':
+    case 'removeMark': {
+      const mark = json.mark as { type?: string; attrs?: Record<string, unknown> } | undefined
+      if (!mark?.type || !schema.marks[mark.type]) return null
+      const built = schema.mark(mark.type, mark.attrs)
+      return json.stepType === 'addMark'
+        ? new AddMarkStep(from, to, built)
+        : new RemoveMarkStep(from, to, built)
+    }
+    default:
+      return null
+  }
 }

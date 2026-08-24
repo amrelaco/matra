@@ -3,7 +3,7 @@ import { History } from './engine/history'
 import { InputRules, type TextContext } from './engine/input-rules'
 import { Keymap } from './engine/keys'
 import { DOMParser, DOMSerializer, Fragment, type Node, type Schema } from './engine/model'
-import { EditorState, TextSelection, type Transaction } from './engine/state'
+import { EditorState, Plugin, TextSelection, type Transaction } from './engine/state'
 import type { Mapping } from './engine/transform'
 import { EditorView } from './engine/view'
 import { core } from './extensions/core'
@@ -35,10 +35,6 @@ export function createEditor<const T extends readonly AnyDef[]>(
   const parser = DOMParser.fromSchema(schema)
 
   let view: EditorView | null = null
-  let state = EditorState.create({
-    schema,
-    doc: options.content ? parseContent(schema, parser, options.content) : undefined,
-  })
 
   const host: CtxHost = {
     schema,
@@ -46,6 +42,29 @@ export function createEditor<const T extends readonly AnyDef[]>(
     focus: () => view?.focus(),
     replay: (direction) => replay(direction),
   }
+
+  // Extensions that declare state become engine plugins, reduced per transaction.
+  const statefulDefs = defs.filter(
+    (def): def is Extract<AnyDef, { kind: 'extension' }> =>
+      def.kind === 'extension' && def.state !== undefined,
+  )
+  const plugins = statefulDefs.map((def) => {
+    const spec = def.state
+    if (!spec) throw new Error('Matra: stateful extension lost its state spec')
+    return new Plugin({
+      key: def.name,
+      state: {
+        init: (editorState) => spec.init(createCtx(host, editorState, editorState.tr)),
+        apply: (tr, value, editorState) => spec.apply(createCtx(host, editorState, tr), value),
+      },
+    })
+  })
+
+  let state = EditorState.create({
+    schema,
+    doc: options.content ? parseContent(schema, parser, options.content) : undefined,
+    plugins,
+  })
 
   function emit(event: EventName) {
     for (const fn of listeners.get(event) ?? []) fn(editor)
@@ -75,7 +94,9 @@ export function createEditor<const T extends readonly AnyDef[]>(
     const ctx = createCtx(host, state, tr)
     const ok = fn(ctx)
     if (!ok) return false
-    if (tr.docChanged || tr.selectionSet || tr.storedMarksSet) apply(tr)
+    // Metadata counts: a transaction that only carries meta is how an
+    // extension tells its own reducer something happened.
+    if (tr.docChanged || tr.selectionSet || tr.storedMarksSet || tr.metaSet) apply(tr)
     return true
   }
 
@@ -182,9 +203,11 @@ export function createEditor<const T extends readonly AnyDef[]>(
       }
       runner(staged as CommandsOf<T> & CoreCommands)
       if (failed) return false
-      if (tr.docChanged || tr.selectionSet || tr.storedMarksSet) apply(tr)
+      if (tr.docChanged || tr.selectionSet || tr.storedMarksSet || tr.metaSet) apply(tr)
       return true
     },
+
+    extensionState: <S = unknown>(name: string) => state.pluginState(name) as S | undefined,
 
     getJSON: () => state.doc.toJSON() as unknown as DocNode,
 

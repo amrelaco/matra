@@ -61,6 +61,12 @@ importers:
         specifier: workspace:^
         version: link:../core
 
+  packages/collab:
+    dependencies:
+      '@matrajs/core':
+        specifier: workspace:^
+        version: link:../core
+
   packages/core: {}
 
   packages/react:

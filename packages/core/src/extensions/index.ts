@@ -26,4 +26,5 @@ export {
   type CharacterCountOptions,
 } from './character-count'
 export { table, tableCell, tableHeader, tableKit, tableRow } from './table'
+export { comment, commentCSS, commentRanges, type CommentRange } from './comments'
 export { starterKit } from './starter-kit'

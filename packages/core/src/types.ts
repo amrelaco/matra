@@ -50,7 +50,14 @@ export interface Ctx {
   inNode(name: string, attrs?: Record<string, unknown>): boolean
 
   addMark(name: string, attrs?: Record<string, unknown>, range?: Range): boolean
-  removeMark(name: string, range?: Range): boolean
+  /**
+   * Remove a mark across a range.
+   *
+   * With no `attrs`, every mark of that type in the range goes. Pass `attrs` to
+   * remove only matching ones — which is how overlapping comment threads are
+   * removed one at a time.
+   */
+  removeMark(name: string, range?: Range, attrs?: Record<string, unknown>): boolean
   toggleMark(name: string, attrs?: Record<string, unknown>): boolean
 
   setBlockType(name: string, attrs?: Record<string, unknown>): boolean
@@ -241,6 +248,15 @@ export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
     event: 'change' | 'focus' | 'blur' | 'selectionChange',
     fn: (editor: Editor<T>) => void,
   ): () => void
+
+  /**
+   * The state an extension is keeping, by extension name.
+   *
+   * Extensions that declare `state` have it reduced on every transaction;
+   * this is how a toolbar reads a character count or a collaboration version
+   * without the extension having to publish a global.
+   */
+  extensionState<S = unknown>(name: string): S | undefined
 
   mount(element: HTMLElement): void
   destroy(): void

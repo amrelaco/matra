@@ -1,4 +1,6 @@
+import type { Schema } from './engine/model'
 import type { EditorState, Transaction } from './engine/state'
+import type { Step } from './engine/transform'
 import type { Ctx } from './types'
 
 /**
@@ -12,8 +14,13 @@ import type { Ctx } from './types'
 export interface EngineAccess {
   readonly state: EditorState
   readonly tr: Transaction
+  readonly schema: Schema
   /** Rewind or replay one history entry. */
   replay(direction: 'undo' | 'redo'): boolean
+  /** Rebuild a step that arrived as data — what collaboration needs. */
+  stepFromJSON(json: Record<string, unknown>): Step | null
+  /** An extension's own reduced state, mid-transaction. */
+  pluginState(key: string): unknown
 }
 
 const ENGINE = Symbol.for('matra.engine')

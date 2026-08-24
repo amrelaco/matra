@@ -1,7 +1,7 @@
 import { Fragment, type Node, type Schema } from './engine/model'
 import type { EditorState, Transaction } from './engine/state'
 import { TextSelection } from './engine/state'
-import { type Mapping, findWrapping, liftTarget } from './engine/transform'
+import { type Mapping, findWrapping, liftTarget, stepFromJSON } from './engine/transform'
 import { attachEngine } from './internal'
 import type { Ctx, DocNode, Pos, PosMarker, Range, Selection } from './types'
 
@@ -118,15 +118,34 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       return true
     },
 
-    removeMark(name, range) {
+    removeMark(name, range, attrs) {
       const type = schema.marks[name]
       if (!type) return false
       const { from, to } = resolveRange(tr, range)
+
       if (from === to) {
-        tr.removeStoredMark(type.create())
+        const stored = tr.storedMarks ?? tr.selection.$head.marks()
+        const present = stored.find((mark) => mark.type === type)
+        if (!present) return false
+        tr.removeStoredMark(present)
         return true
       }
-      tr.removeMark(from, to, type.create())
+
+      // Remove the marks that are actually there. Building one from the type
+      // alone fails for marks whose attributes are required, and would remove
+      // the wrong thread where several overlap.
+      const marks: Parameters<typeof tr.removeMark>[2][] = []
+      tr.doc.descendants((node, pos) => {
+        if (pos + node.nodeSize <= from || pos >= to || !node.isText) return undefined
+        for (const mark of node.marks) {
+          if (mark.type !== type) continue
+          if (attrs && !Object.entries(attrs).every(([k, v]) => mark.attrs[k] === v)) continue
+          if (!marks.some((existing) => existing.eq(mark))) marks.push(mark)
+        }
+        return undefined
+      })
+      if (!marks.length) return false
+      for (const mark of marks) tr.removeMark(from, to, mark)
       return true
     },
 
@@ -205,7 +224,10 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
   attachEngine(ctx, {
     state,
     tr,
+    schema,
     replay: (direction) => host.replay(direction),
+    stepFromJSON: (json) => stepFromJSON(schema, json),
+    pluginState: (key) => state.pluginState(key),
   })
 
   return ctx

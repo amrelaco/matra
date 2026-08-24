@@ -166,9 +166,12 @@ is pulled in that the editor does not use.
 
 Honesty about the gaps, since "no dependencies" can read as "complete":
 
-- **Collaborative editing.** Steps rebase, which is the hard half, but there is
-  no transport, no version vector and no cursor presence.
+- ~~**Collaborative editing.**~~ Done in `@matrajs/collab`: an authority, step
+  exchange, rebasing of unsent work over remote edits, and presence tracking.
+  What is still missing is *drawing* remote cursors, which needs decorations.
 - **Node views.** No way yet to render a node with custom interactive DOM.
+  This is the next thing worth building: tables, image resizing and embeds all
+  want it.
 - **Decorations.** No inline highlights or widgets independent of the document.
 - **Drag and drop**, and **tables**.
 - **Deep nesting in replace.** A cross-block range nested more than one level
