@@ -10,6 +10,7 @@ export type {
   CommandsOf,
   CoreCommands,
   Ctx,
+  DecorationSpec,
   DocMark,
   DocNode,
   DomOutput,

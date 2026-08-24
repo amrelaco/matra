@@ -101,7 +101,9 @@ export function resolveAttrs(
   owner: string,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
-  if (!spec) return given ? { ...given } : out
+  // No declaration means no attributes. Passing unknown keys through is how a
+  // node that renders `node.attrs` ends up writing whatever JSON asked for.
+  if (!spec) return out
   for (const [name, attr] of Object.entries(spec)) {
     const value = given?.[name]
     if (value !== undefined) {

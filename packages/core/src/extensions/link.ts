@@ -9,6 +9,9 @@ export interface LinkAttrs {
 /** Anything that is not http(s), mailto or a same-page anchor is dropped. */
 function isSafeHref(href: unknown): href is string {
   if (typeof href !== 'string' || !href.length) return false
+  // "//evil.example" inherits the page protocol and leaves the site, so a
+  // leading slash only counts when it is a single one.
+  if (href.startsWith('//')) return false
   if (href.startsWith('#') || href.startsWith('/')) return true
   try {
     const { protocol } = new URL(href)

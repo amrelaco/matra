@@ -167,6 +167,14 @@ export interface ExtensionDef<C extends CommandMap = CommandMap, S = unknown> {
   commands?: C
   keys?: Record<string, keyof C | Command<never[]>>
   inputRules?: InputRule[]
+  /**
+   * Decorations to draw over the document.
+   *
+   * Recomputed whenever the document or selection changes. Return the same
+   * array when nothing changed and the editor will skip the redraw.
+   */
+  decorations?(ctx: Ctx): DecorationSpec[]
+
   /** Per-extension state, reduced on every change. */
   state?: {
     init(ctx: Ctx): S
@@ -178,6 +186,12 @@ export interface ExtensionDef<C extends CommandMap = CommandMap, S = unknown> {
   onDestroy?(editor: Editor): void
   priority?: number
 }
+
+/** A decoration, described in plain data. */
+export type DecorationSpec =
+  | { type: 'inline'; from: Pos; to: Pos; attrs: Record<string, string> }
+  | { type: 'node'; from: Pos; to: Pos; attrs: Record<string, string> }
+  | { type: 'widget'; pos: Pos; render(): HTMLElement; side?: number; key?: string }
 
 export type AnyDef = NodeDef | MarkDef | ExtensionDef
 

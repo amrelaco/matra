@@ -20,6 +20,12 @@ export interface MatchableType {
   readonly fillable?: boolean
 }
 
+/** Counted repeats build a state each, so they are bounded. */
+const MAX_REPEAT = 500
+
+/** A whole expression is bounded too, since repeats nest. */
+const MAX_STATES = 5000
+
 // --- tokenizer --------------------------------------------------------------
 
 type Token =
@@ -55,8 +61,15 @@ function tokenize(source: string): Token[] {
       const [minText, maxText] = body.includes(',') ? body.split(',') : [body, body]
       const min = Number(minText)
       const max = maxText?.trim() === '' ? Number.POSITIVE_INFINITY : Number(maxText)
-      if (!Number.isFinite(min) || Number.isNaN(max)) {
+      if (!Number.isFinite(min) || Number.isNaN(max) || min < 0) {
         throw new Error(`Matra: bad range "{${body}}" in content expression "${source}"`)
+      }
+      // A counted repeat becomes one NFA state per repetition, so an
+      // unbounded count is a denial of service dressed up as a schema.
+      if (min > MAX_REPEAT || (Number.isFinite(max) && max > MAX_REPEAT)) {
+        throw new Error(
+          `Matra: repeat count in "{${body}}" is too large — the limit is ${MAX_REPEAT}. Use * or + for an unbounded run.`,
+        )
       }
       tokens.push({ kind: 'range', min, max })
       i = end + 1
@@ -153,7 +166,14 @@ interface Edge {
 /** Compile the tree to an NFA whose states are arrays of edges. */
 function toNFA(expr: Expr, resolve: (name: string) => MatchableType[]): Edge[][] {
   const states: Edge[][] = [[]]
-  const node = () => states.push([]) - 1
+  const node = () => {
+    if (states.length >= MAX_STATES) {
+      throw new Error(
+        `Matra: content expression is too large — over ${MAX_STATES} states. Nested counted repeats multiply; use * or + instead.`,
+      )
+    }
+    return states.push([]) - 1
+  }
   const edge = (from: number, to: number, types?: MatchableType[]) => {
     states[from]?.push({ types, to })
   }

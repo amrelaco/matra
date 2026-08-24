@@ -16,6 +16,17 @@ export interface CtxHost {
 
 const asPos = (n: number) => n as Pos
 
+/**
+ * Is this a position the document could actually contain?
+ *
+ * Positions arrive from extensions, collaborative peers and application code.
+ * NaN slips through naive range checks — `NaN < 0` and `NaN > size` are both
+ * false — so it is rejected explicitly rather than reaching the position maths.
+ */
+function validPos(value: unknown, size: number): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= size
+}
+
 function toSelection(tr: Transaction): Selection {
   const sel = tr.selection
   return {
@@ -185,18 +196,24 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       const nodes = toNodes(schema, content)
       if (!nodes.length) return false
       const pos = at ?? tr.selection.from
+      if (!validPos(pos, tr.doc.content.size)) return false
       tr.insert(pos, Fragment.from(nodes))
       return true
     },
 
     replace(range, content) {
+      const size = tr.doc.content.size
+      if (!validPos(range.from, size) || !validPos(range.to, size)) return false
+      if (range.from > range.to) return false
       tr.replaceWith(range.from, range.to, Fragment.from(toNodes(schema, content)))
       return true
     },
 
     delete(range) {
       const { from, to } = resolveRange(tr, range)
-      if (from === to) return false
+      const size = tr.doc.content.size
+      if (!validPos(from, size) || !validPos(to, size)) return false
+      if (from >= to) return false
       tr.delete(from, to)
       return true
     },
@@ -204,8 +221,8 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     select(range) {
       const from = typeof range === 'number' ? range : range.from
       const to = typeof range === 'number' ? range : range.to
-      const max = tr.doc.content.size
-      if (from < 0 || to > max) return false
+      const size = tr.doc.content.size
+      if (!validPos(from, size) || !validPos(to, size)) return false
       tr.setSelection(TextSelection.create(tr.doc, from, to))
       return true
     },

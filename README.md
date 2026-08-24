@@ -37,6 +37,14 @@ editor.commands.toggleBold()
 Every command comes from the array you passed. Nothing else is on `editor.commands`,
 and calling something that is not there is a compile error.
 
+## Security
+
+Document JSON, pasted HTML and collaborative steps are all treated as hostile,
+and the rendering path is the gate they all pass through: executable attributes
+are never set, URL attributes are scheme-checked, undeclared attributes are
+dropped, and commands report failure rather than throwing. See
+[SECURITY.md](./SECURITY.md).
+
 ## Development
 
 ```bash

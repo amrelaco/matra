@@ -1,3 +1,10 @@
+export {
+  type Decoration,
+  DecorationSet,
+  type InlineDecoration,
+  type NodeDecoration,
+  type WidgetDecoration,
+} from './decoration'
 export { DOMMap } from './dom-map'
 export { applyIntent, type InputHandlers, type InputIntent, splitBlock } from './input'
 export {

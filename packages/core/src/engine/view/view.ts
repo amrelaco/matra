@@ -3,6 +3,7 @@ import type { Node } from '../model/node'
 import type { Schema } from '../model/schema'
 import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
+import { DecorationSet } from './decoration'
 import { type InputHandlers, type InputIntent, applyIntent } from './input'
 import type { NodeViewFactory } from './node-view'
 import { Renderer } from './render'
@@ -12,6 +13,8 @@ export interface EditorViewOptions {
   state: EditorState
   /** Node views by type name. */
   nodeViews?: Record<string, NodeViewFactory>
+  /** Recomputed on every redraw. */
+  decorations?(): DecorationSet
   /** Called with every transaction the view produces. */
   dispatchTransaction(tr: Transaction): void
   editable?: () => boolean
@@ -72,8 +75,19 @@ export class EditorView {
     if (this.destroyed) return
     // Never redraw mid-composition: it would tear the candidate window down.
     if (this.composing) return
-    if (docChanged) this.render()
+    // Decorations can change without the document changing — a selection-driven
+    // highlight, or a remote cursor moving.
+    if (docChanged || this.decorationsChanged()) this.render()
     this.syncSelection()
+  }
+
+  private lastDecorations = DecorationSet.empty
+
+  private decorationsChanged(): boolean {
+    const next = this.options.decorations?.() ?? DecorationSet.empty
+    if (this.lastDecorations.eq(next)) return false
+    this.lastDecorations = next
+    return true
   }
 
   focus(): void {
@@ -98,7 +112,11 @@ export class EditorView {
   }
 
   private render(): void {
-    this.renderer.render(this.stateValue.doc, this.dom)
+    this.renderer.render(
+      this.stateValue.doc,
+      this.dom,
+      this.options.decorations?.() ?? DecorationSet.empty,
+    )
   }
 
   private syncSelection(): void {

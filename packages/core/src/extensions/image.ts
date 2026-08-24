@@ -9,6 +9,7 @@ export interface ImageAttrs {
 /** Reject anything that is not an image URL a browser will fetch safely. */
 function isSafeSrc(src: unknown): src is string {
   if (typeof src !== 'string' || !src.length) return false
+  if (src.startsWith('//')) return false
   if (src.startsWith('/') || src.startsWith('./')) return true
   if (src.startsWith('data:image/')) return true
   try {

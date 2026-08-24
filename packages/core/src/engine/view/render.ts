@@ -1,7 +1,9 @@
 import type { Fragment } from '../model/fragment'
 import type { Mark } from '../model/mark'
 import type { Node } from '../model/node'
+import { setSafeAttribute } from '../model/safe-attrs'
 import type { DOMOutputSpec, Schema } from '../model/schema'
+import { type Decoration, DecorationSet } from './decoration'
 import { DOMMap } from './dom-map'
 import { type NodeViewHost, NodeViewManager } from './node-view'
 
@@ -18,6 +20,8 @@ export class Renderer {
   readonly map = new DOMMap()
   readonly nodeViews: NodeViewManager
   private previous: Node | null = null
+  private previousDecorations = DecorationSet.empty
+  private decorations = DecorationSet.empty
   private root: HTMLElement | null = null
 
   constructor(
@@ -27,7 +31,8 @@ export class Renderer {
     this.nodeViews = new NodeViewManager(host)
   }
 
-  render(doc: Node, target: HTMLElement): void {
+  render(doc: Node, target: HTMLElement, decorations = DecorationSet.empty): void {
+    this.decorations = decorations
     const canPatch = this.previous !== null && this.root === target
     this.map.clear()
     this.root = target
@@ -42,6 +47,7 @@ export class Renderer {
     }
 
     this.previous = doc
+    this.previousDecorations = decorations
   }
 
   /** Forget the rendered tree; the next render rebuilds from scratch. */
@@ -79,8 +85,86 @@ export class Renderer {
       }
 
       const parent = openTargets[openTargets.length - 1] as HTMLElement
-      parent.appendChild(this.buildNode(child, start + offset))
+      const pos = start + offset
+      this.insertWidgets(parent, pos)
+
+      if (child.isText) {
+        for (const piece of this.buildDecoratedText(child, pos)) parent.appendChild(piece)
+        continue
+      }
+      parent.appendChild(this.decorate(this.buildNode(child, pos), child, pos))
     }
+
+    // Widgets sitting at the very end of the fragment.
+    this.insertWidgets(target, start + fragment.size)
+  }
+
+  /** Widgets are DOM the document does not contain, so they are marked inert. */
+  private insertWidgets(target: HTMLElement, pos: number): void {
+    for (const item of this.decorations.items) {
+      if (item.type !== 'widget' || item.pos !== pos) continue
+      const dom = item.render()
+      dom.setAttribute('contenteditable', 'false')
+      dom.setAttribute('data-matra-widget', item.key ?? '')
+      target.appendChild(dom)
+    }
+  }
+
+  /**
+   * Text, split at decoration boundaries.
+   *
+   * An inline decoration usually covers part of a text node — one word inside a
+   * paragraph. Wrapping the whole node would highlight the entire paragraph, so
+   * the text is cut at every boundary and each piece wrapped in whatever covers
+   * exactly it.
+   */
+  private buildDecoratedText(node: Node, pos: number): globalThis.Node[] {
+    const text = node.text ?? ''
+    const end = pos + text.length
+    const inline = this.decorations.items.filter(
+      (item): item is Extract<Decoration, { type: 'inline' }> =>
+        item.type === 'inline' && item.to > pos && item.from < end,
+    )
+    if (!inline.length) return [document.createTextNode(text)]
+
+    const points = new Set<number>([0, text.length])
+    for (const item of inline) {
+      points.add(Math.max(0, item.from - pos))
+      points.add(Math.min(text.length, item.to - pos))
+    }
+    const boundaries = [...points].sort((a, b) => a - b)
+
+    const out: globalThis.Node[] = []
+    for (let i = 0; i < boundaries.length - 1; i++) {
+      const from = boundaries[i] as number
+      const to = boundaries[i + 1] as number
+      if (to <= from) continue
+
+      let piece: globalThis.Node = document.createTextNode(text.slice(from, to))
+      for (const item of inline) {
+        if (item.from > pos + from || item.to < pos + to) continue
+        const span = document.createElement('span')
+        applyAttrs(span, item.attrs)
+        span.appendChild(piece)
+        piece = span
+      }
+      out.push(piece)
+    }
+    return out
+  }
+
+  /** Wrap or annotate a rendered node according to the decorations over it. */
+  private decorate(dom: globalThis.Node, node: Node, pos: number): globalThis.Node {
+    if (!this.decorations.size) return dom
+    const end = pos + node.nodeSize
+    const result = dom
+
+    for (const item of this.decorations.items) {
+      if (item.type !== 'node') continue
+      if (item.to <= pos || item.from >= end) continue
+      if (dom.nodeType === 1) applyAttrs(dom as HTMLElement, item.attrs)
+    }
+    return result
   }
 
   private buildNode(node: Node, pos: number): globalThis.Node {
@@ -123,7 +207,13 @@ export class Renderer {
     // the fragment, so a textblock's inside is rebuilt whole. Everything above
     // that is patched.
     if (newParent.isTextblock) {
-      if (!oldChildren.eq(newChildren)) {
+      const decorationsChanged = !sameOver(
+        this.previousDecorations,
+        this.decorations,
+        contentStart,
+        contentStart + newChildren.size,
+      )
+      if (!oldChildren.eq(newChildren) || decorationsChanged) {
         this.nodeViews.destroyWithin(target)
         target.replaceChildren()
         this.buildFragment(newChildren, target, contentStart)
@@ -208,6 +298,35 @@ export class Renderer {
   }
 }
 
+function applyAttrs(dom: HTMLElement, attrs: Record<string, string>): void {
+  for (const [name, value] of Object.entries(attrs)) {
+    if (name === 'class') {
+      for (const cls of String(value).split(/\s+/)) if (cls) dom.classList.add(cls)
+      continue
+    }
+    if (name === 'style') {
+      dom.setAttribute('style', String(value).replace(/expression\s*\(|javascript:/gi, ''))
+      continue
+    }
+    setSafeAttribute(dom, name, value)
+  }
+}
+
+/** Do two sets draw the same thing over this range? */
+function sameOver(a: DecorationSet, b: DecorationSet, from: number, to: number): boolean {
+  const left = a.find(from, to)
+  const right = b.find(from, to)
+  if (left.length !== right.length) return false
+  return left.every((item, index) => {
+    const other = right[index] as Decoration
+    if (item.type !== other.type) return false
+    if (item.type === 'widget' || other.type === 'widget') {
+      return item.type === 'widget' && other.type === 'widget' && item.pos === other.pos
+    }
+    return item.from === other.from && item.to === other.to
+  })
+}
+
 export function renderSpec(spec: DOMOutputSpec): {
   dom: HTMLElement
   hole: globalThis.Node | null
@@ -222,8 +341,7 @@ export function renderSpec(spec: DOMOutputSpec): {
   const first = rest[0]
   if (first && typeof first === 'object' && !Array.isArray(first)) {
     for (const [name, value] of Object.entries(first as Record<string, unknown>)) {
-      if (value === null || value === undefined || value === false) continue
-      dom.setAttribute(name, String(value))
+      setSafeAttribute(dom, name, value)
     }
     start = 1
   }

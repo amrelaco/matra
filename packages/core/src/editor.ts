@@ -5,7 +5,11 @@ import { Keymap } from './engine/keys'
 import { DOMParser, DOMSerializer, Fragment, type Node, type Schema } from './engine/model'
 import { EditorState, Plugin, TextSelection, type Transaction } from './engine/state'
 import type { Mapping } from './engine/transform'
-import { EditorView, type NodeViewFactory as EngineNodeViewFactory } from './engine/view'
+import {
+  DecorationSet,
+  EditorView,
+  type NodeViewFactory as EngineNodeViewFactory,
+} from './engine/view'
 import { core } from './extensions/core'
 import { buildSchema, sortByPriority } from './schema'
 import type {
@@ -13,6 +17,7 @@ import type {
   AnyDef,
   CommandsOf,
   CoreCommands,
+  DecorationSpec,
   DocNode,
   Editor,
   EditorOptions,
@@ -92,7 +97,18 @@ export function createEditor<const T extends readonly AnyDef[]>(
   function run(fn: (ctx: ReturnType<typeof createCtx>) => boolean): boolean {
     const tr = state.tr
     const ctx = createCtx(host, state, tr)
-    const ok = fn(ctx)
+
+    let ok = false
+    try {
+      ok = fn(ctx)
+    } catch (error) {
+      // A command is contracted to report success as a boolean. One that
+      // throws — a bad extension, a hostile step, an edge nobody covered —
+      // must not take the whole editor down with it, and the half-built
+      // transaction is discarded rather than applied.
+      console.error('Matra: a command threw and was refused', error)
+      return false
+    }
     if (!ok) return false
     // Metadata counts: a transaction that only carries meta is how an
     // extension tells its own reducer something happened.
@@ -181,6 +197,22 @@ export function createEditor<const T extends readonly AnyDef[]>(
       })
       return handled
     })
+  }
+
+  /** Ask every extension what it wants drawn, right now. */
+  function collectDecorations(): DecorationSet {
+    const specs: DecorationSpec[] = []
+    for (const def of defs) {
+      if (def.kind !== 'extension' || !def.decorations) continue
+      const ctx = createCtx(host, state, state.tr)
+      try {
+        specs.push(...def.decorations(ctx))
+      } catch (error) {
+        // A broken decorator must not take the editor down with it.
+        console.error(`Matra: decorations from "${def.name}" threw`, error)
+      }
+    }
+    return DecorationSet.create(specs as never)
   }
 
   // --- public surface -------------------------------------------------------
@@ -274,6 +306,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
       view = new EditorView(element, schema, {
         state,
         nodeViews,
+        decorations: () => collectDecorations(),
         editable: () => options.editable ?? true,
         dispatchTransaction: (tr) => apply(tr),
         handleKeyDown: (event) => keys.handle(event),

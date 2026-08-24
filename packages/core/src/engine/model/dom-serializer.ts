@@ -1,6 +1,7 @@
 import type { Fragment } from './fragment'
 import type { Mark } from './mark'
 import type { Node } from './node'
+import { setSafeAttribute } from './safe-attrs'
 import type { DOMOutputSpec, Schema } from './schema'
 
 /**
@@ -82,8 +83,7 @@ export class DOMSerializer {
     const first = rest[0]
     if (first && typeof first === 'object' && !Array.isArray(first)) {
       for (const [name, value] of Object.entries(first as Record<string, unknown>)) {
-        if (value === null || value === undefined || value === false) continue
-        dom.setAttribute(name, String(value))
+        setSafeAttribute(dom, name, value)
       }
       start = 1
     }
