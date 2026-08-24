@@ -167,8 +167,8 @@ is pulled in that the editor does not use.
 Honesty about the gaps, since "no dependencies" can read as "complete":
 
 - ~~**Collaborative editing.**~~ Done in `@matrajs/collab`: an authority, step
-  exchange, rebasing of unsent work over remote edits, and presence tracking.
-  What is still missing is *drawing* remote cursors, which needs decorations.
+  exchange, rebasing of unsent work over remote edits, and remote cursors drawn
+  as decorations, each one mapped through local steps rather than clamped.
 - ~~**Node views.**~~ Done. A node type may declare `nodeView`, returning its
   own DOM plus an optional `contentDOM` for children. `stopEvent` keeps the
   editor's hands off interactions inside the view.

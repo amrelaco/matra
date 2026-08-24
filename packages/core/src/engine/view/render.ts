@@ -99,15 +99,19 @@ export class Renderer {
     this.insertWidgets(target, start + fragment.size)
   }
 
-  /** Widgets are DOM the document does not contain, so they are marked inert. */
   private insertWidgets(target: HTMLElement, pos: number): void {
     for (const item of this.decorations.items) {
       if (item.type !== 'widget' || item.pos !== pos) continue
-      const dom = item.render()
-      dom.setAttribute('contenteditable', 'false')
-      dom.setAttribute('data-matra-widget', item.key ?? '')
-      target.appendChild(dom)
+      target.appendChild(this.buildWidget(item))
     }
+  }
+
+  /** Widgets are DOM the document does not contain, so they are marked inert. */
+  private buildWidget(item: Extract<Decoration, { type: 'widget' }>): HTMLElement {
+    const dom = item.render()
+    dom.setAttribute('contenteditable', 'false')
+    dom.setAttribute('data-matra-widget', item.key ?? '')
+    return dom
   }
 
   /**
@@ -125,19 +129,32 @@ export class Renderer {
       (item): item is Extract<Decoration, { type: 'inline' }> =>
         item.type === 'inline' && item.to > pos && item.from < end,
     )
-    if (!inline.length) return [document.createTextNode(text)]
+    // A widget *inside* this text — a remote caret between two letters. The
+    // boundaries of the fragment are handled by the caller; these are the ones
+    // that would otherwise have nowhere to go, and a caret sitting mid-word is
+    // the ordinary case, not the exotic one.
+    const widgets = this.decorations.items.filter(
+      (item): item is Extract<Decoration, { type: 'widget' }> =>
+        item.type === 'widget' && item.pos > pos && item.pos < end,
+    )
+    if (!inline.length && !widgets.length) return [document.createTextNode(text)]
 
     const points = new Set<number>([0, text.length])
     for (const item of inline) {
       points.add(Math.max(0, item.from - pos))
       points.add(Math.min(text.length, item.to - pos))
     }
+    for (const item of widgets) points.add(item.pos - pos)
     const boundaries = [...points].sort((a, b) => a - b)
 
     const out: globalThis.Node[] = []
     for (let i = 0; i < boundaries.length - 1; i++) {
       const from = boundaries[i] as number
       const to = boundaries[i + 1] as number
+
+      for (const widget of widgets) {
+        if (widget.pos - pos === from) out.push(this.buildWidget(widget))
+      }
       if (to <= from) continue
 
       let piece: globalThis.Node = document.createTextNode(text.slice(from, to))
@@ -249,8 +266,21 @@ export class Renderer {
         continue
       }
 
-      // Immutability pays here: an untouched subtree is the same object.
-      if (oldChild === newChild) {
+      // Immutability pays here: an untouched subtree is the same object — but
+      // only the *document* is untouched. Decorations are drawn over it and
+      // change on their own: a remote cursor moves, a search highlight lands,
+      // a selection-driven mark appears, all without a single step. Skipping on
+      // node identity alone leaves every one of those invisible until something
+      // else happens to edit that paragraph.
+      if (
+        oldChild === newChild &&
+        sameOver(
+          this.previousDecorations,
+          this.decorations,
+          contentStart + offset,
+          contentStart + offset + newChild.nodeSize,
+        )
+      ) {
         this.recordNode(newChild, dom, contentStart + offset)
         offset += newChild.nodeSize
         continue
@@ -322,10 +352,26 @@ function sameOver(a: DecorationSet, b: DecorationSet, from: number, to: number):
     const other = right[index] as Decoration
     if (item.type !== other.type) return false
     if (item.type === 'widget' || other.type === 'widget') {
-      return item.type === 'widget' && other.type === 'widget' && item.pos === other.pos
+      return (
+        item.type === 'widget' &&
+        other.type === 'widget' &&
+        item.pos === other.pos &&
+        item.key === other.key
+      )
     }
-    return item.from === other.from && item.to === other.to
+    // Position is not the whole of a decoration. A cursor that changes colour
+    // in place, or a highlight that swaps its class, sits at the same offsets
+    // and still has to be redrawn.
+    return (
+      item.from === other.from && item.to === other.to && sameAttrs(item.attrs, other.attrs)
+    )
   })
+}
+
+function sameAttrs(a: Record<string, string>, b: Record<string, string>): boolean {
+  const keys = Object.keys(a)
+  if (keys.length !== Object.keys(b).length) return false
+  return keys.every((key) => a[key] === b[key])
 }
 
 export function renderSpec(spec: DOMOutputSpec): {

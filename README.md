@@ -60,15 +60,12 @@ pnpm build      # tsup, all packages
 
 0.1 — the engine is ours end to end. Document model, transforms, position
 mapping, editor state and the editable view are written from scratch, with
-**zero runtime dependencies**. 178 tests.
+**zero runtime dependencies**. 309 tests, 45 of them adversarial.
 
 An app bundles **18.4 kB gzipped**, because nothing arrives that the editor
 does not use.
 
-Not built yet, and worth knowing before you pick it: **decorations** (highlights
-and widgets that are not part of the document) and drag and drop. Collaborative
-presence positions are tracked, but drawing remote cursors needs decorations,
-so that is the host's job today.
+Not built yet, and worth knowing before you pick it: **drag and drop**.
 
 The view passes its tests but has not yet met real IME users on iOS Safari or
 Android Chrome. See [ENGINE.md](./ENGINE.md) for where the risk actually sits.

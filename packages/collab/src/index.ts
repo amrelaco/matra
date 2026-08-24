@@ -6,5 +6,10 @@ export {
   type CollabOptions,
   type CollabState,
 } from './collab'
-export { PresenceTracker } from './presence'
+export {
+  colorFor,
+  remoteCursorCSS,
+  remoteCursors,
+  type RemoteCursors,
+} from './remote-cursors'
 export type { CollabStep, Presence, Sendable } from './types'

@@ -3,7 +3,7 @@ import type { Pos } from '@matrajs/core'
 import { describe, expect, it } from 'vitest'
 import { Authority } from './authority'
 import { collab, getVersion, sendableSteps } from './collab'
-import { PresenceTracker } from './presence'
+import { type RemoteCursors, colorFor, remoteCursors } from './remote-cursors'
 
 const makeClient = (clientId: string, content = '<p>hello world</p>') =>
   createEditor({
@@ -161,29 +161,90 @@ describe('two clients', () => {
   })
 })
 
-describe('presence', () => {
+describe('remote cursors', () => {
+  const client = (clientId: string, content = '<p>hello world</p>') =>
+    createEditor({
+      extensions: [...starterKit, collab({ clientId }), remoteCursors()] as const,
+      content,
+    })
+
+  const cursors = (editor: ReturnType<typeof client>) =>
+    editor.extensionState<RemoteCursors>('remoteCursors')
+
   it('tracks and removes people', () => {
-    const editor = makeClient('a')
-    const tracker = new PresenceTracker(editor as never)
+    const editor = client('a')
+    expect(editor.commands.setPresence({ clientId: 'bob', anchor: 3, head: 5 })).toBe(true)
+    expect(cursors(editor)?.size).toBe(1)
 
-    tracker.set({ clientId: 'bob', anchor: 3, head: 5, meta: { name: 'Bob' } })
-    expect(tracker.list()).toHaveLength(1)
-
-    tracker.remove('bob')
-    expect(tracker.list()).toHaveLength(0)
-    tracker.destroy()
+    expect(editor.commands.removePresence('bob')).toBe(true)
+    expect(cursors(editor)?.size).toBe(0)
   })
 
-  it('keeps a cursor inside the document as it shrinks', () => {
-    const editor = makeClient('a')
-    const tracker = new PresenceTracker(editor as never)
-    tracker.set({ clientId: 'bob', anchor: 11, head: 11 })
+  it('moves a remote cursor forward when text is inserted before it', () => {
+    const editor = client('a')
+    editor.commands.setPresence({ clientId: 'bob', anchor: 9, head: 9 })
 
-    editor.commands.select({ from: 1 as Pos, to: 10 as Pos })
+    editor.commands.select(1 as Pos)
+    editor.commands.insert('12345')
+
+    // Clamping — the shortcut this replaced — would have left bob at 9,
+    // pointing five characters earlier in the text than where he was.
+    const bob = cursors(editor)?.get('bob')
+    expect(bob?.head).toBe(14)
+    expect(bob?.anchor).toBe(14)
+  })
+
+  it('pulls a remote cursor back when text before it is deleted', () => {
+    const editor = client('a')
+    editor.commands.setPresence({ clientId: 'bob', anchor: 10, head: 10 })
+
+    editor.commands.select({ from: 1 as Pos, to: 4 as Pos })
     editor.commands.remove()
 
-    const bob = tracker.list()[0]
-    expect(bob?.anchor).toBeLessThanOrEqual(editor.getText().length + 2)
-    tracker.destroy()
+    expect(cursors(editor)?.get('bob')?.head).toBe(7)
+  })
+
+  it('collapses a cursor that sat inside deleted text', () => {
+    const editor = client('a')
+    editor.commands.setPresence({ clientId: 'bob', anchor: 5, head: 5 })
+
+    editor.commands.select({ from: 3 as Pos, to: 8 as Pos })
+    editor.commands.remove()
+
+    const head = cursors(editor)?.get('bob')?.head ?? -1
+    expect(head).toBe(3)
+  })
+
+  it('refuses presence that is not placed in the document', () => {
+    const editor = client('a')
+    for (const bad of [
+      { clientId: '', anchor: 1, head: 1 },
+      { clientId: 'b', anchor: -1, head: 1 },
+      { clientId: 'b', anchor: Number.NaN, head: 1 },
+      { clientId: 'b', anchor: 1.5, head: 1 },
+      { clientId: 'b', anchor: 1, head: Number.POSITIVE_INFINITY },
+      null,
+      undefined,
+      'bob',
+    ]) {
+      expect(editor.commands.setPresence(bad as never)).toBe(false)
+    }
+    expect(cursors(editor)?.size).toBe(0)
+  })
+
+  it('clears everyone at once', () => {
+    const editor = client('a')
+    editor.commands.setPresence({ clientId: 'b', anchor: 1, head: 1 })
+    editor.commands.setPresence({ clientId: 'c', anchor: 2, head: 2 })
+    expect(cursors(editor)?.size).toBe(2)
+
+    expect(editor.commands.clearPresence()).toBe(true)
+    expect(cursors(editor)?.size).toBe(0)
+  })
+
+  it('gives the same person the same colour on every client', () => {
+    expect(colorFor('bob')).toBe(colorFor('bob'))
+    expect(colorFor('bob')).not.toBe(colorFor('alice'))
+    expect(colorFor('bob')).toMatch(/^hsl\(\d+ 70% 45%\)$/)
   })
 })
