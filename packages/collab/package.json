@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/collab",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "Collaborative editing for Matra \u2014 step exchange, rebasing and presence. No CRDT dependency.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
@@ -13,7 +13,13 @@
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": ["editor", "rich-text", "collaborative", "matra", "ot"],
+  "keywords": [
+    "editor",
+    "rich-text",
+    "collaborative",
+    "matra",
+    "ot"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +35,10 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"

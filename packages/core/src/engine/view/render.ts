@@ -1,7 +1,7 @@
 import type { Fragment } from '../model/fragment'
 import type { Mark } from '../model/mark'
 import type { Node } from '../model/node'
-import { setSafeAttribute } from '../model/safe-attrs'
+import { finalizeElement, setSafeAttribute } from '../model/safe-attrs'
 import type { DOMOutputSpec, Schema } from '../model/schema'
 import { type Decoration, DecorationSet } from './decoration'
 import { DOMMap } from './dom-map'
@@ -310,6 +310,7 @@ function applyAttrs(dom: HTMLElement, attrs: Record<string, string>): void {
     }
     setSafeAttribute(dom, name, value)
   }
+  finalizeElement(dom)
 }
 
 /** Do two sets draw the same thing over this range? */
@@ -343,6 +344,7 @@ export function renderSpec(spec: DOMOutputSpec): {
     for (const [name, value] of Object.entries(first as Record<string, unknown>)) {
       setSafeAttribute(dom, name, value)
     }
+    finalizeElement(dom)
     start = 1
   }
 

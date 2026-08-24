@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/core",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "A headless rich text editor framework with a first-class extension API. Zero dependencies.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
@@ -13,7 +13,14 @@
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": ["editor", "rich-text", "prosemirror", "wysiwyg", "matra", "extensions"],
+  "keywords": [
+    "editor",
+    "rich-text",
+    "prosemirror",
+    "wysiwyg",
+    "matra",
+    "extensions"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +36,10 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"

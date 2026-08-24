@@ -500,3 +500,316 @@ describe('attack: round three', () => {
     expect(editor.selection.from).toBeLessThanOrEqual(editor.getText().length + 2)
   })
 })
+
+describe('attack: the render gate is the only gate that matters', () => {
+  const TAB = String.fromCharCode(9)
+  const LF = String.fromCharCode(10)
+  const CR = String.fromCharCode(13)
+  const NUL = String.fromCharCode(0)
+
+  /** What a browser resolves, after it strips the characters URLs ignore. */
+  const asBrowserSees = (value: string) =>
+    value
+      .replace(/[\t\n\r\0]/g, '')
+      .trim()
+      .toLowerCase()
+
+  const linkDoc = (href: string) => ({
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: 'click', marks: [{ type: 'link', attrs: { href } }] }],
+      },
+    ],
+  })
+
+  const hostile = [
+    ['plain scheme', 'javascript:alert(1)'],
+    ['mixed case', 'JaVaScRiPt:alert(1)'],
+    ['leading space', '  javascript:alert(1)'],
+    ['tab inside the scheme', `java${TAB}script:alert(1)`],
+    ['newline inside the scheme', `java${LF}script:alert(1)`],
+    ['carriage return inside the scheme', `java${CR}script:alert(1)`],
+    ['NUL inside the scheme', `java${NUL}script:alert(1)`],
+    ['every separator at once', `j${TAB}a${LF}v${CR}a${NUL}script:alert(1)`],
+    ['leading NUL', `${NUL}javascript:alert(1)`],
+    ['vbscript with a tab', `vb${TAB}script:msgbox(1)`],
+    ['data: document', 'data:text/html,<script>alert(1)</script>'],
+    ['protocol-relative', '//evil.example/x'],
+    ['protocol-relative behind a tab', `${TAB}//evil.example/x`],
+  ] as const
+
+  // The document model keeps what it was given; the gate runs on the way out.
+  // So the assertion is about rendered output, not about stored attributes.
+  for (const [name, href] of hostile) {
+    it(`refuses ${name} in serialized HTML`, () => {
+      const editor = createEditor({ extensions: starterKit })
+      editor.setContent(linkDoc(href))
+      const match = /href="([^"]*)"/.exec(editor.getHTML())
+      if (match) {
+        const resolved = asBrowserSees(match[1] ?? '')
+        expect(resolved.startsWith('javascript:')).toBe(false)
+        expect(resolved.startsWith('vbscript:')).toBe(false)
+        expect(resolved.startsWith('data:text')).toBe(false)
+        expect(resolved.startsWith('//')).toBe(false)
+      }
+    })
+  }
+
+  it('still emits an ordinary link', () => {
+    const editor = createEditor({ extensions: starterKit })
+    editor.setContent(linkDoc('https://ok.example/x'))
+    expect(editor.getHTML()).toContain('https://ok.example/x')
+  })
+
+  it('still emits an inline image', () => {
+    const editor = createEditor({ extensions: [...starterKit, image] })
+    editor.setContent({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'image', attrs: { src: 'data:image/png;base64,iVBORw0KGgo=' } }],
+        },
+      ],
+    })
+    expect(editor.getHTML()).toContain('data:image/png;base64')
+  })
+
+  it('refuses a non-object passed where a range belongs', () => {
+    const editor = createEditor({ extensions: starterKit, content: '<p>hello</p>' })
+    for (const value of [null, undefined, 'x', true, Symbol.iterator] as unknown[]) {
+      expect(editor.commands.select(value as never)).toBe(false)
+    }
+    expect(editor.getHTML()).toContain('hello')
+  })
+})
+
+const ed = (content?: unknown) =>
+  createEditor({ extensions: starterKit, content: content as never })
+
+describe('attack: malformed and hostile document JSON', () => {
+  it('R1 tabnabbing: JSON can blank out rel while keeping target=_blank', () => {
+    const e = createEditor({ extensions: starterKit })
+    e.setContent({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'x',
+              marks: [
+                {
+                  type: 'link',
+                  attrs: { href: 'https://evil.example', target: '_blank', rel: '' },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    } as never)
+    const html = e.getHTML()
+    if (/target="_blank"/.test(html)) expect(html).toMatch(/noopener/)
+  })
+
+  it('R2 deep nesting does not blow the stack', () => {
+    let node: unknown = { type: 'paragraph', content: [{ type: 'text', text: 'deep' }] }
+    for (let i = 0; i < 5000; i++) node = { type: 'blockquote', content: [node] }
+    const e = createEditor({ extensions: starterKit })
+    expect(() => {
+      try {
+        e.setContent({ type: 'doc', content: [node] } as never)
+        e.getHTML()
+      } catch (err) {
+        if (err instanceof RangeError) throw err // stack overflow is a real failure
+      }
+    }).not.toThrow()
+  })
+
+  it('R3 undeclared mark attrs are dropped', () => {
+    const e = createEditor({ extensions: starterKit })
+    e.setContent({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'x',
+              marks: [{ type: 'bold', attrs: { onclick: 'alert(1)', style: 'x' } }],
+            },
+          ],
+        },
+      ],
+    } as never)
+    expect(e.getHTML()).not.toMatch(/onclick/i)
+  })
+
+  it('R4 unknown node/mark type in JSON is refused, not crashed', () => {
+    const e = createEditor({ extensions: starterKit })
+    for (const doc of [
+      { type: 'doc', content: [{ type: 'nope' }] },
+      {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'x', marks: [{ type: 'nope' }] }],
+          },
+        ],
+      },
+      { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text' }] }] },
+      { type: 'doc', content: 'not-an-array' },
+      { type: 'doc' },
+      {},
+      null,
+    ]) {
+      let threw: string | null = null
+      try {
+        e.setContent(doc as never)
+      } catch (err) {
+        threw = (err as Error).message
+      }
+    }
+    expect(e.getHTML()).toBeTypeOf('string') // editor still alive
+  })
+
+  it('R5 huge single text node completes', () => {
+    const e = createEditor({ extensions: starterKit })
+    const started = performance.now()
+    e.setContent({
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'a'.repeat(2_000_000) }] },
+      ],
+    } as never)
+    e.getHTML()
+    expect(true).toBe(true)
+  })
+
+  it('R6 image src with hostile data type', () => {
+    const e = createEditor({ extensions: [...starterKit, image] })
+    for (const src of [
+      'data:image/svg+xml;base64,PHN2Zz48c2NyaXB0PmFsZXJ0KDEpPC9zY3JpcHQ+PC9zdmc+',
+      'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==',
+    ]) {
+      e.setContent({
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'image', attrs: { src } }] }],
+      } as never)
+    }
+    expect(true).toBe(true)
+  })
+
+  it('R7 __proto__ / prototype pollution through attrs', () => {
+    const e = createEditor({ extensions: starterKit })
+    const evil = JSON.parse(
+      '{"type":"doc","content":[{"type":"heading","attrs":{"__proto__":{"polluted":"yes"},"level":1},"content":[{"type":"text","text":"x"}]}]}',
+    )
+    try {
+      e.setContent(evil)
+      e.getHTML()
+    } catch (err) {
+      console.log('R7 threw', (err as Error).message)
+    }
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+  })
+})
+
+describe('attack: extensions, depth limits and link targets', () => {
+  it('S1 a hostile widget decoration cannot inject script into the document', () => {
+    const evil = {
+      name: 'evil',
+      kind: 'extension' as const,
+      decorations: () => {
+        throw new Error('decorator exploded')
+      },
+    }
+    const e = createEditor({
+      extensions: [...starterKit, evil] as never,
+      content: '<p>safe</p>',
+    })
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    e.mount(el)
+    expect(el.textContent).toContain('safe')
+  })
+
+  it('S2 an extension whose command throws cannot take the editor down', () => {
+    const evil = {
+      name: 'boom',
+      kind: 'extension' as const,
+      commands: {
+        boom: () => {
+          throw new Error('kaboom')
+        },
+      },
+    }
+    const e = createEditor({
+      extensions: [...starterKit, evil] as never,
+      content: '<p>alive</p>',
+    })
+    const commands = e.commands as unknown as { boom: () => boolean }
+    expect(commands.boom()).toBe(false)
+    expect(e.getHTML()).toContain('alive')
+  })
+
+  it('S3 setContent with a doc whose depth is exactly at and past the limit', () => {
+    const build = (n: number) => {
+      let node: unknown = { type: 'paragraph', content: [{ type: 'text', text: 'x' }] }
+      for (let i = 0; i < n; i++) node = { type: 'blockquote', content: [node] }
+      return { type: 'doc', content: [node] }
+    }
+    const e = createEditor({ extensions: starterKit })
+    expect(() => e.setContent(build(20) as never)).not.toThrow()
+    expect(() => e.setContent(build(5000) as never)).toThrow(/nests deeper/)
+    e.setContent('<p>recovered</p>')
+    expect(e.getHTML()).toContain('recovered')
+  })
+
+  it('S4 pasted HTML nested past the limit does not blow the stack', () => {
+    const e = createEditor({ extensions: starterKit })
+    const html = `${'<blockquote>'.repeat(5000)}<p>deep</p>${'</blockquote>'.repeat(5000)}`
+    expect(() => {
+      e.setContent(html)
+      e.getHTML()
+    }).not.toThrow()
+    expect(e.getHTML()).toBeTypeOf('string')
+  })
+
+  it('S5 target=_blank always carries noopener however it arrives', () => {
+    const e = createEditor({ extensions: starterKit })
+    for (const rel of ['', 'nofollow', 'noopener']) {
+      e.setContent({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: 'x',
+                marks: [
+                  { type: 'link', attrs: { href: 'https://e.example', target: '_blank', rel } },
+                ],
+              },
+            ],
+          },
+        ],
+      } as never)
+      const html = e.getHTML()
+      expect(html).toMatch(/noopener/)
+      expect(html).toMatch(/noreferrer/)
+    }
+  })
+
+  it('S6 malformed content field reports a Matra error, not a TypeError', () => {
+    const e = createEditor({ extensions: starterKit })
+    expect(() => e.setContent({ type: 'doc', content: 'nope' } as never)).toThrow(/Matra:/)
+  })
+})

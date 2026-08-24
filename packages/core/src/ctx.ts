@@ -219,6 +219,10 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     },
 
     select(range) {
+      // `range` crosses the public boundary, so it may be anything at runtime.
+      // Reaching into `.from` of a null is a crash, not a refusal.
+      if (typeof range !== 'number' && (range === null || typeof range !== 'object'))
+        return false
       const from = typeof range === 'number' ? range : range.from
       const to = typeof range === 'number' ? range : range.to
       const size = tr.doc.content.size

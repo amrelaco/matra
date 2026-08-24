@@ -21,8 +21,20 @@ other two routes. **The last gate is the rendering path**, in
   `srcdoc`.
 - **URL attributes are scheme-checked** — `href`, `src`, `xlink:href`,
   `action`, `formaction`, `poster`, `data`. `javascript:`, `vbscript:` and
-  `data:` are refused, except `data:image/*` on `src`, which is a legitimate
-  inline image.
+  `data:` are refused, except `data:image/*` on an `<img>`, which is a
+  legitimate inline image. The tag matters: the same bytes on an `<iframe>` or
+  an `<object>` are a document, and an SVG document runs scripts.
+- **The URL is normalised before its scheme is read.** A browser strips tab,
+  newline, carriage return and NUL from a URL before resolving it, so
+  `java&#9;script:` *is* `javascript:` by the time it matters. Testing the raw
+  string instead of the normalised one is how scheme filters get bypassed.
+- **`target="_blank"` always carries `rel="noopener noreferrer"`**, whatever the
+  document said. Without it the opened page gets a `window.opener` handle and
+  can navigate this tab to a page that looks like your login screen.
+- **Document depth is bounded to 100 levels**, in both document JSON and pasted
+  HTML. Parsing, resolving and rendering are all recursive; five thousand
+  nested blockquotes exhaust the stack and take down every client that opens
+  the document.
 - **Undeclared attributes are dropped.** A node type that declares no `attrs`
   gets none, so a type whose `toDOM` renders `node.attrs` cannot be fed
   arbitrary keys through JSON.
@@ -40,6 +52,10 @@ other two routes. **The last gate is the rendering path**, in
 
 ## What is your responsibility
 
+- **The document model keeps what it was given.** The gate runs on the way out,
+  not on the way in, so a hostile `href` survives in `getJSON()` even though it
+  never reaches the DOM. This is deliberate — sanitising at load silently
+  destroys data — but it means *your own* renderer needs the same care.
 - **`getHTML()` output still needs a policy at rest.** It is safe to render in
   the editor; if you store it and serve it elsewhere, apply your own sanitiser
   at that boundary too. Defence in depth is the point.

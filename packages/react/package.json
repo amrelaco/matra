@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/react",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "React bindings for Matra \u2014 useEditor and EditorContent.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
@@ -13,7 +13,13 @@
   "bugs": {
     "url": "https://github.com/amrelaco/matra/issues"
   },
-  "keywords": ["editor", "rich-text", "react", "matra", "prosemirror"],
+  "keywords": [
+    "editor",
+    "rich-text",
+    "react",
+    "matra",
+    "prosemirror"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +35,10 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"

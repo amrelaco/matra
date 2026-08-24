@@ -222,7 +222,17 @@ export class Schema {
     return type.create(attrs)
   }
 
-  nodeFromJSON(json: unknown): Node {
+  /**
+   * Deeper than any real document, shallow enough that the recursive walks in
+   * parsing, resolving and rendering cannot exhaust the stack. A document
+   * nested five thousand blockquotes deep is a denial of service, not prose.
+   */
+  static readonly MAX_DEPTH = 100
+
+  nodeFromJSON(json: unknown, depth = 0): Node {
+    if (depth > Schema.MAX_DEPTH) {
+      throw new Error(`Matra: document nests deeper than ${Schema.MAX_DEPTH} levels`)
+    }
     const value = json as {
       type?: string
       attrs?: Record<string, unknown>
@@ -238,7 +248,10 @@ export class Schema {
       if (typeof value.text !== 'string') throw new Error('Matra: text node without text')
       return this.text(value.text, marks)
     }
-    const content = value.content?.map((child) => this.nodeFromJSON(child)) ?? []
+    if (value.content !== undefined && !Array.isArray(value.content)) {
+      throw new Error(`Matra: "${value.type}" has a "content" that is not an array`)
+    }
+    const content = value.content?.map((child) => this.nodeFromJSON(child, depth + 1)) ?? []
     return this.node(value.type, value.attrs, content, marks)
   }
 }

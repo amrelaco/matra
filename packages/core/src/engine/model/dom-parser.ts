@@ -1,7 +1,8 @@
 import { Fragment } from './fragment'
 import type { Mark, MarkType } from './mark'
 import type { Node } from './node'
-import type { NodeType, ParseRule, Schema } from './schema'
+import { Schema } from './schema'
+import type { NodeType, ParseRule } from './schema'
 
 interface CompiledRule extends ParseRule {
   owner: NodeType | MarkType
@@ -88,15 +89,21 @@ export class DOMParser {
     return this.parseChildren(dom, [])
   }
 
-  private parseChildren(dom: globalThis.Node, marks: readonly Mark[]): Fragment {
+  /**
+   * Pasted HTML nests as deeply as the clipboard likes, and every level here is
+   * a stack frame. Past this depth the content is discarded rather than
+   * followed — five thousand nested blockquotes are an attack, not a document.
+   */
+  private parseChildren(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Fragment {
+    if (depth > Schema.MAX_DEPTH) return Fragment.empty
     const out: Node[] = []
     for (const child of Array.from(dom.childNodes)) {
-      out.push(...this.parseOne(child, marks))
+      out.push(...this.parseOne(child, marks, depth + 1))
     }
     return Fragment.from(out)
   }
 
-  private parseOne(dom: globalThis.Node, marks: readonly Mark[]): Node[] {
+  private parseOne(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Node[] {
     if (dom.nodeType === 3) {
       const text = normaliseWhitespace(dom.nodeValue ?? '')
       return text ? [this.schema.text(text, marks)] : []
@@ -111,23 +118,23 @@ export class DOMParser {
     if (matched?.kind === 'mark') {
       const type = matched.owner as MarkType
       const attrs = this.attrsFor(matched, element)
-      if (attrs === false) return this.parseChildren(element, marks).content.slice()
+      if (attrs === false) return this.parseChildren(element, marks, depth).content.slice()
       const mark = type.create(attrs)
-      return this.parseChildren(element, mark.addToSet(marks)).content.slice()
+      return this.parseChildren(element, mark.addToSet(marks), depth).content.slice()
     }
 
     if (matched?.kind === 'node') {
       const type = matched.owner as NodeType
       const attrs = this.attrsFor(matched, element)
-      if (attrs === false) return this.parseChildren(element, marks).content.slice()
-      const content = type.isLeaf ? Fragment.empty : this.parseChildren(element, marks)
+      if (attrs === false) return this.parseChildren(element, marks, depth).content.slice()
+      const content = type.isLeaf ? Fragment.empty : this.parseChildren(element, marks, depth)
       const node = type.createAndFill(attrs, content)
       return node ? [node] : []
     }
 
     // Inline styles can carry marks even when the tag means nothing.
     const styleMarks = this.marksFromStyle(element, marks)
-    return this.parseChildren(element, styleMarks).content.slice()
+    return this.parseChildren(element, styleMarks, depth).content.slice()
   }
 
   private matchElement(element: Element): CompiledRule | null {
