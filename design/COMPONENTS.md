@@ -166,3 +166,27 @@ list is four items and only one is editor-specific:
 
 If a future edit leaves editors as the loudest thing on amrela.co, the balance
 has drifted.
+
+## Package names shown in mockups
+
+The extension directory once listed nine packages — `@matrajs/extension-bold`,
+`@matrajs/extension-table` and so on — none of which exist. A directory that
+advertises installs which 404 is worse than no directory.
+
+What actually ships:
+
+| shown as | really is |
+|---|---|
+| bold, heading, lists, tables, comments, code, highlight | `@matrajs/core` |
+| AI | `@matrajs/ai` |
+| Collaboration | `@matrajs/collab` |
+
+Sizes in the mockups are now real: "in core" for bundled extensions, measured
+gzipped sizes for the separate ones. `Math` was replaced with `Highlight`
+because Math is not built.
+
+**Open question for the business, not for design:** every extension shipped so
+far is MIT, including tables, comments and collaboration. Nothing sits behind a
+licence key, so the "pro" badges and the paid tier on the pricing page describe
+a product that does not exist yet. Either something moves behind the licence, or
+the pricing page changes to sell support and sponsorship instead.
