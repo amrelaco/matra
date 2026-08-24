@@ -4,11 +4,14 @@ import type { Schema } from '../model/schema'
 import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
 import { type InputHandlers, type InputIntent, applyIntent } from './input'
+import type { NodeViewFactory } from './node-view'
 import { Renderer } from './render'
 import { readSelection, writeSelection } from './selection-sync'
 
 export interface EditorViewOptions {
   state: EditorState
+  /** Node views by type name. */
+  nodeViews?: Record<string, NodeViewFactory>
   /** Called with every transaction the view produces. */
   dispatchTransaction(tr: Transaction): void
   editable?: () => boolean
@@ -45,7 +48,7 @@ export class EditorView {
     private readonly options: EditorViewOptions,
   ) {
     this.stateValue = options.state
-    this.renderer = new Renderer(schema)
+    this.renderer = new Renderer(schema, { factories: options.nodeViews ?? {} })
     this.parser = DOMParser.fromSchema(schema)
 
     this.dom = place
@@ -88,6 +91,7 @@ export class EditorView {
 
   destroy(): void {
     this.destroyed = true
+    this.renderer.reset()
     for (const cleanup of this.cleanups) cleanup()
     this.cleanups.length = 0
     this.dom.removeAttribute('contenteditable')
@@ -134,6 +138,7 @@ export class EditorView {
 
   private onKeyDown(event: KeyboardEvent): void {
     if (this.composing) return
+    if (this.renderer.nodeViews.stopsEvent(event.target as globalThis.Node, event)) return
     if (this.options.handleKeyDown?.(event)) {
       event.preventDefault()
     }
@@ -141,6 +146,8 @@ export class EditorView {
 
   private onBeforeInput(event: InputEvent): void {
     if (this.composing) return
+    // A node view may own this interaction entirely.
+    if (this.renderer.nodeViews.stopsEvent(event.target as globalThis.Node, event)) return
     if (this.options.editable && !this.options.editable()) {
       event.preventDefault()
       return

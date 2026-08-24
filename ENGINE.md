@@ -169,9 +169,18 @@ Honesty about the gaps, since "no dependencies" can read as "complete":
 - ~~**Collaborative editing.**~~ Done in `@matrajs/collab`: an authority, step
   exchange, rebasing of unsent work over remote edits, and presence tracking.
   What is still missing is *drawing* remote cursors, which needs decorations.
-- **Node views.** No way yet to render a node with custom interactive DOM.
-  This is the next thing worth building: tables, image resizing and embeds all
-  want it.
+- ~~**Node views.**~~ Done. A node type may declare `nodeView`, returning its
+  own DOM plus an optional `contentDOM` for children. `stopEvent` keeps the
+  editor's hands off interactions inside the view.
+
+  Node views forced a real fix underneath: the renderer used to call
+  `replaceChildren()` on every keystroke, which is O(document) per character and
+  would have destroyed a view's focus, scroll position and any half-finished
+  interaction. It now patches. Because nodes are immutable, an edit inside one
+  paragraph leaves every other paragraph as literally the same object, so
+  identity alone skips most of the tree. Inline content inside a textblock is
+  still rebuilt whole — it is small, and mark wrappers make its DOM shape
+  diverge from the fragment.
 - **Decorations.** No inline highlights or widgets independent of the document.
 - **Drag and drop**, and **tables**.
 - **Deep nesting in replace.** A cross-block range nested more than one level

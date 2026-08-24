@@ -5,7 +5,7 @@ import { Keymap } from './engine/keys'
 import { DOMParser, DOMSerializer, Fragment, type Node, type Schema } from './engine/model'
 import { EditorState, Plugin, TextSelection, type Transaction } from './engine/state'
 import type { Mapping } from './engine/transform'
-import { EditorView } from './engine/view'
+import { EditorView, type NodeViewFactory as EngineNodeViewFactory } from './engine/view'
 import { core } from './extensions/core'
 import { buildSchema, sortByPriority } from './schema'
 import type {
@@ -251,8 +251,29 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
     mount(element) {
       if (view) throw new Error('Matra: editor is already mounted')
+      // Node views are written against plain JSON, like everything else in the
+      // public API, so the engine's node is converted on the way in.
+      const nodeViews: Record<string, EngineNodeViewFactory> = {}
+      for (const def of defs) {
+        if (def.kind !== 'node' || !def.nodeView) continue
+        const factory = def.nodeView
+        nodeViews[def.name] = ({ node, getPos }) => {
+          const spec = factory({ node: node.toJSON() as unknown as DocNode, getPos })
+          return {
+            dom: spec.dom,
+            contentDOM: spec.contentDOM,
+            update: spec.update
+              ? (next) => Boolean(spec.update?.(next.toJSON() as unknown as DocNode))
+              : undefined,
+            destroy: spec.destroy,
+            stopEvent: spec.stopEvent,
+          }
+        }
+      }
+
       view = new EditorView(element, schema, {
         state,
+        nodeViews,
         editable: () => options.editable ?? true,
         dispatchTransaction: (tr) => apply(tr),
         handleKeyDown: (event) => keys.handle(event),

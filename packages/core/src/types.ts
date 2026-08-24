@@ -100,6 +100,26 @@ export type CommandMap = Record<string, AnyCommand>
 // Definitions — three primitives, all plain objects.
 // ---------------------------------------------------------------------------
 
+/** What a node view hands back to the editor. */
+export interface NodeViewSpec {
+  dom: HTMLElement
+  /** Where child content renders. Omit for an atom that owns its inside. */
+  contentDOM?: HTMLElement | null
+  /** Return false when the view cannot represent the new node; it is rebuilt. */
+  update?(node: DocNode): boolean
+  destroy?(): void
+  /** Return true to keep the editor's hands off an event inside your UI. */
+  stopEvent?(event: Event): boolean
+}
+
+export interface NodeViewProps {
+  node: DocNode
+  /** Where this node starts, read at call time rather than cached. */
+  getPos(): number
+}
+
+export type NodeViewFactory = (props: NodeViewProps) => NodeViewSpec
+
 export interface NodeDef<C extends CommandMap = CommandMap> {
   kind: 'node'
   name: string
@@ -113,6 +133,13 @@ export interface NodeDef<C extends CommandMap = CommandMap> {
   attrs?: Record<string, AttrSpec>
   parseDOM?: ParseRule[]
   toDOM?: (node: DocNode) => DomOutput
+  /**
+   * Render this node with your own DOM.
+   *
+   * Use it when a node needs behaviour the document cannot express — a table
+   * with resize handles, an embed, an image with its own controls.
+   */
+  nodeView?: NodeViewFactory
   commands?: C
   keys?: Record<string, keyof C | Command<never[]>>
   inputRules?: InputRule[]

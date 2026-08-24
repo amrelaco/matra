@@ -57,11 +57,10 @@ mapping, editor state and the editable view are written from scratch, with
 An app bundles **18.4 kB gzipped**, because nothing arrives that the editor
 does not use.
 
-Not built yet, and worth knowing before you pick it: **node views** (rendering a
-node with custom interactive DOM), **decorations** (highlights and widgets that
-are not part of the document), and drag and drop. Collaborative presence
-positions are tracked but drawing the cursors is the host's job, for the same
-reason — there is no decoration layer yet.
+Not built yet, and worth knowing before you pick it: **decorations** (highlights
+and widgets that are not part of the document) and drag and drop. Collaborative
+presence positions are tracked, but drawing remote cursors needs decorations,
+so that is the host's job today.
 
 The view passes its tests but has not yet met real IME users on iOS Safari or
 Android Chrome. See [ENGINE.md](./ENGINE.md) for where the risk actually sits.
