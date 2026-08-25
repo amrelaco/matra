@@ -100,11 +100,19 @@ export class DOMParser {
    */
   private parseChildren(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Fragment {
     if (depth > Schema.MAX_DEPTH) return Fragment.empty
+    const children = Array.from(dom.childNodes)
     const out: Node[] = []
-    for (const child of Array.from(dom.childNodes)) {
+
+    for (const child of children) {
+      // The newline and indentation between two block tags is how the source
+      // was formatted, not something anybody typed. Left in, each run becomes
+      // its own paragraph, and a document written across several lines gains a
+      // blank paragraph between every pair of blocks.
+      if (child.nodeType === 3 && isBlank(child.nodeValue) && nextToBlock(child)) continue
       out.push(...this.parseOne(child, marks, depth + 1))
     }
-    return Fragment.from(out)
+
+    return Fragment.from(trimEdges(out))
   }
 
   private parseOne(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Node[] {
@@ -216,4 +224,91 @@ function matchesSelector(element: Element, selector: string, tag: string): boole
 /** Collapse runs of whitespace the way HTML rendering does. */
 function normaliseWhitespace(text: string): string {
   return text.replace(/[\s\r\n]+/g, ' ')
+}
+
+const isBlank = (text: string | null) => text !== null && text.trim() === ''
+
+/** Is this text node sitting next to a block element rather than inline text? */
+function nextToBlock(node: globalThis.Node): boolean {
+  const before = node.previousSibling
+  const after = node.nextSibling
+  // Nothing either side: the parent held only whitespace, which is not content.
+  if (!before && !after) return true
+  return isBlockElement(before) || isBlockElement(after)
+}
+
+const BLOCK_TAGS = new Set([
+  'ADDRESS',
+  'ARTICLE',
+  'ASIDE',
+  'BLOCKQUOTE',
+  'DD',
+  'DIV',
+  'DL',
+  'DT',
+  'FIELDSET',
+  'FIGCAPTION',
+  'FIGURE',
+  'FOOTER',
+  'FORM',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'HEADER',
+  'HR',
+  'LI',
+  'MAIN',
+  'NAV',
+  'OL',
+  'P',
+  'PRE',
+  'SECTION',
+  'TABLE',
+  'TBODY',
+  'TD',
+  'TFOOT',
+  'TH',
+  'THEAD',
+  'TR',
+  'UL',
+])
+
+function isBlockElement(node: globalThis.Node | null): boolean {
+  return node !== null && node.nodeType === 1 && BLOCK_TAGS.has((node as Element).tagName)
+}
+
+/**
+ * Drop the space a source file left at the start and end of a block.
+ *
+ * `<p>\n  Hello\n</p>` carries a leading and a trailing space that nobody
+ * typed. HTML hides them by collapsing whitespace; an editor cannot, because it
+ * has to show the spaces people *do* type.
+ */
+function trimEdges(nodes: Node[]): Node[] {
+  if (nodes.length === 0) return nodes
+  const out = [...nodes]
+
+  const first = out[0] as Node
+  if (first.isText) {
+    const trimmed = (first.text ?? '').replace(/^ +/, '')
+    if (trimmed !== first.text) {
+      if (!trimmed) out.shift()
+      else out[0] = first.withText(trimmed)
+    }
+  }
+
+  const lastIndex = out.length - 1
+  const last = out[lastIndex] as Node | undefined
+  if (last?.isText) {
+    const trimmed = (last.text ?? '').replace(/ +$/, '')
+    if (trimmed !== last.text) {
+      if (!trimmed) out.pop()
+      else out[lastIndex] = last.withText(trimmed)
+    }
+  }
+
+  return out
 }

@@ -84,3 +84,51 @@ describe('trailing spaces survive', () => {
     expect(editor.getText()).toBe('word   ')
   })
 })
+
+describe('formatting whitespace is not content', () => {
+  const parse = (html: string) => {
+    const editor = createEditor({ extensions: starterKit })
+    editor.setContent(html)
+    return editor
+  }
+
+  it('does not turn the gap between two blocks into a paragraph', () => {
+    const editor = parse(`<h3>Title</h3>
+        <p>Body.</p>
+        <blockquote><p>Quote.</p></blockquote>`)
+    expect(editor.getJSON().content?.length).toBe(3)
+    expect(editor.getJSON().content?.map((node) => node.type)).toEqual([
+      'heading',
+      'paragraph',
+      'blockquote',
+    ])
+  })
+
+  it('trims the space a source file leaves inside a block', () => {
+    const editor = parse('<p>\n          Body.\n        </p>')
+    expect(editor.getJSON().content?.[0]?.content?.[0]?.text).toBe('Body.')
+  })
+
+  it('keeps a space between two inline elements', () => {
+    const editor = parse('<p><strong>one</strong> <em>two</em></p>')
+    expect(editor.getText()).toBe('one two')
+  })
+
+  it('keeps spaces someone actually typed inside a line', () => {
+    const editor = parse('<p>a  b</p>')
+    expect(editor.getText()).toBe('a b')
+  })
+
+  it('leaves a genuinely empty paragraph alone', () => {
+    const editor = parse('<p>one</p><p></p><p>two</p>')
+    expect(editor.getJSON().content?.length).toBe(3)
+  })
+
+  it('does not collapse a list written across lines', () => {
+    const editor = parse(`<ul>
+          <li><p>one</p></li>
+          <li><p>two</p></li>
+        </ul>`)
+    expect(editor.getJSON().content?.[0]?.content?.length).toBe(2)
+  })
+})
