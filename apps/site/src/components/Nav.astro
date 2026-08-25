@@ -19,9 +19,6 @@ const links = [
     </div>
 
     <div class="right">
-      <button id="reset-page" type="button" class="reset mono" title="Undo every edit on this page">
-        reset page
-      </button>
       <a class="gh" href="https://github.com/amrelaco/matra">GitHub</a>
     </div>
   </div>
@@ -57,21 +54,11 @@ const links = [
   .links a { text-decoration: none; color: var(--ink-soft); }
   .links a:hover { color: var(--ink); }
   .right { display: flex; align-items: center; gap: var(--s2); flex: none; }
-  .reset {
-    background: none;
-    border: 1px dashed var(--rule-strong);
-    color: var(--ink-faint);
-    font-size: 11px;
-    padding: 6px 11px;
-    cursor: pointer;
-  }
-  .reset:hover { color: var(--ink); border-color: var(--indigo); }
   .gh { font-size: 14.5px; text-decoration: none; color: var(--ink-soft); }
   .gh:hover { color: var(--ink); }
 
   @media (max-width: 860px) {
     .bar { gap: var(--s2); }
     .links { display: none; }
-    .reset { display: none; }
   }
 </style>

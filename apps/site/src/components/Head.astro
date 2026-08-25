@@ -9,11 +9,11 @@ const { kicker, title, lede } = Astro.props
 <header class="page-head">
   <div class="wrap">
     <p class="kicker">{kicker}</p>
-    <div data-editable="typography" data-hint="typography extension">
+    <div data-editable="typography">
       <h1 set:html={title} />
     </div>
     {lede && (
-      <div data-editable="typography" data-hint="try typing here">
+      <div data-editable="typography">
         <p class="lede">{lede}</p>
       </div>
     )}

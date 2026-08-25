@@ -51,7 +51,10 @@
   --s6: 112px;
   --s7: 160px;
 
-  --page: 1200px;
+  /* One column width for the whole site. Every section sits on the same left
+     edge — the hero used to be capped narrower than the sections under it, so
+     the nav, the headline and the first section each started somewhere else. */
+  --page: 1140px;
   --gutter: 40px;
   color-scheme: light;
 }
@@ -130,8 +133,8 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 16.5px;
-  line-height: 1.65;
+  font-size: 17px;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -140,9 +143,25 @@ h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.018em;
-  line-height: 1.05;
   margin: 0;
+}
+
+h1 {
+  font-size: clamp(52px, 7.4vw, 92px);
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+}
+
+h2 {
+  font-size: clamp(34px, 4.4vw, 54px);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+h3 {
+  font-size: 25px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 a {
@@ -261,29 +280,6 @@ th {
   background: color-mix(in srgb, var(--indigo) 6%, transparent);
 }
 
-[data-editable]::after {
-  content: attr(data-hint);
-  position: absolute;
-  top: -11px;
-  right: 6px;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--indigo);
-  background: var(--paper);
-  padding: 0 7px;
-  opacity: 0;
-  transition: opacity 140ms ease;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-[data-editable]:hover::after,
-[data-editable]:focus-within::after {
-  opacity: 1;
-}
-
 [data-editable][data-live]::before {
   content: "";
   position: absolute;
@@ -296,13 +292,6 @@ th {
 [data-editable][data-live]:hover::before,
 [data-editable][data-live]:focus-within::before {
   border-color: color-mix(in srgb, var(--indigo) 40%, transparent);
-}
-
-/* Someone who cannot see the hover affordance should not get the surprise. */
-@media (prefers-reduced-motion: reduce) {
-  [data-editable]::after {
-    transition: none;
-  }
 }
 
 @media (max-width: 860px) {
@@ -629,4 +618,39 @@ th {
 }
 .page-head .lede {
   font-size: 18.5px;
+}
+
+/* --- editable text, once upgraded -------------------------------------- */
+
+/*
+ * An upgraded element holds a document, and a document's first child is a
+ * paragraph carrying the browser's default 1em margin. Inside an h1 that is
+ * 1em of 52px, so a heading that looked right as markup gains a hundred pixels
+ * of air the moment it becomes editable.
+ */
+h1[data-live] > p,
+h2[data-live] > p,
+h3[data-live] > p {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+
+[data-live] > p:first-child,
+[data-live] > h1:first-child,
+[data-live] > h2:first-child,
+[data-live] > h3:first-child {
+  margin-top: 0;
+}
+
+[data-live] > p:last-child,
+[data-live] > ul:last-child,
+[data-live] > blockquote:last-child {
+  margin-bottom: 0;
+}
+
+/* The caret is the only affordance these need. */
+[data-live] {
+  cursor: text;
 }
