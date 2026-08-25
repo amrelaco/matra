@@ -261,37 +261,14 @@ th {
 /* --- the editable mechanic -------------------------------------------- */
 
 /*
- * Every region marked editable is a real editor once the page settles. The
- * affordance has to be quiet until it is wanted: a dashed frame on hover, and
- * a label naming the extension that makes that region work.
+ * Nothing announces itself. No tint on hover, no frame, no focus ring — the
+ * caret appearing is the whole affordance, which is how text behaves in every
+ * other editor anyone has used.
  */
+[data-live],
 [data-editable] {
-  position: relative;
   outline: none;
-  transition: background-color 140ms ease;
-  border-radius: 2px;
-}
-
-[data-editable]:hover {
-  background: color-mix(in srgb, var(--indigo) 4%, transparent);
-}
-
-[data-editable]:focus-within {
-  background: color-mix(in srgb, var(--indigo) 6%, transparent);
-}
-
-[data-editable][data-live]::before {
-  content: "";
-  position: absolute;
-  inset: -10px -12px;
-  border: 1px dashed transparent;
-  transition: border-color 140ms ease;
-  pointer-events: none;
-}
-
-[data-editable][data-live]:hover::before,
-[data-editable][data-live]:focus-within::before {
-  border-color: color-mix(in srgb, var(--indigo) 40%, transparent);
+  cursor: text;
 }
 
 @media (max-width: 860px) {

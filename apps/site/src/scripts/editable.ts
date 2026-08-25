@@ -1,15 +1,16 @@
 /**
  * Turn the page into the product.
  *
- * Every block of prose becomes a real Matra editor, seeded from the HTML
- * already in it. That ordering is load-bearing: the content is written once as
- * ordinary markup, so it exists for a crawler, for a reader with JavaScript
- * off, and for a screen reader — and only then is it upgraded. A page whose
- * text lives only inside an editor instance is a page with no text.
+ * Every piece of text becomes a real Matra editor, seeded from the HTML already
+ * in it — headings, paragraphs, quotes, list items, table cells, captions and
+ * the small uppercase labels. That ordering is load-bearing: the content is
+ * written once as ordinary markup, so it exists for a crawler, for a reader
+ * with JavaScript off, and for a screen reader, and only then is it upgraded.
+ * A page whose text lives only inside an editor instance is a page with no
+ * text.
  *
- * Nothing announces itself. There is no tooltip and no reset button: the cursor
- * changes when you are over text, and a reload puts everything back, which is
- * what a reload is for.
+ * Nothing announces itself. No tooltip, no frame, no reset button: the caret
+ * appears, and a reload puts everything back.
  */
 import {
   blockquote,
@@ -30,6 +31,10 @@ import {
   orderedList,
   paragraph,
   strike,
+  tableCell,
+  tableHeader,
+  table as tableNode,
+  tableRow,
   taskItem,
   taskList,
   text,
@@ -39,10 +44,12 @@ import {
 
 type Kit = readonly unknown[]
 
-/** Marks only — for a headline or a caption that should stay one block. */
-const LINE: Kit = [doc, paragraph, text, bold, italic, code, hardBreak, history, typography]
+const MARKS = [bold, italic, strike, code, underline, highlight] as const
 
-/** Prose: marks, plus the blocks a paragraph can legitimately become. */
+/** One line, marks only — a label, a caption, a heading, a table cell. */
+const LINE: Kit = [doc, paragraph, text, ...MARKS, hardBreak, history, typography]
+
+/** Prose: marks plus the blocks a paragraph can legitimately become. */
 const PROSE: Kit = [
   doc,
   paragraph,
@@ -52,16 +59,25 @@ const PROSE: Kit = [
   bulletList,
   orderedList,
   listItem,
-  bold,
-  italic,
-  strike,
-  code,
+  ...MARKS,
   link,
-  underline,
-  highlight,
   hardBreak,
   history,
   typography,
+]
+
+/** A whole table, so cells are editable and the structure survives. */
+const TABLE: Kit = [
+  doc,
+  paragraph,
+  text,
+  tableNode,
+  tableRow,
+  tableCell,
+  tableHeader,
+  ...MARKS,
+  hardBreak,
+  history,
 ]
 
 /** Everything, for the region that is meant to show everything. */
@@ -79,53 +95,57 @@ const FULL: Kit = [
   taskItem,
   horizontalRule,
   hardBreak,
-  bold,
-  italic,
-  strike,
-  code,
+  ...MARKS,
   link,
-  underline,
-  highlight,
   history,
   typography,
 ]
 
-const KITS: Record<string, Kit> = {
-  line: LINE,
-  prose: PROSE,
-  full: FULL,
-  tasks: [
-    doc,
-    paragraph,
-    text,
-    bulletList,
-    orderedList,
-    listItem,
-    taskList,
-    taskItem,
-    bold,
-    italic,
-    hardBreak,
-    history,
-  ],
-}
+const KITS: Record<string, Kit> = { line: LINE, prose: PROSE, table: TABLE, full: FULL }
+
+/** Text that upgrades on its own. */
+const AUTO = [
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'p',
+  'blockquote',
+  'li',
+  'figcaption',
+  'dt',
+  'dd',
+  '.kicker',
+  '.cell-head',
+  '.packages',
+  '.md-label',
+  '.count',
+  '.file',
+  '.proof b',
+  '.proof span',
+  '.bubble',
+].join(',')
 
 /**
- * Text that is upgraded automatically.
+ * What stays as rendered.
  *
- * Everything a reader would call prose, and nothing that is really a control.
- * Buttons, links in navigation, code samples people copy, and table cells stay
- * exactly as they were rendered.
+ * Anything whose click has to do something: a link must navigate and a button
+ * must fire. Inside a contenteditable region a click places a caret instead, so
+ * making the navigation editable would be a page that looks the same and no
+ * longer works. Code samples stay too, because people copy them.
  */
-const AUTO = 'h1, h2, h3, p, blockquote, ul:not([data-type]), ol'
+const SKIP = 'nav, pre, code, .btn, [data-static], [data-editable], [data-live]'
 
-const SKIP = 'nav, footer, pre, code, table, .btn, .kicker, [data-static], [data-editable]'
+const isInteractive = (element: Element) =>
+  element.matches('a, button') || element.querySelector('a, button') !== null
 
+/** A label is one line; a paragraph might reasonably become a list. */
 function kitFor(element: HTMLElement): Kit {
   const named = element.dataset.editable
   if (named && KITS[named]) return KITS[named] as Kit
-  // A heading is one line; a paragraph might reasonably become a list.
-  return /^H[1-3]$/.test(element.tagName) ? LINE : PROSE
+  if (/^(H[1-4]|LI|TD|TH|FIGCAPTION|DT|DD)$/.test(element.tagName)) return LINE
+  if (element.classList.contains('kicker')) return LINE
+  return element.tagName === 'P' ? PROSE : LINE
 }
 
 function upgrade(element: HTMLElement): void {
@@ -140,30 +160,51 @@ function upgrade(element: HTMLElement): void {
     element.setAttribute('aria-label', 'Editable text. Reload the page to restore it.')
   } catch (error) {
     // A region that will not upgrade stays as the HTML it already was, which is
-    // readable and correct. Failing loudly here would break the page to
-    // announce that a demo is missing.
+    // readable and correct. Failing loudly would break the page to announce
+    // that a demo is missing.
     console.warn('Matra: could not make this editable', element, error)
   }
 }
 
-/** Everything that should become an editor, marked or inferred. */
+/**
+ * A table becomes one editor rather than one per cell.
+ *
+ * Sixty cells would be sixty editors, and each would be an island — no tabbing
+ * between them, no sense that it is a table at all. One editor over the whole
+ * thing means the cells are editable *and* the table is still a table.
+ */
+function wrapTable(table: HTMLTableElement): HTMLElement | null {
+  if (table.closest(SKIP) || isInteractive(table)) return null
+  const holder = document.createElement('div')
+  holder.dataset.editable = 'table'
+  table.replaceWith(holder)
+  holder.innerHTML = table.outerHTML
+  return holder
+}
+
 function regions(): HTMLElement[] {
+  const tables = Array.from(document.querySelectorAll<HTMLTableElement>('table'))
+    .map(wrapTable)
+    .filter((element): element is HTMLElement => element !== null)
+
   const marked = Array.from(document.querySelectorAll<HTMLElement>('[data-editable]'))
+
   const auto = Array.from(document.querySelectorAll<HTMLElement>(AUTO)).filter((element) => {
     if (element.closest(SKIP)) return false
-    // A paragraph inside something already being upgraded is that editor's
-    // problem, not a second editor's.
+    if (isInteractive(element)) return false
+    // Text inside something already being upgraded belongs to that editor.
     return !marked.some((region) => region !== element && region.contains(element))
   })
-  return [...marked, ...auto]
+
+  return [...new Set([...tables, ...marked, ...auto])]
 }
 
 /**
  * Upgrade as things approach the viewport.
  *
- * Every paragraph on the page becoming an editor during first paint would spend
- * the opening moment proving how slow the thing is. The observer means what you
- * can see is ready before you reach it, and the rest costs nothing until then.
+ * Every paragraph and cell on the page becoming an editor during first paint
+ * would spend the opening moment proving how slow the thing is. The observer
+ * means what you can see is ready before you reach it.
  */
 function watch(): void {
   const found = regions()
