@@ -10,7 +10,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check": "biome check .",
-    "fix": "biome check --write ."
+    "fix": "biome check --write .",
+    "stamp": "node scripts/stamp.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
