@@ -1,6 +1,7 @@
 import { DOMParser } from '../model/dom-parser'
 import type { Node } from '../model/node'
 import type { Schema } from '../model/schema'
+import type { Selection } from '../state/selection'
 import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
 import type { Mapping } from '../transform/step-map'
@@ -122,6 +123,8 @@ export class EditorView {
 
   /** The block being dragged, as a document range. */
   private dragged: { from: number; to: number } | null = null
+  /** The block an in-progress composition is writing into. */
+  private composedBlock: { dom: HTMLElement; index: number } | null = null
   private dropCursor: DropCursor | null = null
 
   private onDragStart(event: DragEvent): void {
@@ -215,10 +218,14 @@ export class EditorView {
     this.on('keydown', (event) => this.onKeyDown(event))
     this.on('compositionstart', () => {
       this.composing = true
+      // Remember which block the IME is writing into, so the read-back can
+      // re-parse that block rather than the whole document.
+      this.composedBlock = this.blockUnderSelection()
     })
     this.on('compositionend', () => {
       this.composing = false
       this.readBackComposition()
+      this.composedBlock = null
     })
     this.on('paste', (event) => this.onPaste(event as ClipboardEvent))
     this.on('dragstart', (event) => this.onDragStart(event as DragEvent))
@@ -303,8 +310,41 @@ export class EditorView {
    * After an IME finishes, the DOM holds text the model has not seen. Read the
    * affected block back rather than trying to reconstruct the keystrokes.
    */
+  /** The top-level block the selection sits in, and where it starts. */
+  private blockUnderSelection(): { dom: HTMLElement; index: number } | null {
+    const selection = this.dom.ownerDocument.getSelection()
+    const node = selection?.anchorNode
+    if (!node) return null
+
+    let element: globalThis.Node | null = node
+    while (element && element.parentNode !== this.dom) element = element.parentNode
+    if (!element || element.nodeType !== 1) return null
+
+    const index = Array.prototype.indexOf.call(this.dom.children, element)
+    return index === -1 ? null : { dom: element as HTMLElement, index }
+  }
+
+  /**
+   * Take the DOM back after the IME has finished writing into it.
+   *
+   * Composition is the one time the DOM changes without a transaction, so the
+   * document has to be brought back into line with it afterwards. Re-parsing
+   * everything is the obvious way and it costs the size of the document per
+   * composed character — which is a bill paid only by people writing Bangla,
+   * Chinese, Japanese or Korean, because everyone else never enters this path.
+   *
+   * So the block the IME was writing in is re-parsed on its own, and only that
+   * block is replaced. The whole-document read-back stays as the fallback for
+   * anything that cannot be localised: a composition spanning blocks, or one
+   * whose block has since gone.
+   */
   private readBackComposition(): void {
     const selection = readSelection(this.dom, this.renderer.map, this.stateValue.doc)
+    const local = this.composedBlock
+    if (local && local.dom.parentNode === this.dom && this.replaceOneBlock(local, selection)) {
+      return
+    }
+
     const parsed = this.parser.parse(this.dom)
     if (parsed.eq(this.stateValue.doc)) {
       if (selection) this.dispatchSelection(selection)
@@ -315,6 +355,42 @@ export class EditorView {
     tr.replaceWith(0, this.stateValue.doc.content.size, parsed.content)
     if (selection) tr.selectAt(Math.min(selection.anchor, tr.doc.content.size))
     this.options.dispatchTransaction(tr)
+  }
+
+  /** Re-parse one block and swap it in. False means "could not, use the fallback". */
+  private replaceOneBlock(
+    local: { dom: HTMLElement; index: number },
+    selection: Selection | null,
+  ): boolean {
+    const doc = this.stateValue.doc
+    // The DOM and the document must still agree on how many blocks there are;
+    // if the IME added or removed one, this is not a single-block edit.
+    if (this.dom.children.length !== doc.content.childCount) return false
+    if (local.index >= doc.content.childCount) return false
+
+    const container = this.dom.ownerDocument.createElement('div')
+    container.appendChild(local.dom.cloneNode(true))
+    const parsed = this.parser.parse(container)
+    if (parsed.content.childCount !== 1) return false
+
+    const replacement = parsed.content.child(0)
+    const existing = doc.content.child(local.index)
+    if (replacement.eq(existing)) {
+      if (selection) this.dispatchSelection(selection)
+      return true
+    }
+    // Only the text inside a block may change this way. A different node type
+    // means the IME did something structural, and that needs the full path.
+    if (replacement.type !== existing.type) return false
+
+    let from = 0
+    for (let i = 0; i < local.index; i++) from += doc.content.child(i).nodeSize
+
+    const tr = this.stateValue.tr
+    tr.replaceWith(from, from + existing.nodeSize, replacement)
+    if (selection) tr.selectAt(Math.min(selection.anchor, tr.doc.content.size))
+    this.options.dispatchTransaction(tr)
+    return true
   }
 
   private readSelectionFromDOM(): void {

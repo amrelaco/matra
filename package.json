@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check": "biome check .",
     "fix": "biome check --write .",
-    "stamp": "node scripts/stamp.mjs"
+    "stamp": "node scripts/stamp.mjs",
+    "size": "node scripts/size.mjs",
+    "links": "node scripts/links.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -19,6 +21,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.7",
     "@vue/test-utils": "^2.4.6",
+    "esbuild": "^0.28.2",
     "happy-dom": "^15.11.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
