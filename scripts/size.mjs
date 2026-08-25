@@ -35,8 +35,8 @@ console.log(`core + starter kit: ${gzipped.toFixed(1)} kB gzipped (budget ${BUDG
 
 if (gzipped > BUDGET_KB) {
   console.error(
-    `\nOver budget by ${(gzipped - BUDGET_KB).toFixed(1)} kB.\n` +
-      'Either trim it, or raise the budget here and change every page that quotes the old number.',
+    `\nOver budget by ${(gzipped - BUDGET_KB).toFixed(1)} kB.
+Either trim it, or raise the budget here and change every page that quotes the old number.`,
   )
   process.exit(1)
 }
