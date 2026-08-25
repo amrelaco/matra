@@ -1,0 +1,57 @@
+---
+import Footer from '../components/Footer.astro'
+import Legal from '../components/Legal.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+---
+<Base title="Terms — Matra" description="Plain terms for the hosted account and paid packages. The framework is MIT and these terms do not touch it.">
+  <Nav />
+  <Legal
+    kicker="Terms"
+    title="Plain terms.<br />No lock-in."
+    lede="These cover the account and anything you pay us for — not the MIT core, which its own licence already covers."
+    updated="24 August 2026"
+  >
+    <h2>Using Matra</h2>
+    <p>
+      <code>@matrajs/core</code> and the framework bindings are MIT. Nothing here takes that
+      back, and nothing here applies to code you ship with them.
+    </p>
+    <p>An account is for one organisation. Sharing credentials outside it will close it.</p>
+
+    <h2>Paying</h2>
+    <p>
+      Subscriptions renew until cancelled, and cancelling stops the next charge rather than the
+      current period. Ask within 14 days of a charge and we refund it, without asking why.
+    </p>
+    <p>
+      Plans are capped by the number of developers writing code against the paid packages.
+      Adding one inside your cap costs nothing and needs no paperwork.
+    </p>
+
+    <h2>What we promise</h2>
+    <p>
+      The service is provided as it is. We will tell you before a breaking change to a paid
+      feature. We will not hold your documents hostage if you leave — export is a button rather
+      than a support ticket.
+    </p>
+    <p>
+      <strong>A lapsed subscription cannot switch anything off.</strong> Nothing checks a
+      licence at runtime and nothing contacts us, so software you already shipped keeps running
+      whatever happens to your billing.
+    </p>
+
+    <h2>What we ask</h2>
+    <p>
+      Do not resell the hosted service as your own, and do not use it to store anything illegal.
+      That is the whole list.
+    </p>
+
+    <h2>Changes and law</h2>
+    <p>
+      Changes are posted here with a new date. These terms are governed by the laws of
+      Bangladesh. Questions: <strong>legal@amrela.co</strong>.
+    </p>
+  </Legal>
+  <Footer />
+</Base>

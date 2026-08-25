@@ -1,0 +1,44 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Your first editor — Matra docs" description="A working editor in ten lines, with a toolbar wired to real commands." section="Getting started" heading="Your first editor">
+  <p>Ten lines, and the result is the editor on the front page.</p>
+  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123;
+  extensions: starterKit,
+  content: '&lt;p&gt;Hello.&lt;/p&gt;',
+&#125;)
+
+editor.mount(document.querySelector('#editor'))</code></pre>
+
+  <h2>A toolbar</h2>
+  <p>
+    Every button is a command call. <code>editor.commands</code> is typed from the array you
+    passed in, so <code>toggleBold</code> exists because <code>bold</code> is in the starter kit
+    — not because of a declaration merge somewhere.
+  </p>
+  <pre><code>document.querySelector('#bold').addEventListener('mousedown', (event) =&gt; &#123;
+  event.preventDefault()      // keep the caret in the editor
+  editor.commands.toggleBold()
+&#125;)</code></pre>
+
+  <h2>Reading the document</h2>
+  <pre><code>editor.getJSON()   // plain JSON, no engine types
+editor.getHTML()   // a string
+editor.getText()   // block-separated text</code></pre>
+  <p>
+    Store the JSON. It is ordinary data: you can diff two revisions with any library, log it,
+    and read it in a language that has never heard of this editor.
+  </p>
+
+  <h2>Reacting to changes</h2>
+  <pre><code>const off = editor.on('change', () =&gt; save(editor.getJSON()))
+// later
+off()</code></pre>
+
+  <div class="note">
+    Call <code>editor.destroy()</code> when the component unmounts. The React and Vue bindings
+    do it for you.
+  </div>
+</Docs>

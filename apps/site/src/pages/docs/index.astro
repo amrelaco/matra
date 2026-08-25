@@ -1,0 +1,38 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Introduction — Matra docs" description="Matra is a headless rich text editor framework. It gives you a document model, an extension API and a command system, and stays out of your interface." section="Getting started" heading="Introduction">
+  <p>
+    Matra is a headless rich text editor framework. It gives you a document model, an extension
+    API and a command system — and stays out of the way of your interface.
+  </p>
+
+  <h2>Why another editor</h2>
+  <p>
+    Every editor framework leaks its engine into your code. You import the engine's types, write
+    against its internals, and upgrading it becomes your problem. Matra wraps the engine
+    completely: <strong>your document is plain JSON and no engine type appears in a public
+    signature.</strong>
+  </p>
+  <p>
+    It also has no runtime dependencies. The document model, transforms, position mapping,
+    editor state and the editable view are written from scratch, which is why an app bundles
+    21.9 kB gzipped instead of 117.
+  </p>
+
+  <h2>Install</h2>
+  <pre><code>npm i @matrajs/core</code></pre>
+
+  <div class="note">
+    Matra is pre-1.0. The API may still change, and the view has not yet met real IME users on
+    iOS and Android at scale — if your users type Bangla, Chinese or Japanese, test before you
+    commit.
+  </div>
+
+  <h2>Next</h2>
+  <ul>
+    <li><a href="/docs/installation">Installation</a> — packages and framework bindings</li>
+    <li><a href="/docs/first-editor">Your first editor</a> — a working editor in ten lines</li>
+    <li><a href="/docs/position-mapping">Position mapping</a> — why async edits stay correct</li>
+  </ul>
+</Docs>

@@ -1,0 +1,48 @@
+---
+import Footer from '../components/Footer.astro'
+import Legal from '../components/Legal.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+---
+<Base title="Privacy — Matra" description="The editor runs in your browser and never sends your documents to us. This covers matrajs.com and the account, and nothing else.">
+  <Nav />
+  <Legal
+    kicker="Privacy"
+    title="What we keep.<br />And what we don't."
+    lede="The editor runs in your browser. Your documents are never sent to us — there is no endpoint to send them to."
+    updated="24 August 2026"
+  >
+    <h2>The editor itself</h2>
+    <p>
+      <code>@matrajs/core</code> makes no network requests. No telemetry, no phone-home, no
+      usage beacon, no licence check. Your document never leaves the page it is typed on, and
+      that is a property of the code rather than a promise about our intentions.
+    </p>
+
+    <h2>What an account stores</h2>
+    <p>An email address and a password hash. Nothing else is required to use Matra.</p>
+
+    <h2>The website</h2>
+    <p>
+      Plausible, self-hosted, counts page views. No cookies, no cross-site identifier, no
+      profile of you. Server logs keep an IP address for 14 days to stop abuse, then drop it.
+    </p>
+
+    <h2>Who else sees anything</h2>
+    <ul>
+      <li><strong>Stripe</strong> — payments. We never see or store a card number.</li>
+      <li><strong>Our hosting provider</strong> — serves this page.</li>
+    </ul>
+    <p>
+      No advertising network, no data broker, and no model trained on anything of yours.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+      Ask what we hold, correct it, export it, or have it erased:
+      <strong>privacy@amrela.co</strong>. We answer within 30 days. Deleting your account
+      removes the record, not just its label.
+    </p>
+  </Legal>
+  <Footer />
+</Base>

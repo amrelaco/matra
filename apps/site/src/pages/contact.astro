@@ -1,0 +1,64 @@
+---
+import Footer from '../components/Footer.astro'
+import Head from '../components/Head.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+
+const routes = [
+  [
+    'A bug, or something broken',
+    'The issue tracker gets a faster answer than any inbox, because it reaches the person who wrote the line.',
+    'Open an issue',
+    'https://github.com/amrelaco/matra/issues',
+  ],
+  [
+    'Buying, or a licence question',
+    'Seats, invoices, purchase orders, or a licence that does not fit your situation.',
+    'licensing@amrela.co',
+    'mailto:licensing@amrela.co',
+  ],
+  [
+    'Security',
+    'Anything you would rather not post in public. We answer these first.',
+    'security@amrela.co',
+    'mailto:security@amrela.co',
+  ],
+  [
+    'Everything else',
+    'Including whether Amrela can build the thing around the editor for you.',
+    'hello@amrela.co',
+    'mailto:hello@amrela.co',
+  ],
+]
+---
+<Base title="Contact — Matra" description="Where to send a bug, a licence question, a security report, or anything else.">
+  <Nav />
+  <Head
+    kicker="Contact"
+    title="Four inboxes,<br />one small company."
+    lede="Matra is built by Amrela in Dhaka. The people who answer these are the people who wrote the code."
+  />
+  <section class="section">
+    <div class="wrap">
+      <div class="routes">
+        {routes.map(([title, note, label, href]) => (
+          <a class="route" href={href}>
+            <h3>{title}</h3>
+            <p>{note}</p>
+            <span class="mono go">{label} →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+  <Footer />
+  <style>
+    .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .route { border: 1px dashed var(--rule-strong); background: var(--surface); padding: 24px; text-decoration: none; display: block; }
+    .route:hover { border-color: var(--indigo); }
+    .route h3 { font-size: 20px; margin: 0 0 8px; }
+    .route p { font-size: 14px; color: var(--ink-soft); margin: 0 0 16px; }
+    .go { font-size: 12.5px; color: var(--indigo); }
+    @media (max-width: 720px) { .routes { grid-template-columns: 1fr; } }
+  </style>
+</Base>

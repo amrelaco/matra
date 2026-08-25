@@ -1,0 +1,129 @@
+---
+import Footer from '../components/Footer.astro'
+import Head from '../components/Head.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+
+/** Every row here ships. A directory advertising installs that 404 is worse than none. */
+const rows = [
+  ['Bold', 'Toggle strong emphasis. Mod-B.', '@matrajs/core', 'free'],
+  ['Italic, strike, code', 'The rest of the everyday marks.', '@matrajs/core', 'free'],
+  ['Underline, highlight', 'Plus subscript and superscript.', '@matrajs/core', 'free'],
+  ['Link', 'Scheme-checked on every route into the DOM.', '@matrajs/core', 'free'],
+  ['Heading', 'Levels 1–6, with an input rule for #.', '@matrajs/core', 'free'],
+  ['Lists', 'Bulleted and ordered, Tab to nest.', '@matrajs/core', 'free'],
+  ['Task lists', 'Real checkboxes the caret cannot enter.', '@matrajs/core', 'free'],
+  [
+    'Blockquote, code block',
+    'Fenced blocks carry a language attribute.',
+    '@matrajs/core',
+    'free',
+  ],
+  ['Tables', 'Insert and delete, header rows, colspan kept.', '@matrajs/core', 'free'],
+  ['Image', 'data:image on an img, and nowhere else.', '@matrajs/core', 'free'],
+  ['Placeholder', 'Text for an empty document.', '@matrajs/core', 'free'],
+  [
+    'Character count',
+    'Characters and words, reduced per transaction.',
+    '@matrajs/core',
+    'free',
+  ],
+  ['Text align', 'Left, centre, right, justify.', '@matrajs/core', 'free'],
+  ['Typography', 'Smart quotes, dashes, arrows, ellipsis.', '@matrajs/core', 'free'],
+  ['Comments', 'Threaded comments anchored to ranges.', '@matrajs/core', 'free'],
+  ['Table of contents', 'Derived on demand, never stale.', '@matrajs/core', 'free'],
+  ['Unique block ids', 'Stable identity for anchoring things.', '@matrajs/core', 'free'],
+  ['Drag handle', 'Drag blocks, with a drop cursor.', '@matrajs/core', 'free'],
+  ['Markdown', 'In and out, with no DOM at all.', '@matrajs/core', 'free'],
+  ['History', 'Undo grouped by what you did.', '@matrajs/core', 'free'],
+  ['AI', 'Streaming edits that survive concurrent typing.', '@matrajs/ai', 'pro'],
+  ['Collaboration', 'Authority, step rebasing, remote cursors.', '@matrajs/collab', 'pro'],
+]
+const free = rows.filter((r) => r[3] === 'free').length
+---
+<Base title="Extensions — Matra" description="Every extension that ships with Matra. Twenty are MIT, including the ones other editors charge for; two are paid.">
+  <Nav />
+  <Head
+    kicker="In the box"
+    title="Everything hanging<br />off the core."
+    lede="Every extension is a plain object with the same power as the built-ins. Twenty of the twenty-two below are MIT."
+  />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="counts">
+        <div><b>{free}</b><span>free, MIT</span></div>
+        <div><b>{rows.length - free}</b><span>paid</span></div>
+        <div><b>4</b><span>that others charge for, free here</span></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Extension</th><th>What it does</th><th>Package</th><th></th></tr></thead>
+          <tbody>
+            {rows.map(([name, what, pkg, badge]) => (
+              <tr>
+                <td class="name">{name}</td>
+                <td class="what">{what}</td>
+                <td class="mono pkg">{pkg}</td>
+                <td><span class={`badge ${badge}`}>{badge}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="footnote">
+        Table of contents, unique block ids, the drag handle and comments are paid features in
+        Tiptap. They are MIT here — the things that take a week should bring people in, and the
+        two that took months are what pay for the work.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span>Write your own</p>
+      <h2>An extension is an object.</h2>
+      <div class="code">
+        <pre class="mono"><code><span class="k">import</span> {'{'} type MarkDef {'}'} <span class="k">from</span> <span class="s">'@matrajs/core'</span>
+
+<span class="k">export const</span> spoiler: MarkDef&lt;{'{'} toggleSpoiler: Command {'}'}&gt; = {'{'}
+  kind: <span class="s">'mark'</span>,
+  name: <span class="s">'spoiler'</span>,
+  parseDOM: [{'{'} tag: <span class="s">'span[data-spoiler]'</span> {'}'}],
+  toDOM: () =&gt; [<span class="s">'span'</span>, {'{'} <span class="s">'data-spoiler'</span>: <span class="s">''</span> {'}'}, 0],
+  commands: {'{'} toggleSpoiler: (ctx) =&gt; ctx.toggleMark(<span class="s">'spoiler'</span>) {'}'},
+  keys: {'{'} <span class="s">'Mod-Shift-S'</span>: <span class="s">'toggleSpoiler'</span> {'}'},
+{'}'}</code></pre>
+      </div>
+      <p class="footnote">
+        Pass it to <span class="mono">createEditor</span> and
+        <span class="mono">editor.commands.toggleSpoiler</span> exists, typed, with no
+        declaration merging.
+      </p>
+    </div>
+  </section>
+
+  <Footer />
+
+  <style>
+    .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
+    .counts { display: flex; gap: 0; border: 1px dashed var(--rule-strong); background: var(--surface); flex-wrap: wrap; }
+    .counts div { flex: 1 1 160px; padding: 18px 20px; border-right: 1px dashed var(--rule-strong); display: flex; flex-direction: column; gap: 4px; }
+    .counts div:last-child { border-right: none; }
+    .counts b { font-family: var(--font-display); font-size: 32px; font-weight: 400; line-height: 1; }
+    .counts span { font-size: 12px; color: var(--ink-faint); }
+    .table-wrap { overflow-x: auto; margin-top: 26px; }
+    td.name { font-weight: 500; white-space: nowrap; }
+    td.what { color: var(--ink-soft); }
+    td.pkg { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+    .badge { font-size: 10px; font-family: var(--font-mono); border: 1px solid var(--rule-strong); padding: 2px 7px; color: var(--ink-faint); }
+    .badge.pro { border-color: var(--indigo); color: var(--indigo); }
+    .footnote { color: var(--ink-faint); font-size: 13px; max-width: 72ch; margin-top: 20px; }
+    .code { border: 1px dashed var(--rule-strong); background: var(--code-bg); margin-top: 26px; }
+    .code pre { margin: 0; padding: 18px; overflow-x: auto; font-size: 12.5px; line-height: 1.75; color: var(--code-fg); }
+    .code .k { color: var(--code-key); }
+    .code .s { color: var(--code-str); }
+  </style>
+</Base>

@@ -1,0 +1,188 @@
+---
+import Footer from '../components/Footer.astro'
+import Head from '../components/Head.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+
+const tiers = [
+  {
+    name: 'Core',
+    price: '$0',
+    unit: 'MIT, forever',
+    tag: 'Everything most editors need, and no asterisk on any of it.',
+    features: [
+      'The whole engine, MIT',
+      'Every node and mark extension',
+      'Tables, comments, task lists',
+      'Table of contents and block ids',
+      'Drag and drop with a handle',
+      'React, Vue and vanilla bindings',
+      'Community support on GitHub',
+    ],
+    cta: 'npm i @matrajs/core',
+    href: 'https://github.com/amrelaco/matra',
+  },
+  {
+    name: 'Pro',
+    price: '$99',
+    unit: 'per month · up to 5 developers',
+    tag: 'For teams shipping AI or collaboration in production.',
+    features: [
+      'Everything in Core',
+      'AI extension, streaming edits',
+      'Collaboration and step rebasing',
+      'Remote cursors and presence',
+      'Email support, 2 working days',
+      'Private registry access',
+    ],
+    cta: 'Start with Pro',
+    href: '/contact?plan=pro',
+    featured: true,
+  },
+  {
+    name: 'Business',
+    price: '$349',
+    unit: 'per month · up to 25 developers',
+    tag: 'When more than one team depends on it.',
+    features: [
+      'Everything in Pro',
+      'Priority queue on issues',
+      'Invoice billing and POs',
+      'Security review answered',
+      'A private channel with us',
+    ],
+    cta: 'Talk to us',
+    href: '/contact?plan=business',
+  },
+]
+
+const questions = [
+  [
+    'What happens if we stop paying?',
+    'The version you installed keeps working, forever. Nothing checks a licence at runtime and nothing contacts us, so a lapsed subscription cannot switch off software you already shipped. What lapses is access to new versions and to support.',
+  ],
+  [
+    'Why flat pricing and not per seat?',
+    'Because per seat punishes the teams worth having and produces invoices too small to fund the work. Flat is also one number your finance team can approve without counting anyone, and adding a developer inside your cap costs nothing.',
+  ],
+  [
+    'Do you count contractors?',
+    'Only people writing code against the paid packages count. Designers, PMs and anyone using the product you built with it do not.',
+  ],
+  [
+    'Can we buy annually?',
+    'Yes, and two months are free. It helps us more than it costs you, which is the honest reason it is discounted.',
+  ],
+  [
+    'Is there a free trial?',
+    'There is no trial because there is nothing to trial around: evaluation, development, testing and personal projects are free under the licence, indefinitely. You pay when it goes to production with more than two developers on it.',
+  ],
+  [
+    'We are a charity or a student.',
+    'Then it is free. Write to us and we will send the registry token.',
+  ],
+]
+---
+<Base title="Pricing — Matra" description="The core is MIT and free forever. AI and collaboration are $99 a month for up to five developers, flat rather than per seat.">
+  <Nav />
+  <Head
+    kicker="Pricing"
+    title="The core is<br />free forever."
+    lede="Flat pricing, not per seat — one number your finance team can approve. Pay yearly and two months are free."
+  />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="tiers">
+        {tiers.map((tier) => (
+          <div class={`tier ${tier.featured ? 'featured' : ''}`}>
+            <div class="tier-head">
+              <span class="mono tier-name">{tier.name}</span>
+              {tier.featured && <span class="badge mono">Most teams</span>}
+            </div>
+            <div class="price"><b>{tier.price}</b><span>{tier.unit}</span></div>
+            <p class="tier-tag">{tier.tag}</p>
+            <a class={`btn ${tier.featured ? '' : 'ghost'}`} href={tier.href}>{tier.cta}</a>
+            <ul>{tier.features.map((f) => <li>{f}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <p class="footnote">
+        Prices in US dollars, billed by Amrela in Dhaka. Enterprise terms, an SLA or a security
+        review — <a href="/contact">ask</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span>What you are actually buying</p>
+      <h2>Access, not permission.</h2>
+      <div class="two">
+        <div class="card">
+          <h3>Nothing phones home</h3>
+          <p>
+            There is no licence key, no telemetry and no runtime check — in development or in
+            production. Your editor never talks to us. We could not switch your app off if we
+            wanted to, and we built it that way deliberately.
+          </p>
+        </div>
+        <div class="card">
+          <h3>The gate is at install</h3>
+          <p>
+            The paid packages come from a private registry. A subscription issues a token that
+            lets <span class="mono">npm install</span> reach them and keeps reaching new
+            versions. That is the whole mechanism.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span>Questions</p>
+      <h2>Answered plainly.</h2>
+      <div class="faq">
+        {questions.map(([q, a]) => (
+          <details><summary>{q}</summary><p>{a}</p></details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+
+  <style>
+    .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
+    .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .tier { border: 1px dashed var(--rule-strong); padding: 24px; display: flex; flex-direction: column; }
+    .tier.featured { background: var(--invert-bg); color: var(--invert-fg); border-style: solid; border-color: var(--invert-bg); }
+    .tier.featured .tier-tag, .tier.featured li { color: var(--invert-soft); }
+    .tier.featured .btn { background: var(--invert-fg); color: var(--invert-bg); border-color: var(--invert-fg); }
+    .tier-head { display: flex; align-items: center; justify-content: space-between; }
+    .tier-name { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .badge { font-size: 10px; border: 1px solid currentColor; padding: 3px 7px; opacity: 0.8; }
+    .price { margin: 16px 0 10px; display: flex; flex-direction: column; }
+    .price b { font-family: var(--font-display); font-size: 42px; font-weight: 400; line-height: 1; }
+    .price span { font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
+    .tier.featured .price span { color: var(--invert-soft); }
+    .tier-tag { font-size: 13.5px; color: var(--ink-soft); min-height: 42px; }
+    .tier ul { list-style: none; margin: 20px 0 0; padding: 18px 0 0; border-top: 1px dashed currentColor; font-size: 13.5px; color: var(--ink-soft); }
+    .tier li { padding: 5px 0 5px 18px; position: relative; }
+    .tier li::before { content: '·'; position: absolute; left: 4px; color: var(--indigo); font-weight: 700; }
+    .tier .btn { justify-content: center; margin-top: 4px; }
+    .footnote { color: var(--ink-faint); font-size: 13px; margin-top: 22px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+    .two h3 { font-size: 19px; margin-bottom: 8px; }
+    .two p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+    .faq { margin-top: 26px; border-top: 1px dashed var(--rule); }
+    details { border-bottom: 1px dashed var(--rule); padding: 16px 0; }
+    summary { cursor: pointer; font-size: 16px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; color: var(--ink-faint); font-family: var(--font-mono); }
+    details[open] summary::after { content: '−'; }
+    details p { color: var(--ink-soft); font-size: 14.5px; max-width: 72ch; margin: 12px 0 0; }
+    @media (max-width: 940px) { .tiers, .two { grid-template-columns: 1fr; } }
+  </style>
+</Base>

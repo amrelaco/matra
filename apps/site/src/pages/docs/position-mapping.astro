@@ -1,0 +1,40 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Position mapping — Matra docs" description="A position is an integer into the document. The moment anything changes, that integer points somewhere else." section="Concepts" heading="Position mapping">
+  <p>
+    A position is an integer into the document. The moment anything changes, that integer points
+    somewhere else. Mapping is how a position survives an edit it did not expect.
+  </p>
+
+  <h2>Why positions move</h2>
+  <p>
+    Insert five characters at the start and everything after them is five further along. That is
+    fine when you act immediately. It is not fine when you asked a model for a completion two
+    seconds ago and the person kept typing while you waited.
+  </p>
+
+  <h2>Markers</h2>
+  <pre><code>const at = ctx.mark()
+
+await stream((chunk) =&gt; &#123;
+  ctx.insert(chunk, at.map(caret))
+&#125;)</code></pre>
+  <p>
+    Between one chunk and the next the person may have typed, pasted or hit undo. A marker
+    replays every change made since it was taken, so the position still points at the same place
+    in the text — rather than at the same number, which is no longer the same place.
+  </p>
+
+  <div class="note">
+    Never hold a raw position across an await. A number that was correct when you asked for it
+    is not correct when you come back.
+  </div>
+
+  <h2>Where else it matters</h2>
+  <ul>
+    <li><strong>Collaboration</strong> — a remote caret arrives in the sender's coordinates and has to be mapped into yours.</li>
+    <li><strong>Comments</strong> — anchored as marks, so mapping keeps them on the right words for free.</li>
+    <li><strong>Decorations</strong> — search highlights move with the text they highlight.</li>
+  </ul>
+</Docs>

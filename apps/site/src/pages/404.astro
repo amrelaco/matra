@@ -1,0 +1,28 @@
+---
+import Footer from '../components/Footer.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+---
+<Base title="Not found — Matra" description="That page does not exist.">
+  <Nav />
+  <section class="section" style="border-top: none">
+    <div class="wrap lost">
+      <p class="kicker mono">404 — undefined</p>
+      <h1>A position that<br />does not resolve.</h1>
+      <p class="lede">
+        This page is not in the document. Nothing was silently dropped — it simply was never
+        here.
+      </p>
+      <div class="cta">
+        <a class="btn" href="/">Back to the start</a>
+        <a class="btn ghost" href="/docs">Documentation</a>
+      </div>
+    </div>
+  </section>
+  <Footer />
+  <style>
+    .lost { padding-top: 96px; padding-bottom: 96px; max-width: 700px; }
+    .lost h1 { font-size: clamp(38px, 5vw, 60px); margin: 16px 0 18px; }
+    .cta { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+  </style>
+</Base>

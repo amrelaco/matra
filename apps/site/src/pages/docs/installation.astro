@@ -1,0 +1,36 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Installation — Matra docs" description="Which packages exist, which are MIT, and which need a subscription." section="Getting started" heading="Installation">
+  <p>The core is all most projects need.</p>
+  <pre><code>npm i @matrajs/core</code></pre>
+
+  <h2>Framework bindings</h2>
+  <pre><code>npm i @matrajs/react   # useEditor, useEditorState, EditorContent
+npm i @matrajs/vue     # useEditor, EditorContent</code></pre>
+  <p>
+    Both are MIT and both are thin — the editor does not care which framework renders around it,
+    and neither binding re-implements anything.
+  </p>
+
+  <h2>The paid packages</h2>
+  <pre><code>npm i @matrajs/ai      # streaming edits
+npm i @matrajs/collab  # authority, rebasing, remote cursors</code></pre>
+  <p>
+    These are source-available under a commercial licence rather than MIT, and come from a
+    private registry. Free for evaluation, development, testing, teaching, personal projects and
+    teams of fewer than three developers — see <a href="/licence">the licence</a>.
+  </p>
+
+  <div class="note">
+    Nothing checks a licence at runtime and nothing phones home. A subscription is what lets
+    <code>npm install</code> reach these packages, not what lets your app run.
+  </div>
+
+  <h2>Requirements</h2>
+  <ul>
+    <li>Any bundler. The packages ship ESM and CJS with types.</li>
+    <li>No peer dependencies for the core.</li>
+    <li>Node 18+ for the parts that run on a server — Markdown needs no DOM.</li>
+  </ul>
+</Docs>

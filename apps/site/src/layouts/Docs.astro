@@ -1,0 +1,81 @@
+---
+import Footer from '../components/Footer.astro'
+import Nav from '../components/Nav.astro'
+import Base from '../layouts/Base.astro'
+
+interface Props {
+  title: string
+  description: string
+  section: string
+  heading: string
+}
+const { title, description, section, heading } = Astro.props
+
+/** One list, so the sidebar can never advertise a page that does not exist. */
+const nav = [
+  [
+    'Getting started',
+    [
+      ['Introduction', '/docs'],
+      ['Installation', '/docs/installation'],
+      ['Your first editor', '/docs/first-editor'],
+    ],
+  ],
+  [
+    'Concepts',
+    [
+      ['Document model', '/docs/document-model'],
+      ['Commands', '/docs/commands'],
+      ['Position mapping', '/docs/position-mapping'],
+    ],
+  ],
+] as const
+const here = Astro.url.pathname.replace(/\/$/, '') || '/docs'
+---
+<Base title={title} description={description}>
+  <Nav />
+  <div class="shell">
+    <aside class="side">
+      {nav.map(([group, items]) => (
+        <div class="group">
+          <div class="group-name mono">{group}</div>
+          {items.map(([label, href]) => (
+            <a href={href} class={href === here ? 'on' : ''}>{label}</a>
+          ))}
+        </div>
+      ))}
+    </aside>
+    <main class="article">
+      <p class="crumb mono">{section}</p>
+      <h1>{heading}</h1>
+      <slot />
+    </main>
+  </div>
+  <Footer />
+  <style>
+    .shell { max-width: var(--page); margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 48px; padding: 40px 24px 72px; }
+    .side { position: sticky; top: 90px; align-self: start; border-right: 1px dashed var(--rule); padding-right: 20px; }
+    .group { margin-bottom: 24px; }
+    .group-name { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 9px; }
+    .side a { display: block; font-size: 13.5px; color: var(--ink-soft); text-decoration: none; padding: 5px 9px; }
+    .side a:hover { color: var(--ink); }
+    .side a.on { background: var(--indigo-wash); color: var(--indigo); font-weight: 500; }
+    .crumb { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.08em; text-transform: uppercase; }
+    .article { min-width: 0; }
+    .article h1 { font-size: clamp(32px, 3.6vw, 42px); margin: 12px 0 20px; }
+    .article :global(h2) { font-family: var(--font-display); font-size: 24px; margin: 34px 0 10px; }
+    .article :global(p) { color: var(--ink-soft); font-size: 15.5px; max-width: 68ch; margin: 0 0 14px; }
+    .article :global(ul) { color: var(--ink-soft); font-size: 15.5px; max-width: 68ch; padding-left: 20px; }
+    .article :global(li) { margin-bottom: 7px; }
+    .article :global(strong) { color: var(--ink); }
+    .article :global(code) { font-family: var(--font-mono); font-size: 13px; background: var(--surface-2); padding: 1px 5px; }
+    .article :global(pre) { border: 1px dashed var(--rule-strong); background: var(--code-bg); color: var(--code-fg); padding: 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; margin: 0 0 16px; }
+    .article :global(pre code) { background: none; padding: 0; font-size: inherit; }
+    .article :global(.note) { border-left: 2px solid var(--indigo); background: var(--indigo-wash); padding: 12px 14px; font-size: 14px; color: var(--ink); margin: 0 0 16px; }
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; gap: 26px; }
+      .side { position: static; border-right: none; border-bottom: 1px dashed var(--rule); padding: 0 0 18px; display: flex; gap: 26px; flex-wrap: wrap; }
+      .group { margin-bottom: 0; }
+    }
+  </style>
+</Base>

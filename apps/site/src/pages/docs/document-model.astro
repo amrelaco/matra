@@ -1,0 +1,39 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Document model — Matra docs" description="Your document is plain JSON: a tree of nodes you can log, diff, store and send over the wire." section="Concepts" heading="Document model">
+  <p>
+    Your document is plain JSON. Not a class, not an engine object — a tree of nodes you can
+    log, diff, store and send over the wire.
+  </p>
+  <pre><code>&#123; type: 'doc', content: [
+  &#123; type: 'heading', attrs: &#123; level: 1 &#125;,
+    content: [&#123; type: 'text', text: 'Title' &#125;] &#125;
+] &#125;</code></pre>
+
+  <h2>Nodes and marks</h2>
+  <p>
+    A <strong>node</strong> is a thing in the document: a paragraph, a heading, an image. A
+    <strong>mark</strong> is something applied to a range of text: bold, a link, a comment
+    thread. Nodes nest; marks decorate.
+  </p>
+
+  <h2>Positions</h2>
+  <p>
+    Positions are integers into this tree. The document starts at 0, each node border costs one,
+    and each character costs one. A paragraph containing "hi" occupies 0 to 4: the opening
+    border, two characters, the closing border.
+  </p>
+  <div class="note">
+    Never do arithmetic on a position across an await. Take a marker with
+    <code>ctx.mark()</code> and map through it — see
+    <a href="/docs/position-mapping">position mapping</a>.
+  </div>
+
+  <h2>Why JSON</h2>
+  <p>
+    Because it is ordinary data, you can persist it anywhere, compare two revisions with any
+    diff library, and read it on a server without loading an editor. It is also what makes the
+    Markdown converter possible without a DOM.
+  </p>
+</Docs>

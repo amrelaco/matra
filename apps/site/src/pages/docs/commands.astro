@@ -1,0 +1,43 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Commands — Matra docs" description="Commands are functions that either change the document and return true, or change nothing and return false." section="Concepts" heading="Commands">
+  <p>
+    A command is a function that takes a context and returns a boolean:
+    <strong>true if it did something, false if it declined.</strong> It never throws — one that
+    does is caught, logged, and its half-built transaction discarded.
+  </p>
+  <pre><code>const toggleBold: Command = (ctx) =&gt; ctx.toggleMark('bold')</code></pre>
+
+  <h2>Types are inferred</h2>
+  <p>
+    <code>editor.commands</code> is built from the extensions array you passed in. Add an
+    extension and its commands appear, typed, with their argument types intact. Remove it and
+    calling them is a compile error.
+  </p>
+
+  <h2>Running several as one</h2>
+  <pre><code>editor.batch((commands) =&gt; &#123;
+  commands.toggleBold()
+  commands.insert(' and this')
+&#125;)</code></pre>
+  <p>
+    One undo step, and all or nothing — if any command returns false the whole batch rolls back.
+  </p>
+
+  <h2>The core commands</h2>
+  <ul>
+    <li><code>select(range)</code> — move the selection</li>
+    <li><code>insert(content, at?)</code> — insert JSON, an array, or an HTML string</li>
+    <li><code>replace(range, content)</code></li>
+    <li><code>remove(range?)</code></li>
+    <li><code>moveBlock(from, to)</code> — what a drag does</li>
+    <li><code>focus()</code></li>
+  </ul>
+
+  <div class="note">
+    Positions that are not finite integers inside the document return false rather than
+    throwing. <code>NaN</code> included — it slips past naive range checks, because both
+    <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
+  </div>
+</Docs>
