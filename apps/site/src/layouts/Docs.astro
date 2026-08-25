@@ -11,7 +11,12 @@ interface Props {
 }
 const { title, description, section, heading } = Astro.props
 
-/** One list, so the sidebar can never advertise a page that does not exist. */
+/**
+ * Three columns, as in the design file: navigation, the article, and what is on
+ * this page. The right-hand column is built from the rendered headings rather
+ * than from a list written by hand, because a hand-written one drifts and then
+ * points at a heading somebody renamed.
+ */
 const nav = [
   [
     'Getting started',
@@ -48,8 +53,6 @@ const nav = [
 ] as const
 
 const here = Astro.url.pathname.replace(/\/$/, '') || '/docs'
-
-/** Flattened once, so previous/next follow the sidebar rather than a second list. */
 const flat = nav.flatMap(([, items]) => items as unknown as [string, string][])
 const index = flat.findIndex(([, href]) => href === here)
 const previous = index > 0 ? flat[index - 1] : null
@@ -60,85 +63,81 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
 ---
 <Base title={title} description={description}>
   <Nav />
-  <div class="shell">
-    <aside class="side">
-      {nav.map(([group, items]) => (
-        <div class="group">
-          <div class="group-name mono">{group}</div>
-          {items.map(([label, href]) => (
-            <a href={href} class={href === here ? 'on' : ''}>{label}</a>
-          ))}
-        </div>
-      ))}
+  <div class="docs-shell">
+    <aside class="docs-side">
+      <nav aria-label="Documentation">
+        {nav.map(([group, items]) => (
+          <div class="docs-group">
+            <div class="docs-group-name mono">{group}</div>
+            {items.map(([label, href]) => (
+              <a href={href} class={href === here ? 'on' : ''} aria-current={href === here ? 'page' : undefined}>
+                {label}
+              </a>
+            ))}
+          </div>
+        ))}
+      </nav>
     </aside>
-    <main class="article">
-      <p class="crumb mono">{section}</p>
+
+    <main class="docs-article" id="article">
+      <p class="docs-crumb mono">{section}</p>
       <h1>{heading}</h1>
       <slot />
 
-      <nav class="pager">
+      <nav class="docs-pager" aria-label="More documentation">
         {previous ? (
-          <a href={previous[1]} class="pager-link prev">
+          <a href={previous[1]} class="docs-pager-link">
             <span class="mono">← previous</span>
             <b>{previous[0]}</b>
           </a>
         ) : <span />}
         {next && (
-          <a href={next[1]} class="pager-link next">
+          <a href={next[1]} class="docs-pager-link next">
             <span class="mono">next →</span>
             <b>{next[0]}</b>
           </a>
         )}
       </nav>
 
-      <p class="edit"><a href={source}>Edit this page on GitHub</a></p>
+      <p class="docs-edit"><a href={source}>Edit this page on GitHub</a></p>
     </main>
+
+    <aside class="docs-toc">
+      <div class="docs-toc-inner">
+        <div class="docs-group-name mono">On this page</div>
+        <nav id="toc" aria-label="On this page"></nav>
+      </div>
+    </aside>
   </div>
   <Footer />
-  <style>
-    .shell { max-width: var(--page); margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 48px; padding: 40px 24px 72px; }
-    .side { position: sticky; top: 90px; align-self: start; border-right: 1px dashed var(--rule); padding-right: 20px; }
-    .group { margin-bottom: 24px; }
-    .group-name { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 9px; }
-    .side a { display: block; font-size: 13.5px; color: var(--ink-soft); text-decoration: none; padding: 5px 9px; }
-    .side a:hover { color: var(--ink); }
-    .side a.on { background: var(--indigo-wash); color: var(--indigo); font-weight: 500; }
-    .crumb { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.08em; text-transform: uppercase; }
-    .article { min-width: 0; }
-    .article h1 { font-size: clamp(32px, 3.6vw, 42px); margin: 12px 0 20px; }
-    .article :global(h2) { font-family: var(--font-display); font-size: 24px; margin: 34px 0 10px; }
-    .article :global(p) { color: var(--ink-soft); font-size: 15.5px; max-width: 68ch; margin: 0 0 14px; }
-    .article :global(ul) { color: var(--ink-soft); font-size: 15.5px; max-width: 68ch; padding-left: 20px; }
-    .article :global(li) { margin-bottom: 7px; }
-    .article :global(strong) { color: var(--ink); }
-    .article :global(code) { font-family: var(--font-mono); font-size: 13px; background: var(--surface-2); padding: 1px 5px; }
-    .article :global(pre) { border: 1px dashed var(--rule-strong); background: var(--code-bg); color: var(--code-fg); padding: 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; margin: 0 0 16px; }
-    .article :global(pre code) { background: none; padding: 0; font-size: inherit; }
-    .article :global(.note) { border-left: 2px solid var(--indigo); background: var(--indigo-wash); padding: 12px 14px; font-size: 14px; color: var(--ink); margin: 0 0 16px; }
-    .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 48px; padding-top: 24px; border-top: 1px dashed var(--rule-strong); }
-    .pager-link { display: flex; flex-direction: column; gap: 4px; text-decoration: none; border: 1px dashed var(--rule-strong); padding: 14px 18px; min-width: 180px; }
-    .pager-link:hover { border-color: var(--indigo); }
-    .pager-link span { font-size: 10.5px; color: var(--ink-faint); }
-    .pager-link b { font-weight: 500; font-size: 14.5px; }
-    .pager-link.next { text-align: right; align-items: flex-end; }
-    .edit { margin-top: 22px; font-size: 12.5px; }
-    .edit a { color: var(--ink-faint); }
-    .article :global(pre) { position: relative; }
-    .article :global(.copy-code) { position: absolute; top: 8px; right: 8px; font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border: 1px solid var(--rule-strong); background: var(--paper); color: var(--ink-faint); cursor: pointer; opacity: 0; transition: opacity 120ms; }
-    .article :global(pre:hover .copy-code) { opacity: 1; }
-    .article :global(.copy-code:hover) { color: var(--ink); }
-
-    @media (max-width: 860px) {
-      .shell { grid-template-columns: 1fr; gap: 26px; }
-      .side { position: static; border-right: none; border-bottom: 1px dashed var(--rule); padding: 0 0 18px; display: flex; gap: 26px; flex-wrap: wrap; }
-      .group { margin-bottom: 0; }
-    }
-  </style>
 
   <script>
-    // A copy button on every block, added here rather than written into each
-    // page — docs that make you select code by hand are docs nobody trusts.
-    for (const block of document.querySelectorAll('.article pre')) {
+    // Built from the article that actually rendered, so it cannot advertise a
+    // heading that is not there.
+    const article = document.getElementById('article')
+    const toc = document.getElementById('toc')
+    if (article && toc) {
+      const headings = Array.from(article.querySelectorAll('h2'))
+      for (const heading of headings) {
+        if (!heading.id) {
+          heading.id =
+            heading.textContent
+              ?.toLowerCase()
+              .trim()
+              .replace(/[^\p{L}\p{N}\s-]/gu, '')
+              .replace(/\s+/g, '-') ?? ''
+        }
+        const link = document.createElement('a')
+        link.href = `#${heading.id}`
+        link.textContent = heading.textContent
+        toc.appendChild(link)
+      }
+      if (headings.length === 0) toc.closest('.docs-toc')?.setAttribute('hidden', '')
+    }
+
+    // A copy button on every block. Docs that make you select code by hand are
+    // docs nobody trusts.
+    for (const block of document.querySelectorAll('.docs-article pre')) {
       const button = document.createElement('button')
       button.className = 'copy-code'
       button.type = 'button'

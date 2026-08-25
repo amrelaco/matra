@@ -1,10 +1,18 @@
 /*
- * Tokens straight from the design file, as CSS custom properties.
+ * Typography and colour come from the design file; the spacing does not.
  *
- * Two themes, switched by prefers-color-scheme and overridable with a
- * data-theme attribute so the toggle can win in both directions.
+ * Sections there sat closer together than they should on a real screen, so the
+ * rhythm here is roughly half again as generous. The dashed rule stays as the
+ * only separator — it is the one device the whole system is built on.
  */
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+
 :root {
+  /* paper */
   --paper: #f5f1e8;
   --surface: #fbf8f1;
   --surface-2: #f0ebde;
@@ -30,11 +38,21 @@
   --dot-y: #d4ac5e;
   --dot-g: #7fa678;
 
-  --font-display: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --font-ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* One scale, so nothing is picked by eye. */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 28px;
+  --s4: 44px;
+  --s5: 72px;
+  --s6: 112px;
+  --s7: 160px;
+
   --page: 1200px;
+  --gutter: 40px;
   color-scheme: light;
 }
 
@@ -91,8 +109,20 @@
 * {
   box-sizing: border-box;
 }
+
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {
@@ -100,9 +130,8 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 16px;
-  line-height: 1.6;
-  font-synthesis-weight: none;
+  font-size: 16.5px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -111,8 +140,8 @@ h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
+  letter-spacing: -0.018em;
+  line-height: 1.05;
   margin: 0;
 }
 
@@ -120,30 +149,45 @@ a {
   color: inherit;
 }
 
-/* Every section is separated by one dashed rule and nothing else. */
+/* --- structure -------------------------------------------------------- */
+
 .section {
   border-top: 1px dashed var(--rule-strong);
 }
+
 .wrap {
   max-width: var(--page);
   margin: 0 auto;
-  padding: 72px 24px;
+  padding: var(--s6) var(--gutter);
 }
+
 .kicker {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-faint);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  margin: 0 0 var(--s3);
 }
+
+.kicker::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  background: var(--indigo);
+  flex: none;
+}
+
 .lede {
   color: var(--ink-soft);
-  font-size: 17px;
-  max-width: 62ch;
+  font-size: 18px;
+  max-width: 60ch;
+  margin: var(--s3) 0 0;
 }
+
 .mono {
   font-family: var(--font-mono);
 }
@@ -151,56 +195,438 @@ a {
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 18px;
+  gap: 9px;
+  padding: 13px 22px;
   border: 1px solid var(--ink);
   background: var(--ink);
   color: var(--paper);
-  font-size: 14px;
+  font-size: 14.5px;
   text-decoration: none;
   white-space: nowrap;
+  transition: opacity 120ms ease;
 }
+
 .btn.ghost {
   background: transparent;
   color: var(--ink);
+  border-style: dashed;
   border-color: var(--rule-strong);
 }
-.btn:hover {
-  opacity: 0.88;
-}
 
-.card {
-  border: 1px dashed var(--rule-strong);
-  background: var(--surface);
-  padding: 20px;
+.btn:hover {
+  opacity: 0.85;
 }
 
 table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 14px;
+  font-size: 14.5px;
 }
+
 th,
 td {
   text-align: left;
-  padding: 11px 12px;
+  padding: 14px 16px;
   border-bottom: 1px dashed var(--rule);
 }
+
 th {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-faint);
   font-weight: 400;
 }
-td.win {
-  color: var(--indigo);
-  font-weight: 600;
+
+/* --- the editable mechanic -------------------------------------------- */
+
+/*
+ * Every region marked editable is a real editor once the page settles. The
+ * affordance has to be quiet until it is wanted: a dashed frame on hover, and
+ * a label naming the extension that makes that region work.
+ */
+[data-editable] {
+  position: relative;
+  outline: none;
+  transition: background-color 140ms ease;
+  border-radius: 2px;
 }
 
-@media (max-width: 720px) {
-  .wrap {
-    padding: 48px 18px;
+[data-editable]:hover {
+  background: color-mix(in srgb, var(--indigo) 4%, transparent);
+}
+
+[data-editable]:focus-within {
+  background: color-mix(in srgb, var(--indigo) 6%, transparent);
+}
+
+[data-editable]::after {
+  content: attr(data-hint);
+  position: absolute;
+  top: -11px;
+  right: 6px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  background: var(--paper);
+  padding: 0 7px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+[data-editable]:hover::after,
+[data-editable]:focus-within::after {
+  opacity: 1;
+}
+
+[data-editable][data-live]::before {
+  content: "";
+  position: absolute;
+  inset: -10px -12px;
+  border: 1px dashed transparent;
+  transition: border-color 140ms ease;
+  pointer-events: none;
+}
+
+[data-editable][data-live]:hover::before,
+[data-editable][data-live]:focus-within::before {
+  border-color: color-mix(in srgb, var(--indigo) 40%, transparent);
+}
+
+/* Someone who cannot see the hover affordance should not get the surprise. */
+@media (prefers-reduced-motion: reduce) {
+  [data-editable]::after {
+    transition: none;
   }
+}
+
+@media (max-width: 860px) {
+  :root {
+    --gutter: 22px;
+    --s6: 76px;
+    --s7: 100px;
+  }
+  body {
+    font-size: 16px;
+  }
+}
+
+/* --- site chrome ------------------------------------------------------- */
+
+/*
+ * Nav and footer live here rather than in scoped component styles.
+ * They are global chrome, they are used on every page, and a scoped rule that
+ * silently fails to match is a worse problem than a slightly longer selector:
+ * the footer's link styles did exactly that, and the links stacked up inline
+ * and underlined on a finished-looking page.
+ */
+.site-footer .foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s5);
+  flex-wrap: wrap;
+  padding-bottom: var(--s5);
+}
+.site-footer .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+.site-footer .brand-col p {
+  color: var(--ink-faint);
+  font-size: 13.5px;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+.site-footer .cols {
+  display: flex;
+  gap: var(--s5);
+  flex-wrap: wrap;
+}
+.site-footer .cols h4 {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 400;
+  margin: 0 0 16px;
+}
+.site-footer .cols a {
+  display: block;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 4px 0;
+}
+.site-footer .cols a:hover {
+  color: var(--ink);
+}
+.site-footer .bottom-wrap {
+  border-top: 1px dashed var(--rule);
+}
+.site-footer .bottom {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 22px var(--gutter);
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 620px) {
+  .site-footer .cols {
+    gap: var(--s4);
+  }
+}
+
+/* --- docs -------------------------------------------------------------- */
+
+.docs-shell {
+  max-width: var(--page);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 200px;
+  gap: var(--s5);
+  padding: var(--s4) var(--gutter) var(--s6);
+}
+.docs-side {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  border-right: 1px dashed var(--rule);
+  padding-right: var(--s3);
+}
+.docs-group {
+  margin-bottom: var(--s3);
+}
+.docs-group-name {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+.docs-side a {
+  display: block;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-left: 1px solid transparent;
+}
+.docs-side a:hover {
+  color: var(--ink);
+}
+.docs-side a.on {
+  color: var(--indigo);
+  border-left-color: var(--indigo);
+  background: color-mix(in srgb, var(--indigo) 7%, transparent);
+}
+
+.docs-crumb {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.docs-article {
+  min-width: 0;
+}
+.docs-article h1 {
+  font-size: clamp(34px, 4vw, 46px);
+  margin: 14px 0 var(--s3);
+}
+.docs-article h2 {
+  font-size: 26px;
+  margin: var(--s4) 0 var(--s2);
+  scroll-margin-top: 90px;
+}
+.docs-article p {
+  color: var(--ink-soft);
+  font-size: 16px;
+  max-width: 68ch;
+  margin: 0 0 var(--s2);
+}
+.docs-article ul {
+  color: var(--ink-soft);
+  font-size: 16px;
+  max-width: 68ch;
+  padding-left: 22px;
+  margin: 0 0 var(--s2);
+}
+.docs-article li {
+  margin-bottom: 8px;
+}
+.docs-article strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.docs-article a {
+  color: var(--indigo);
+}
+.docs-article code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--surface-2);
+  padding: 2px 6px;
+}
+.docs-article pre {
+  border: 1px dashed var(--rule-strong);
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: var(--s3);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.8;
+  margin: 0 0 var(--s3);
+  position: relative;
+}
+.docs-article pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.docs-article .note {
+  border-left: 2px solid var(--indigo);
+  background: var(--indigo-wash);
+  padding: 16px 18px;
+  font-size: 14.5px;
+  color: var(--ink);
+  margin: 0 0 var(--s3);
+}
+.docs-article .note p {
+  color: inherit;
+  margin: 0;
+}
+
+.copy-code {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 9px;
+  border: 1px solid var(--rule-strong);
+  background: var(--paper);
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.docs-article pre:hover .copy-code {
+  opacity: 1;
+}
+.copy-code:hover {
+  color: var(--ink);
+}
+
+.docs-toc {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+}
+.docs-toc a {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 5px 0 5px 11px;
+  border-left: 1px solid var(--rule);
+  line-height: 1.45;
+}
+.docs-toc a:hover {
+  color: var(--ink);
+  border-left-color: var(--indigo);
+}
+
+.docs-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-top: var(--s5);
+  padding-top: var(--s3);
+  border-top: 1px dashed var(--rule-strong);
+}
+.docs-pager-link {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-decoration: none;
+  border: 1px dashed var(--rule-strong);
+  padding: 16px 20px;
+  min-width: 190px;
+}
+.docs-pager-link:hover {
+  border-color: var(--indigo);
+}
+.docs-pager-link span {
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+.docs-pager-link b {
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink);
+}
+.docs-pager-link.next {
+  text-align: right;
+  align-items: flex-end;
+}
+.docs-edit {
+  margin-top: var(--s3);
+  font-size: 12.5px;
+}
+.docs-edit a {
+  color: var(--ink-faint);
+}
+
+@media (max-width: 1080px) {
+  .docs-shell {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--s4);
+  }
+  .docs-toc {
+    display: none;
+  }
+}
+@media (max-width: 820px) {
+  .docs-shell {
+    grid-template-columns: 1fr;
+  }
+  .docs-side {
+    position: static;
+    border-right: none;
+    border-bottom: 1px dashed var(--rule);
+    padding: 0 0 var(--s3);
+  }
+  .docs-side nav {
+    display: flex;
+    gap: var(--s3);
+    flex-wrap: wrap;
+  }
+  .docs-group {
+    margin-bottom: 0;
+  }
+}
+
+/* --- page header ------------------------------------------------------- */
+
+.page-head .wrap {
+  padding-bottom: var(--s4);
+}
+.page-head h1 {
+  font-size: clamp(38px, 5vw, 62px);
+}
+.page-head .lede {
+  font-size: 18.5px;
 }

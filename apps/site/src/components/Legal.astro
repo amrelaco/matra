@@ -15,7 +15,7 @@ const { kicker, title, lede, updated } = Astro.props
       <p class="lede">{lede}</p>
       <p class="updated mono">Last updated {updated}</p>
     </div>
-    <article class="legal-body"><slot /></article>
+    <article class="legal-body" data-editable="typography" data-hint="typography extension"><slot /></article>
   </div>
 </section>
 <style>

@@ -9,7 +9,10 @@ import { defineConfig } from 'astro/config'
  */
 export default defineConfig({
   site: 'https://matrajs.com',
-  build: { inlineStylesheets: 'always' },
+  // 'auto', not 'always': the font faces alone are several kilobytes, and
+  // inlining them puts the same bytes in all twenty pages instead of letting
+  // one cached stylesheet serve the whole site.
+  build: { inlineStylesheets: 'auto' },
   compressHTML: true,
   vite: {
     build: {

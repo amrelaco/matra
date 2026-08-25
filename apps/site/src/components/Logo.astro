@@ -1,0 +1,30 @@
+---
+/**
+ * The mark: a matra with three stems.
+ *
+ * In Bengali and Devanagari the matra is the headline stroke letters hang from
+ * — the horizontal line across the top of a word. The bar is that stroke; the
+ * stems are what hangs off it, at three different lengths because a word is not
+ * uniform. Taken from the brand system in the design file, proportions intact.
+ */
+interface Props {
+  size?: number
+  class?: string
+}
+const { size = 26, class: className = '' } = Astro.props
+const height = (size / 64) * 74
+---
+<svg
+  class={className}
+  width={size}
+  height={height}
+  viewBox="0 0 64 74"
+  fill="none"
+  role="img"
+  aria-label="Matra"
+>
+  <rect width="64" height="12" fill="var(--indigo)" />
+  <rect y="22" width="19.47" height="52" fill="currentColor" />
+  <rect x="22.27" y="22" width="19.47" height="32" fill="currentColor" />
+  <rect x="44.53" y="22" width="19.47" height="44" fill="currentColor" />
+</svg>

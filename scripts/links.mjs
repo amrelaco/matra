@@ -17,9 +17,14 @@ const walk = (dir) =>
     return statSync(full).isDirectory() ? walk(full) : [full]
   })
 
-const files = walk(root).filter((file) => file.endsWith('.html'))
+const all = walk(root)
+const files = all.filter((file) => file.endsWith('.html'))
+
+// Every built file is a valid target, not only the pages. Indexing HTML alone
+// reported the favicon as a dead link on all twenty pages — the checker being
+// wrong about the site rather than the site being wrong.
 const pages = new Set(
-  files.map((file) => {
+  all.map((file) => {
     const path = relative(root, file)
       .replace(/index\.html$/, '')
       .replace(/\/$/, '')

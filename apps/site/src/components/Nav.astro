@@ -1,4 +1,5 @@
 ---
+import Logo from './Logo.astro'
 const links = [
   ['Docs', '/docs'],
   ['Extensions', '/extensions'],
@@ -7,29 +8,70 @@ const links = [
 ]
 ---
 <nav>
-  <div class="wrap bar">
-    <a href="/" class="brand">
-      <span class="mark" aria-hidden="true"></span>
+  <div class="bar">
+    <a href="/" class="brand" aria-label="Matra, home">
+      <Logo size={20} />
       <span>Matra</span>
     </a>
+
     <div class="links">
       {links.map(([label, href]) => <a href={href}>{label}</a>)}
-      <a class="btn" href="https://github.com/amrelaco/matra">GitHub</a>
+    </div>
+
+    <div class="right">
+      <button id="reset-page" type="button" class="reset mono" title="Undo every edit on this page">
+        reset page
+      </button>
+      <a class="gh" href="https://github.com/amrelaco/matra">GitHub</a>
     </div>
   </div>
 </nav>
 
 <style>
-  nav { border-bottom: 1px dashed var(--rule-strong); position: sticky; top: 0; background: var(--paper); z-index: 20; }
-  .bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; text-decoration: none; }
-  .mark { width: 16px; height: 16px; background: var(--indigo); display: inline-block; }
-  .links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
+  nav {
+    border-bottom: 1px dashed var(--rule-strong);
+    position: sticky;
+    top: 0;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(8px);
+    z-index: 40;
+  }
+  .bar {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 16px var(--gutter);
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-family: var(--font-display);
+    font-size: 21px;
+    text-decoration: none;
+    flex: none;
+  }
+  .links { display: flex; gap: var(--s3); font-size: 14.5px; margin-right: auto; }
   .links a { text-decoration: none; color: var(--ink-soft); }
   .links a:hover { color: var(--ink); }
-  .links .btn { color: var(--paper); }
-  @media (max-width: 720px) {
-    .bar { padding: 12px 18px; }
-    .links a:not(.btn) { display: none; }
+  .right { display: flex; align-items: center; gap: var(--s2); flex: none; }
+  .reset {
+    background: none;
+    border: 1px dashed var(--rule-strong);
+    color: var(--ink-faint);
+    font-size: 11px;
+    padding: 6px 11px;
+    cursor: pointer;
+  }
+  .reset:hover { color: var(--ink); border-color: var(--indigo); }
+  .gh { font-size: 14.5px; text-decoration: none; color: var(--ink-soft); }
+  .gh:hover { color: var(--ink); }
+
+  @media (max-width: 860px) {
+    .bar { gap: var(--s2); }
+    .links { display: none; }
+    .reset { display: none; }
   }
 </style>
