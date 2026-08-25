@@ -1,10 +1,10 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Writing an extension — Matra docs" description="An extension is a plain object. Nodes, marks and behaviour, with command types inferred rather than declared." section="Concepts" heading="Writing an extension">
+<Docs title="Writing an extension · Matra docs" description="An extension is a plain object. Nodes, marks and behaviour, with command types inferred rather than declared." section="Concepts" heading="Writing an extension">
   <p>
     An extension is a plain object with the same power as the built-ins. There is no base class
-    to extend, nothing to register, and no declaration merging — pass it to
+    to extend, nothing to register, and no declaration merging · pass it to
     <code>createEditor</code> and its commands appear on <code>editor.commands</code>, typed.
   </p>
 
@@ -75,7 +75,7 @@ editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
 
   <h2>Decorations</h2>
   <p>
-    Drawing over the document without putting anything in it — search highlights, remote
+    Drawing over the document without putting anything in it · search highlights, remote
     cursors, squiggles. Decorations never travel with a copy, an export or an undo.
   </p>
   <pre><code>decorations: (ctx) =&gt; findMatches(ctx.doc, query).map((range) =&gt; (&#123;
@@ -89,7 +89,7 @@ editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
   <p>
     Extensions load in array order, adjustable with <code>priority</code>. Later ones win a key
     binding conflict, and a more specific <code>parseDOM</code> rule needs a higher priority to
-    beat a general one — which is how a task list beats a plain bulleted list for the same
+    beat a general one · which is how a task list beats a plain bulleted list for the same
     <code>&lt;ul&gt;</code>.
   </p>
 </Docs>

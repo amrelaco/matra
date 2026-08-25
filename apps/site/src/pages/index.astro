@@ -8,7 +8,7 @@ import Base from '../layouts/Base.astro'
  * One column width for every section, so the page has a single left edge.
  *
  * Each section answers one question and stops. The five editor sections come
- * one after another on scroll rather than behind tabs — a tab is a thing nobody
+ * one after another on scroll rather than behind tabs · a tab is a thing nobody
  * clicks, and the whole argument is that the same package makes all of them.
  */
 
@@ -31,12 +31,12 @@ const compare = [
   ['Unique block ids', 'free', 'paid', 'build it', 'build it'],
   ['Drag handle', 'free', 'paid', 'build it', 'build it'],
   ['Comments', 'free', 'paid', 'build it', 'build it'],
-  ['Runtime licence check', 'never', 'none', '—', '—'],
+  ['Runtime licence check', 'never', 'none', '·', '·'],
 ]
 
 /**
  * Grouped as the design file groups them. The package names there were
- * invented — one per extension — and the real answer is that almost all of it
+ * invented · one per extension · and the real answer is that almost all of it
  * is in the core, which is rather the point of the heading.
  */
 const groups = [
@@ -67,7 +67,7 @@ const groups = [
 ---
 
 <Base
-  title="Matra — the editor you are already using"
+  title="Matra · the editor you are already using"
   description="A headless rich text editor framework. 22.3 kB gzipped, zero dependencies, measured faster than Tiptap in a real browser. Every word on this page is running it."
 >
   <Nav />
@@ -79,7 +79,7 @@ const groups = [
       <p class="lede">
         Every word on this page is a Matra document. Select this sentence and press
         <strong>Mod-B</strong>. Type <strong>"quotes"</strong> and watch them curl. Nothing here
-        is a screenshot and nothing is a video — it is the product, at the size the table
+        is a screenshot and nothing is a video. It is the product, at the size the table
         further down claims.
       </p>
 
@@ -123,7 +123,7 @@ const groups = [
           an em dash.
         </p>
         <ul data-type="taskList">
-          <li data-checked="true"><p>Tick this — it is a real node, not a glyph</p></li>
+          <li data-checked="true"><p>Tick this · a real node, not a glyph</p></li>
           <li data-checked="false"><p>Add a line and watch the list continue</p></li>
         </ul>
         <blockquote>
@@ -149,7 +149,7 @@ const groups = [
   <section class="section">
     <div class="wrap demo-row">
       <div class="demo-copy">
-        <p class="kicker">01 — Block editor</p>
+        <p class="kicker">01 · Block editor</p>
         <h3>The Notion shape.</h3>
         <p>
           Placeholder, task lists, smart typography. What most people picture when they say they
@@ -166,7 +166,7 @@ const groups = [
   <section class="section">
     <div class="wrap demo-row">
       <div class="demo-copy">
-        <p class="kicker">02 — Comment box</p>
+        <p class="kicker">02 · Comment box</p>
         <h3>Three marks, deliberately.</h3>
         <p>
           Bold, italic, code, and nothing else. A comment box that can make headings is a bug
@@ -199,7 +199,7 @@ const groups = [
   <section class="section">
     <div class="wrap demo-row">
       <div class="demo-copy">
-        <p class="kicker">03 — Document</p>
+        <p class="kicker">03 · Document</p>
         <h3>A toolbar over a page.</h3>
         <p>
           Headings, quotes, tables, undo. Every button above the page is a command call, and the
@@ -228,7 +228,7 @@ const groups = [
   <section class="section">
     <div class="wrap demo-row">
       <div class="demo-copy">
-        <p class="kicker">04 — Markdown</p>
+        <p class="kicker">04 · Markdown</p>
         <h3>Out, without a DOM.</h3>
         <p>
           The panel beside this is <span class="mono">toMarkdown</span> running on every
@@ -252,7 +252,7 @@ const groups = [
   <section class="section">
     <div class="wrap demo-row">
       <div class="demo-copy">
-        <p class="kicker">05 — Chat composer</p>
+        <p class="kicker">05 · Chat composer</p>
         <h3>One block, and a send key.</h3>
         <p>
           No headings, no lists, no way to paste a document into a message box. Constraining an
@@ -264,7 +264,7 @@ const groups = [
         <div class="chat-shell">
           <div class="chat-log">
             <div class="bubble them">Did the drag handle land?</div>
-            <div class="bubble me">It did — and it is free, which Tiptap's is not.</div>
+            <div class="bubble me">It did · and it is free, which Tiptap's is not.</div>
           </div>
           <div class="chat-box">
             <div id="ed-chat" class="ed-chat"></div>
@@ -287,7 +287,7 @@ const groups = [
 
       <div class="meter">
         <div><b id="meter-key">measuring…</b><span>per keystroke, 2,000 paragraphs</span></div>
-        <div><b id="meter-parse">—</b><span>to parse that document</span></div>
+        <div><b id="meter-parse">·</b><span>to parse that document</span></div>
         <div class="note"><span id="meter-note" class="mono">running in your browser…</span></div>
       </div>
 
@@ -321,7 +321,7 @@ const groups = [
       <p class="kicker">Extensions</p>
       <h2>A small core.<br />Everything else hangs off it.</h2>
       <p class="lede">
-        Nodes, marks and behaviour are all the same shape — a plain object with a name. Five of
+        Nodes, marks and behaviour are all the same shape: a plain object with a name. Five of
         these seven groups are in the core and MIT, including the four that are paid features
         elsewhere.
       </p>

@@ -1,7 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Position mapping — Matra docs" description="A position is an integer into the document. The moment anything changes, that integer points somewhere else." section="Concepts" heading="Position mapping">
+<Docs title="Position mapping · Matra docs" description="A position is an integer into the document. The moment anything changes, that integer points somewhere else." section="Concepts" heading="Position mapping">
   <p>
     A position is an integer into the document. The moment anything changes, that integer points
     somewhere else. Mapping is how a position survives an edit it did not expect.
@@ -23,7 +23,7 @@ await stream((chunk) =&gt; &#123;
   <p>
     Between one chunk and the next the person may have typed, pasted or hit undo. A marker
     replays every change made since it was taken, so the position still points at the same place
-    in the text — rather than at the same number, which is no longer the same place.
+    in the text · rather than at the same number, which is no longer the same place.
   </p>
 
   <div class="note">
@@ -33,8 +33,8 @@ await stream((chunk) =&gt; &#123;
 
   <h2>Where else it matters</h2>
   <ul>
-    <li><strong>Collaboration</strong> — a remote caret arrives in the sender's coordinates and has to be mapped into yours.</li>
-    <li><strong>Comments</strong> — anchored as marks, so mapping keeps them on the right words for free.</li>
-    <li><strong>Decorations</strong> — search highlights move with the text they highlight.</li>
+    <li><strong>Collaboration</strong> · a remote caret arrives in the sender's coordinates and has to be mapped into yours.</li>
+    <li><strong>Comments</strong> · anchored as marks, so mapping keeps them on the right words for free.</li>
+    <li><strong>Decorations</strong> · search highlights move with the text they highlight.</li>
   </ul>
 </Docs>

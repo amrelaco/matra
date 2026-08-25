@@ -108,6 +108,9 @@ export class DOMParser {
   }
 
   private parseOne(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Node[] {
+    // Scaffolding the view puts in empty blocks so they have height. Reading it
+    // back would turn every empty paragraph into one containing a hard break.
+    if (dom.nodeType === 1 && (dom as Element).hasAttribute('data-matra-filler')) return []
     if (dom.nodeType === 3) {
       const text = normaliseWhitespace(dom.nodeValue ?? '')
       return text ? [this.schema.text(text, marks)] : []

@@ -1,7 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Recipes — Matra docs" description="Autosave, read-only, Markdown, a table of contents, search highlighting, and the things people ask for on day one." section="Reference" heading="Recipes">
+<Docs title="Recipes · Matra docs" description="Autosave, read-only, Markdown, a table of contents, search highlighting, and the things people ask for on day one." section="Reference" heading="Recipes">
   <p>The things people need on the first day, in the fewest lines that actually work.</p>
 
   <h2>Autosave, without saving on every keystroke</h2>
@@ -35,7 +35,7 @@ entries.forEach((entry) =&gt; &#123;
   link.onclick = () =&gt; editor.commands.select(entry.pos + 1)
 &#125;)</code></pre>
   <p>
-    Derived on demand rather than cached, so it cannot disagree with the document — which is how
+    Derived on demand rather than cached, so it cannot disagree with the document · which is how
     a cached outline ends up pointing at a heading that was renamed.
   </p>
 
@@ -56,7 +56,7 @@ entries.forEach((entry) =&gt; &#123;
 const doc = assignIds(editor.getJSON())   // every block gains a stable id
 editor.setContent(doc)</code></pre>
   <p>
-    Call it when you load and when you save, not on every transaction — an editor that rewrites
+    Call it when you load and when you save, not on every transaction · an editor that rewrites
     attributes behind your back makes every document dirty and every undo stack strange.
   </p>
 
@@ -74,13 +74,13 @@ editor.setContent(doc)</code></pre>
   <pre><code>editor.setContent(untrustedHtml)</code></pre>
   <p>
     Safe by construction. Executable attributes are never set, URL attributes are scheme-checked,
-    undeclared attributes are dropped, and every route into the DOM — JSON, paste, command,
-    decoration — passes the same gate. See
+    undeclared attributes are dropped, and every route into the DOM · JSON, paste, command,
+    decoration · passes the same gate. See
     <a href="https://github.com/amrelaco/matra/blob/main/SECURITY.md">SECURITY.md</a>.
   </p>
 
   <div class="note">
     <code>getHTML()</code> output is safe to render in the editor. If you store it and serve it
-    somewhere else, sanitise at that boundary too — defence in depth is the point.
+    somewhere else, sanitise at that boundary too · defence in depth is the point.
   </div>
 </Docs>

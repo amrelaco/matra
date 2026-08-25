@@ -1,7 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="React — Matra docs" description="useEditor, useEditorState and EditorContent: a toolbar whose active states stay honest." section="Frameworks" heading="React">
+<Docs title="React · Matra docs" description="useEditor, useEditorState and EditorContent: a toolbar whose active states stay honest." section="Frameworks" heading="React">
   <pre><code>npm i @matrajs/core @matrajs/react</code></pre>
 
   <h2>An editor</h2>
@@ -18,7 +18,7 @@ export function Editor() &#123;
 &#125;</code></pre>
   <p>
     The editor is created once and destroyed on unmount. <strong>Options are read
-    once</strong> — changing them later does not recreate it, because tearing down a live
+    once</strong> · changing them later does not recreate it, because tearing down a live
     document on a prop change loses whatever the person was writing. Use commands instead.
   </p>
 
@@ -47,7 +47,7 @@ function BoldButton(&#123; editor &#125;) &#123;
   <div class="note">
     <code>onMouseDown</code> with <code>preventDefault</code>, not
     <code>onClick</code>. A click moves focus to the button first, which collapses the
-    selection — so the command runs against a caret rather than the words you highlighted.
+    selection · so the command runs against a caret rather than the words you highlighted.
   </div>
 
   <h2>Saving</h2>

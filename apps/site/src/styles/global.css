@@ -266,9 +266,31 @@ th {
  * other editor anyone has used.
  */
 [data-live],
-[data-editable] {
+[data-editable],
+[contenteditable],
+.matra-editor {
   outline: none;
   cursor: text;
+}
+
+/*
+ * Spaces have to survive.
+ *
+ * HTML collapses runs of whitespace and drops a trailing one, so pressing space
+ * at the end of a line does nothing visible until the next character arrives.
+ * pre-wrap keeps them and still wraps on width, which is what a text editor
+ * needs and what plain prose does not.
+ */
+[data-live],
+.matra-editor {
+  white-space: pre-wrap;
+  -webkit-user-modify: read-write-plaintext-only;
+  -webkit-user-modify: read-write;
+}
+
+/* Scaffolding for an empty block, not content — it must not take up a line. */
+[data-matra-filler] {
+  user-select: none;
 }
 
 @media (max-width: 860px) {

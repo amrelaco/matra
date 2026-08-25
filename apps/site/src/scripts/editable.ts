@@ -134,7 +134,19 @@ const AUTO = [
  * making the navigation editable would be a page that looks the same and no
  * longer works. Code samples stay too, because people copy them.
  */
-const SKIP = 'nav, pre, code, .btn, [data-static], [data-editable], [data-live]'
+const SKIP = [
+  'nav',
+  'pre',
+  'code',
+  '.btn',
+  // Its <b> and <span> are stacked by CSS and carry meaning as separate
+  // elements; one editor over the whole item flattens them onto one line and
+  // "22.3 kB" runs straight into its own caption.
+  '.proof li',
+  '[data-static]',
+  '[data-editable]',
+  '[data-live]',
+].join(',')
 
 const isInteractive = (element: Element) =>
   element.matches('a, button') || element.querySelector('a, button') !== null
@@ -150,21 +162,32 @@ function kitFor(element: HTMLElement): Kit {
 
 function upgrade(element: HTMLElement): void {
   if (element.dataset.live === 'true') return
-  const seed = element.innerHTML.trim()
+  const original = element.innerHTML
+  const seed = original.trim()
   if (!seed) return
 
   try {
     const editor = createEditor({ extensions: kitFor(element) as never, content: seed })
     editor.mount(element)
+
+    // Put it back if the upgrade emptied it. A schema that cannot represent
+    // some markup drops it, and a section of the page silently disappearing is
+    // far worse than a section that is merely not editable.
+    if (seed && !element.textContent?.trim() && stripTags(seed)) {
+      editor.destroy()
+      element.innerHTML = original
+      return
+    }
+
     element.dataset.live = 'true'
     element.setAttribute('aria-label', 'Editable text. Reload the page to restore it.')
   } catch (error) {
-    // A region that will not upgrade stays as the HTML it already was, which is
-    // readable and correct. Failing loudly would break the page to announce
-    // that a demo is missing.
+    element.innerHTML = original
     console.warn('Matra: could not make this editable', element, error)
   }
 }
+
+const stripTags = (html: string) => html.replace(/<[^>]*>/g, '').trim()
 
 /**
  * A table becomes one editor rather than one per cell.

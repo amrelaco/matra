@@ -37,7 +37,7 @@ const coreCommands = [
   ],
   ['replace(range, content)', 'Range, content', 'Swap a range for something else.'],
   ['remove(range?)', 'Range?', 'Delete a range, or the selection.'],
-  ['moveBlock(from, to)', 'Pos, Pos', 'Move a whole block — what a drag does.'],
+  ['moveBlock(from, to)', 'Pos, Pos', 'Move a whole block · what a drag does.'],
   ['focus()', '—', 'Put the caret back.'],
 ]
 
@@ -52,9 +52,9 @@ const ctxApi = [
   ['mark()', 'A PosMarker. Map positions through changes made after this point.'],
 ]
 ---
-<Docs title="API — Matra docs" description="The editor object, the core commands, and the command context, in one page." section="Reference" heading="API">
+<Docs title="API · Matra docs" description="The editor object, the core commands, and the command context, in one page." section="Reference" heading="API">
   <p>
-    Everything public, on one page. No engine type appears in any signature here — that is the
+    Everything public, on one page. No engine type appears in any signature here · that is the
     contract, not a coincidence.
   </p>
 
@@ -93,11 +93,11 @@ const ctxApi = [
 
   <div class="note">
     A command never throws. Positions that are not finite integers inside the document return
-    false — <code>NaN</code> included, which slips past naive range checks because both
+    false · <code>NaN</code> included, which slips past naive range checks because both
     <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
   </div>
 
-  <h2>Ctx — what a command receives</h2>
+  <h2>Ctx · what a command receives</h2>
   <div class="api">
     <table>
       <tbody>

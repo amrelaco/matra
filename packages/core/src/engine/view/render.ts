@@ -219,6 +219,7 @@ export class Renderer {
     if (hole && !node.type.isLeaf) {
       this.map.record(hole, pos + 1)
       this.buildFragment(node.content, hole as HTMLElement, pos + 1)
+      fillEmptyTextblock(hole as HTMLElement, node)
     }
     return dom
   }
@@ -249,6 +250,7 @@ export class Renderer {
         this.nodeViews.destroyWithin(target)
         target.replaceChildren()
         this.buildFragment(newChildren, target, contentStart)
+        fillEmptyTextblock(target, newParent)
       } else {
         this.recordWithin(newChildren, target, contentStart)
       }
@@ -516,4 +518,24 @@ export function renderSpec(spec: DOMOutputSpec): {
   }
 
   return { dom, hole }
+}
+
+/**
+ * Give an empty paragraph something to stand on.
+ *
+ * A textblock with no content renders as an element with no children, which
+ * collapses to zero height and gives the caret nowhere to sit. Press Enter and
+ * nothing appears to happen until you type — the block is there, it just has no
+ * height. Every browser wants a `<br>` in an empty editable block, and this is
+ * the one place that can know a block is empty.
+ *
+ * The break is marked so the parser can ignore it: it is scaffolding, not
+ * content, and reading it back as a hard break would insert a real one.
+ */
+function fillEmptyTextblock(target: HTMLElement, node: Node): void {
+  if (!node.isTextblock || node.content.size > 0) return
+  if (target.firstChild) return
+  const filler = document.createElement('br')
+  filler.setAttribute('data-matra-filler', '')
+  target.appendChild(filler)
 }
