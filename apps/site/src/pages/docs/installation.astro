@@ -14,12 +14,20 @@ npm i @matrajs/vue     # useEditor, EditorContent</code></pre>
   </p>
 
   <h2>The paid packages</h2>
-  <pre><code>npm i @matrajs/ai      # streaming edits
-npm i @matrajs/collab  # authority, rebasing, remote cursors</code></pre>
+  <pre><code>npm i @amrelaco/matra-ai      # streaming edits
+npm i @amrelaco/matra-collab  # authority, rebasing, remote cursors</code></pre>
   <p>
     These are source-available under a commercial licence rather than MIT, and come from a
     private registry. Free for evaluation, development, testing, teaching, personal projects and
     teams of fewer than three developers — see <a href="/licence">the licence</a>.
+  </p>
+  <p>A subscription comes with access; two lines in <code>.npmrc</code> use it:</p>
+  <pre><code>@amrelaco:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=$&#123;GITHUB_TOKEN&#125;</code></pre>
+  <p>
+    That redirects only the <code>@amrelaco</code> scope. <code>@matrajs/core</code> and the
+    bindings keep resolving from public npm, so the rest of your install works with or without
+    the token — it matters only for the packages you are paying for.
   </p>
 
   <div class="note">

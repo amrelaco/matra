@@ -1,5 +1,5 @@
 {
-  "name": "@matrajs/ai",
+  "name": "@amrelaco/matra-ai",
   "version": "0.12.0",
   "description": "AI extension for Matra \u2014 streaming edits that survive concurrent typing.",
   "license": "SEE LICENSE IN LICENSE",

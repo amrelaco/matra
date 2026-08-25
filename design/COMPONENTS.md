@@ -188,8 +188,8 @@ What actually ships:
 | shown as | really is | badge |
 |---|---|---|
 | bold, heading, lists, tables, comments, code, highlight | `@matrajs/core` | free |
-| AI | `@matrajs/ai` | pro |
-| Collaboration | `@matrajs/collab` | pro |
+| AI | `@amrelaco/matra-ai` | pro |
+| Collaboration | `@amrelaco/matra-collab` | pro |
 
 The badge is not decoration: exactly two rows carry `pro`, and they are the two
 packages under the commercial licence. If a third badge ever appears, a package
@@ -199,7 +199,7 @@ Sizes in the mockups are now real: "in core" for bundled extensions, measured
 gzipped sizes for the separate ones. `Math` was replaced with `Highlight`
 because Math is not built.
 
-**Resolved.** From 0.6.0, `@matrajs/ai` and `@matrajs/collab` are commercially
+**Resolved.** From 0.6.0, `@amrelaco/matra-ai` and `@amrelaco/matra-collab` are commercially
 licensed and everything else stays MIT, so the Pro tier now describes something
 real. Two consequences for the design:
 

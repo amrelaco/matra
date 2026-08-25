@@ -32,7 +32,7 @@ AI response lands on the right words instead of corrupting the paragraph.
 ## Companions
 
 - `@matrajs/react` — `useEditor`, `useEditorState`, `EditorContent`
-- `@matrajs/ai` — streaming edits that survive concurrent typing
+- `@amrelaco/matra-ai` — streaming edits that survive concurrent typing
 
 - Docs: https://matrajs.com
 - Source: https://github.com/amrelaco/matra

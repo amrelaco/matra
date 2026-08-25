@@ -16,8 +16,8 @@ See [DESIGN.md](./DESIGN.md) for the API rationale.
 | `@matrajs/core` | Engine, document model, extension API, starter kit | MIT |
 | `@matrajs/react` | `useEditor`, `useEditorState`, `EditorContent` | MIT |
 | `@matrajs/vue` | `useEditor`, `EditorContent` | MIT |
-| `@matrajs/ai` | Streaming edits that survive concurrent typing | Commercial |
-| `@matrajs/collab` | Authority, step rebasing, remote cursors | Commercial |
+| `@amrelaco/matra-ai` | Streaming edits that survive concurrent typing | Commercial |
+| `@amrelaco/matra-collab` | Authority, step rebasing, remote cursors | Commercial |
 
 > The `@matra` npm scope belongs to an unrelated project, so bindings live under
 > `@matrajs`, matching matrajs.com. The headline install stays `npm i @matrajs/core`.
@@ -137,7 +137,7 @@ Two registries, and an order that matters. See [RELEASING.md](./RELEASING.md).
 kit, tables, comments, every mark and node that ships in the box. No open-core
 asterisk on any of it, no feature removed later to sell back.
 
-**AI and collaboration are paid.** `@matrajs/ai` and `@matrajs/collab` are
+**AI and collaboration are paid.** `@amrelaco/matra-ai` and `@amrelaco/matra-collab` are
 source-available under the [Matra Commercial License](./packages/ai/LICENSE):
 free to evaluate, develop against, test, teach with, and use in personal
 projects and small internal tools; paid per developer in production. They are

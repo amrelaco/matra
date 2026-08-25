@@ -1,5 +1,5 @@
 {
-  "name": "@matrajs/collab",
+  "name": "@amrelaco/matra-collab",
   "version": "0.12.0",
   "description": "Collaborative editing for Matra \u2014 step exchange, rebasing and presence. No CRDT dependency.",
   "license": "SEE LICENSE IN LICENSE",
