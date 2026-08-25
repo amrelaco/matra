@@ -25,19 +25,17 @@ free for personal projects and small teams.
 
 ### What you can actually see
 
-- **Per-customer tokens.** Access comes from a GitHub org invite, so every
-  install is attributable to an account. Revoking a customer revokes their
-  installs.
-- **Download counts per version**, from GitHub Packages. A customer of five
-  developers pulling hundreds of distinct installs is a conversation worth
-  having.
-- **Stamped builds.** `pnpm stamp <customer>` writes a licence id into the
-  published artifact. If a copy turns up somewhere it should not, the id says
-  whose copy it was. This is what enterprise vendors mean by watermarking, and
-  it is thirty lines rather than a product.
+Less than any of the access-control schemes promised, and it does not matter as
+much as it seems to.
 
-None of that is DRM and none of it runs at the customer's end. It makes leaks
-*traceable* and unlicensed use *provable*, which is what enforcement needs.
+- **npm download counts**, which say nothing about who.
+- **Who asked you for an invoice**, which is the only signal that ever mattered.
+
+Three gating designs were built and thrown away here before someone asked what
+they were protecting. The source is in a public repository: anyone can read it,
+clone it and build it without an account. A private registry in front of that is
+a locked door in an open field, and it costs an organisation to administer,
+collaborators to add and remove, and a second repository to keep in step.
 
 ### What not to do
 

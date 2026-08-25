@@ -14,25 +14,20 @@ npm i @matrajs/vue     # useEditor, EditorContent</code></pre>
   </p>
 
   <h2>The paid packages</h2>
+  <pre><code>npm i @matrajs/ai      # streaming edits
+npm i @matrajs/collab  # authority, rebasing, remote cursors</code></pre>
   <p>
-    <code>@matrajs/ai</code> and <code>@matrajs/collab</code> are source-available under a
-    commercial licence rather than MIT. Free for evaluation, development, testing, teaching,
-    personal projects and teams of fewer than three developers — see
+    Installed the same way as everything else. These two are source-available under a
+    commercial licence rather than MIT — free for evaluation, development, testing, teaching,
+    personal projects and teams of fewer than three developers, paid beyond that. See
     <a href="/licence">the licence</a>.
-  </p>
-  <p>A subscription comes with access to the release repository; installing uses it:</p>
-  <pre><code>npm i "@matrajs/ai@git+ssh://git@github.com/amrelaco/matra-pro.git#semver:^0.12.0"</code></pre>
-  <p>
-    They install under their own names, so imports read
-    <code>from '@matrajs/ai'</code> exactly as the free packages do. The git URL appears once in
-    your manifest and nowhere else, and <code>#semver:</code> resolves against tags, so ranges
-    and upgrades work normally.
   </p>
 
   <div class="note">
-    Nothing checks a licence at runtime and nothing phones home. Access to the repository is the
-    licence taking effect — so if a subscription lapses, whatever you already shipped keeps
-    running.
+    There is no registry to configure, no token to obtain and no licence key. Nothing checks
+    anything at runtime and nothing phones home. You install them, build with them, and pay when
+    what you built goes to production — which means an unpaid invoice is a conversation rather
+    than an outage.
   </div>
 
   <h2>Requirements</h2>

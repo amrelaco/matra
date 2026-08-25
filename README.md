@@ -149,11 +149,10 @@ work without losing either.
 never talks to us, in development or in production, and a lapsed subscription
 cannot switch anything off in an app you already shipped.
 
-What a subscription buys is *access*, not permission-to-run: the paid packages
-are distributed through a private registry, so `npm install` needs a token tied
-to a seat. Renewing keeps the token working for new versions and keeps support
-open. The version you already installed keeps running forever either way — that
-is clause 3 of the licence, and it is the point of it.
+There is no download gate either. The source is in this repository and the
+packages install from public npm — the licence is the boundary, as with the
+Business Source Licence. What a subscription buys is the right to run them in
+production, plus updates and support.
 
 **Versions up to 0.5.0 shipped under MIT, including `ai` and `collab`, and that
 grant cannot be withdrawn.** Anyone already on 0.5.0 may stay there under MIT

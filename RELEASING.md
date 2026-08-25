@@ -1,106 +1,63 @@
 # Releasing
 
-Two registries, because two of the packages are paid.
-
-| Package | Registry | Access |
-|---|---|---|
-| `@matrajs/core`, `@matrajs/react`, `@matrajs/vue` | public npm | anyone |
-| `@matrajs/ai`, `@matrajs/collab` | private git repo | subscribers only |
-
-## The order matters
-
-Dependants pin `@matrajs/core` by range, so core has to be *available* — not
-merely accepted — before anything that depends on it is published. npm processes
-a publish asynchronously: `+@matrajs/core@1.2.3` means accepted, not installable.
-Publishing dependants against a queued core has already produced uninstallable
-packages once.
+One registry. Everything goes to public npm.
 
 ```sh
 pnpm build && pnpm test && pnpm check && pnpm typecheck
 
 cd packages/core && pnpm publish --access public
-# wait for it to actually exist
+# wait for it to actually exist before publishing anything that depends on it
 until [ "$(npm view @matrajs/core version)" = "1.2.3" ]; do sleep 20; done
 
-for p in react vue; do (cd packages/$p && pnpm publish --access public); done
-node scripts/release-pro.mjs --push                              # the paid two
+for p in react vue ai collab; do (cd packages/$p && pnpm publish --access public); done
 ```
 
-Always `pnpm publish`, never `npm publish`: npm does not convert
-`workspace:*` and will ship a manifest nobody can install.
+Dependants pin `@matrajs/core` by range, so core has to be *available* — not
+merely accepted — before they go out. npm processes a publish asynchronously:
+`+@matrajs/core@1.2.3` means accepted, not installable. Publishing dependants
+against a queued core has produced uninstallable packages here once already.
 
-## Where the paid packages live
+Always `pnpm publish`, never `npm publish`: npm does not convert `workspace:*`
+and will ship a manifest nobody can install.
 
-They keep the `@matrajs` name, because the name belongs to the product and
-Amrela is the company behind it rather than the thing being installed. That
-rules out both of the obvious registries:
+## Why the paid packages are public too
 
-- **GitHub Packages** requires a package to be scoped to the account that owns
-  it. The account is `amrelaco`, so it would only accept `@amrelaco/*`.
-- **npm private packages** need a paid plan.
+They were nearly not. Three designs were built and discarded — a private npm
+scope, GitHub Packages under a second organisation, a private repository
+installed by git ref — before the obvious question got asked: what were they
+protecting?
 
-So they are not published to a registry at all. They live as built output in a
-private repository, and npm installs them from a git ref:
+**The source is already public.** `packages/ai` and `packages/collab` are in
+this repository, and this repository is public. Anyone can read
+`collab/src/collab.ts` in a browser, clone it, and build it. Every one of those
+schemes guarded the npm door of a building with no walls, and each cost real
+administration — an organisation to run, collaborators to add and remove, a
+second repository to keep in step — to achieve nothing a determined non-payer
+would even notice.
 
-```sh
-npm i "@matrajs/ai@git+ssh://git@github.com/amrelaco/matra-pro.git#semver:^0.12.0"
-```
+The alternative was making the repository private, which would trade the thing
+that actually brings people in for a lock that a `git clone` opens.
 
-Once installed it is `node_modules/@matrajs/ai`, and every import reads
-`from '@matrajs/ai'` — the git URL appears once in a manifest and nowhere else.
-`#semver:` resolves against the repo's tags, so ranges and upgrades work
-normally.
+So `@matrajs/ai` and `@matrajs/collab` publish publicly, and **the licence is
+the boundary rather than the download**. That is the same arrangement as the
+Business Source License and the Functional Source License: read it, build it,
+run it in development, and pay when it goes to production beyond the free
+threshold.
 
-Both manifests carry `"private": true`, which is npm's own guard, plus a
-`prepublishOnly` hook that refuses with an explanation. The hook exists because
-`private` is not exercised by `--dry-run` and therefore cannot be tested without
-actually publishing — and an untested safety net is a belief rather than a
-guard. The hook can be checked any time:
+## What actually produces revenue
 
-```sh
-cd packages/ai && npm publish --dry-run   # should refuse, loudly
-```
+Not a gate. A company with a legal department does not put an unlicensed
+dependency in its build to save $99 a month — it surfaces in acquisition due
+diligence and in every enterprise security review, and the exposure is thousands
+of times the saving. Individuals might, and the licence already gives
+individuals these packages free.
 
-```sh
-pnpm build
-node scripts/release-pro.mjs          # dry run, prints what it would do
-node scripts/release-pro.mjs --push   # copy dist, commit, tag
-```
+What a subscription buys is the right to use them in production, plus updates
+and support. See [SELLING.md](./SELLING.md).
 
-Built output only. Customers do not get a build toolchain, and a package that
-compiles on install is a package that fails on somebody's CI.
+## Versions
 
-### What this costs
-
-An unusual install line, and the ref lands in the customer's lockfile. Both are
-real. What it buys is the name, no new organisation, no monthly fee, and access
-controlled by something already administered.
-
-If a registry becomes worth its price later — a paid npm plan is about $7 a
-month — moving is a change to the install line and nothing else, because the
-package name never changes.
-
-## Giving a customer access
-
-1. Add them to the `matra-pro` repository with read access, as an outside
-   collaborator or through a team. A GitHub account is all they need.
-2. They install with their own credentials, so nothing secret is issued and
-   nothing secret can leak into their lockfile.
-3. For CI without SSH keys, an HTTPS remote and a token from the environment:
-
-```sh
-git+https://${GITHUB_TOKEN}@github.com/amrelaco/matra-pro.git#semver:^0.12.0
-```
-
-Removing their repository access removes future installs. Nothing checks a
-licence at runtime, so whatever they already shipped keeps running — which is
-what [the licence](./packages/ai/LICENSE) promises, and that promise is
-load-bearing.
-
-## Versions already public
-
-`ai` and `collab` were MIT through 0.5.0 and public through 0.11.0. npm allows
-unpublishing within 72 hours of a publish and refuses afterwards. Anything past
-that window stays installable forever, so those versions are a permanent free
-tier whether or not that was the intention — worth knowing before pricing
-assumes otherwise.
+`ai` and `collab` were MIT through 0.5.0, and that grant cannot be withdrawn.
+From 0.6.0 they carry the commercial licence. Nothing in either has ever checked
+a licence at runtime, and nothing ever will: it would be patched out in an hour,
+and until then it would sit in a customer's production waiting to fail.

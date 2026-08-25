@@ -29,11 +29,12 @@
   "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "tsup",
-    "clean": "rm -rf dist",
-    "prepublishOnly": "node ../../scripts/no-publish.mjs"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@matrajs/core": "workspace:^"
   },
-  "private": true
+  "publishConfig": {
+    "access": "public"
+  }
 }
