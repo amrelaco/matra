@@ -125,6 +125,10 @@ Meta's traffic, and both have met far more real IME users than this has. If you
 need a mature extension for something exotic today, they have it and this does
 not.
 
+## Releasing
+
+Two registries, and an order that matters. See [RELEASING.md](./RELEASING.md).
+
 ## Licence
 
 **The core is MIT and stays that way.** `@matrajs/core`, `@matrajs/react` and

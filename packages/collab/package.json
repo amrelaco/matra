@@ -15,7 +15,7 @@
   },
   "keywords": ["editor", "rich-text", "collaborative", "matra", "ot"],
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   },
   "type": "module",
   "sideEffects": false,
