@@ -34,3 +34,12 @@ export { tableOfContents, type TocEntry } from './table-of-contents'
 export { assignIds, uniqueId, type UniqueIdOptions } from './unique-id'
 export { fromMarkdown, toMarkdown } from './markdown'
 export { dragHandle, dragHandleCSS, type DragHandleOptions } from './drag-handle'
+export { mention, type MentionOptions } from './mention'
+export {
+  activeSuggestion,
+  suggestion,
+  suggestionCSS,
+  type SuggestionOptions,
+  type SuggestionState,
+  type SuggestionStore,
+} from './suggestion'

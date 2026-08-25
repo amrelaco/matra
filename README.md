@@ -88,6 +88,7 @@ Everything in the box, and everything free unless marked.
 | **Interchange** | **Markdown in and out**, with no DOM | runs on a server |
 | **Dragging** | block drag and drop, **drag handle**, drop cursor | Tiptap charges for the handle |
 | **Review** | threaded comments anchored to ranges | Tiptap charges for these |
+| **Menus** | `@` mentions and `/` commands, detection only | the popup is yours |
 | **Paid** | AI streaming, collaboration with remote cursors | |
 
 The four in bold that Tiptap puts behind its Pro tier — table of contents,
