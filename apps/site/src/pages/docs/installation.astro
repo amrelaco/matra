@@ -14,25 +14,25 @@ npm i @matrajs/vue     # useEditor, EditorContent</code></pre>
   </p>
 
   <h2>The paid packages</h2>
-  <pre><code>npm i @amrelaco/matra-ai      # streaming edits
-npm i @amrelaco/matra-collab  # authority, rebasing, remote cursors</code></pre>
   <p>
-    These are source-available under a commercial licence rather than MIT, and come from a
-    private registry. Free for evaluation, development, testing, teaching, personal projects and
-    teams of fewer than three developers — see <a href="/licence">the licence</a>.
+    <code>@matrajs/ai</code> and <code>@matrajs/collab</code> are source-available under a
+    commercial licence rather than MIT. Free for evaluation, development, testing, teaching,
+    personal projects and teams of fewer than three developers — see
+    <a href="/licence">the licence</a>.
   </p>
-  <p>A subscription comes with access; two lines in <code>.npmrc</code> use it:</p>
-  <pre><code>@amrelaco:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=$&#123;GITHUB_TOKEN&#125;</code></pre>
+  <p>A subscription comes with access to the release repository; installing uses it:</p>
+  <pre><code>npm i "@matrajs/ai@git+ssh://git@github.com/amrelaco/matra-pro.git#semver:^0.12.0"</code></pre>
   <p>
-    That redirects only the <code>@amrelaco</code> scope. <code>@matrajs/core</code> and the
-    bindings keep resolving from public npm, so the rest of your install works with or without
-    the token — it matters only for the packages you are paying for.
+    They install under their own names, so imports read
+    <code>from '@matrajs/ai'</code> exactly as the free packages do. The git URL appears once in
+    your manifest and nowhere else, and <code>#semver:</code> resolves against tags, so ranges
+    and upgrades work normally.
   </p>
 
   <div class="note">
-    Nothing checks a licence at runtime and nothing phones home. A subscription is what lets
-    <code>npm install</code> reach these packages, not what lets your app run.
+    Nothing checks a licence at runtime and nothing phones home. Access to the repository is the
+    licence taking effect — so if a subscription lapses, whatever you already shipped keeps
+    running.
   </div>
 
   <h2>Requirements</h2>

@@ -1,5 +1,5 @@
 {
-  "name": "@amrelaco/matra-collab",
+  "name": "@matrajs/collab",
   "version": "0.12.0",
   "description": "Collaborative editing for Matra \u2014 step exchange, rebasing and presence. No CRDT dependency.",
   "license": "SEE LICENSE IN LICENSE",
@@ -14,10 +14,6 @@
     "url": "https://github.com/amrelaco/matra/issues"
   },
   "keywords": ["editor", "rich-text", "collaborative", "matra", "ot"],
-  "publishConfig": {
-    "access": "restricted",
-    "registry": "https://npm.pkg.github.com"
-  },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -33,9 +29,11 @@
   "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
     "build": "tsup",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "node ../../scripts/no-publish.mjs"
   },
   "dependencies": {
     "@matrajs/core": "workspace:^"
-  }
+  },
+  "private": true
 }

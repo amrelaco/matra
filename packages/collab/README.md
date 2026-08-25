@@ -1,15 +1,15 @@
-# @amrelaco/matra-collab
+# @matrajs/collab
 
 Collaborative editing for Matra. No CRDT, no dependency — the engine can
 already rebase a step over someone else's edit, so this is a version counter
 and a transport on top of that.
 
 ```bash
-npm i @matrajs/core @amrelaco/matra-collab
+npm i @matrajs/core @matrajs/collab
 ```
 
 ```ts
-import { collab, sendableSteps, getVersion } from '@amrelaco/matra-collab'
+import { collab, sendableSteps, getVersion } from '@matrajs/collab'
 
 const editor = createEditor({
   extensions: [...starterKit, collab({ clientId })],
@@ -36,7 +36,7 @@ rather than as document content — so nothing about presence travels with a
 copy, an export, or an undo.
 
 ```ts
-import { collab, remoteCursors, remoteCursorCSS } from '@amrelaco/matra-collab'
+import { collab, remoteCursors, remoteCursorCSS } from '@matrajs/collab'
 
 const editor = createEditor({
   extensions: [...starterKit, collab({ clientId }), remoteCursors()],

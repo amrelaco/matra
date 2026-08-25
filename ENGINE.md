@@ -166,7 +166,7 @@ is pulled in that the editor does not use.
 
 Honesty about the gaps, since "no dependencies" can read as "complete":
 
-- ~~**Collaborative editing.**~~ Done in `@amrelaco/matra-collab`: an authority, step
+- ~~**Collaborative editing.**~~ Done in `@matrajs/collab`: an authority, step
   exchange, rebasing of unsent work over remote edits, and remote cursors drawn
   as decorations, each one mapped through local steps rather than clamped.
 - ~~**Node views.**~~ Done. A node type may declare `nodeView`, returning its

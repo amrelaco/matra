@@ -7,8 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@matrajs/core': resolve(__dirname, 'packages/core/src/index.ts'),
-      '@amrelaco/matra-ai': resolve(__dirname, 'packages/ai/src/index.ts'),
-      '@amrelaco/matra-collab': resolve(__dirname, 'packages/collab/src/index.ts'),
+      '@matrajs/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
+      '@matrajs/collab': resolve(__dirname, 'packages/collab/src/index.ts'),
     },
   },
   test: {

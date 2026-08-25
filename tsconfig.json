@@ -15,8 +15,8 @@
     "baseUrl": ".",
     "paths": {
       "@matrajs/core": ["packages/core/src/index.ts"],
-      "@amrelaco/matra-ai": ["packages/ai/src/index.ts"],
-      "@amrelaco/matra-collab": ["packages/collab/src/index.ts"]
+      "@matrajs/ai": ["packages/ai/src/index.ts"],
+      "@matrajs/collab": ["packages/collab/src/index.ts"]
     },
     "jsx": "react-jsx"
   },
