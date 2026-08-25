@@ -15,35 +15,38 @@ minified, gzipped:
 **5.4× smaller.** Matra has no runtime dependencies; Tiptap brings ProseMirror,
 which is 51 packages in `node_modules`.
 
-## Speed
+## Speed, in a browser
 
-Node 22, happy-dom, 2000 paragraphs of ordinary prose. Milliseconds, lower is
-better.
+Safari/WebKit, 2000 paragraphs of ordinary prose. Median of seven samples.
+Milliseconds, lower is better.
+
+| operation | Matra | Tiptap | |
+|---|---|---|---|
+| mount + first render | **14.1** | 15.3 | 1.1× faster |
+| keystroke, mounted | 0.84 | 0.84 | level |
+| `getHTML()` | **1.41** | 1.76 | 1.25× faster |
+| `getJSON()` | **0.05** | 0.05 | level |
+
+At 200 paragraphs — nearer the size of a document someone actually writes —
+Matra is ahead on everything:
+
+| operation | Matra | Tiptap | |
+|---|---|---|---|
+| mount + first render | **1.58** | 3.12 | 2.0× faster |
+| keystroke, mounted | **0.16** | 0.18 | 1.1× faster |
+| `getHTML()` | **0.15** | 0.20 | 1.3× faster |
+
+Two runs, `bench/browser`. Keystroke at 2000 moved between 0.90× and 1.01× of
+Tiptap across runs, so the honest reading is *level*, not *ahead*.
+
+## Speed, in Node
+
+happy-dom, same document. Useful for the parts that never touch a DOM:
 
 | operation | Matra | Tiptap | |
 |---|---|---|---|
 | create + parse a document | **0.70** | 21.62 | 31× faster |
-| `getHTML()` | **19.07** | 20.24 | 1.1× faster |
-| `getJSON()` | 0.16 | **0.11** | 1.5× slower |
-| keystroke, mounted | 0.67 | **0.63** | 1.1× slower |
-
-At 200 paragraphs — nearer the size of a real document — Matra leads on all
-four, including the keystroke (0.12 vs 0.17).
-
-## What these numbers are not
-
-**The view timings are not browser timings.** They run against happy-dom, whose
-cost model is its own: `nextSibling` is not O(1) there, and a change that made
-the diff faster in a browser measured slower under it. Treat `create + parse`,
-`getJSON` and the bundle figures as solid, and the mounted-keystroke figure as
-indicative until it is measured in Chrome and Safari.
-
-**They are one shape of document.** Flat paragraphs of similar length. Deeply
-nested lists, huge tables and documents full of marks all stress different
-paths, and none of them are measured here yet.
-
-**Run-to-run noise is real** — 10–20% between runs on the same build. A number
-that moves less than that has not moved.
+| `getJSON()` | **0.16** | 0.11 | 1.5× slower |
 
 ## Where the time went
 

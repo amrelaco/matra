@@ -117,7 +117,7 @@ what the numbers are not.
 | Unique block ids | **free** | paid | build it | build it |
 | Drag handle | **free** | paid | build it | build it |
 | Comments | **free** | paid | build it | build it |
-| Cloud account for AI or collaboration | **never** | required | n/a | n/a |
+| Runtime licence check or phone-home | **never** | none | n/a | n/a |
 
 Where the alternatives win, and it is worth saying so: ProseMirror's ecosystem
 is a decade deep and Tiptap inherits all of it, Lexical has been hardened by
@@ -140,8 +140,15 @@ the two things here that took months rather than days — streaming edits that
 survive concurrent typing, and rebasing another client's work over unsent local
 work without losing either.
 
-There is no licence key and nothing phones home. The licence is an agreement,
-not a mechanism.
+**Nothing phones home and there is no runtime licence check.** Your editor
+never talks to us, in development or in production, and a lapsed subscription
+cannot switch anything off in an app you already shipped.
+
+What a subscription buys is *access*, not permission-to-run: the paid packages
+are distributed through a private registry, so `npm install` needs a token tied
+to a seat. Renewing keeps the token working for new versions and keeps support
+open. The version you already installed keeps running forever either way — that
+is clause 3 of the licence, and it is the point of it.
 
 **Versions up to 0.5.0 shipped under MIT, including `ai` and `collab`, and that
 grant cannot be withdrawn.** Anyone already on 0.5.0 may stay there under MIT

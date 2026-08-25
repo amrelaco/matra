@@ -256,9 +256,17 @@ export class Renderer {
     }
 
     const count = Math.max(oldChildren.childCount, newChildren.childCount)
-    let offset = 0
 
-    for (let i = 0; i < count; i++) {
+    // When the edit is confined and no blocks were added or removed, the loop
+    // can start at the first child the edit reached instead of at zero.
+    // Everything before it holds the same node in the same DOM at the same
+    // position, and everything after it is handled by the position map, which
+    // shifts lazily. Without this a keystroke walks every block in the
+    // document, and on a long one that walk is the whole cost.
+    const window = this.editWindow(oldChildren, newChildren, contentStart)
+    let offset = window.offset
+
+    for (let i = window.from; i < count; i++) {
       const oldChild = i < oldChildren.childCount ? oldChildren.child(i) : null
       const newChild = i < newChildren.childCount ? newChildren.child(i) : null
       const dom = target.childNodes[i] ?? null
@@ -355,6 +363,40 @@ export class Renderer {
       target.replaceChild(replacement, dom)
       offset += newChild.nodeSize
     }
+  }
+
+  /**
+   * The first child the edit could have reached, and its offset.
+   *
+   * Falls back to the whole fragment whenever anything makes narrowing unsafe:
+   * no known edit span, a changed child count (which shifts every later child's
+   * DOM), or a mounted node view (which caches a position of its own and has to
+   * be told when it moves).
+   */
+  private editWindow(
+    oldChildren: Fragment,
+    newChildren: Fragment,
+    contentStart: number,
+  ): { from: number; offset: number } {
+    const whole = { from: 0, offset: 0 }
+    const dirty = this.dirty
+    if (!dirty) return whole
+    if (!this.nodeViews.empty) return whole
+    if (oldChildren.childCount !== newChildren.childCount) return whole
+
+    const local = dirty.from - contentStart
+    if (local <= 0) return whole
+    if (local > newChildren.size) return whole
+
+    const { index, offset } = newChildren.findIndex(local)
+    // Step back one: an edit at a child's very first position belongs to it,
+    // and findIndex answers with the child that starts at or after the point.
+    const from = Math.max(0, index - 1)
+    if (from === 0) return whole
+    // findIndex already gave the offset of `index`, so the one before it is
+    // that minus its size — walking back from zero would be the very cost this
+    // is here to avoid.
+    return { from, offset: offset - newChildren.child(from).nodeSize }
   }
 
   /** Did the edit leave this span completely alone? */
