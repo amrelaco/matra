@@ -1,0 +1,218 @@
+---
+/**
+ * Five editors, all running, all the same package.
+ *
+ * The argument for a headless editor is that the interface is yours, and that
+ * argument is unconvincing in prose. So it is made with five of them on one
+ * page: the only difference between any two is which extensions were passed in
+ * and which CSS was written around them.
+ */
+const presets = [
+  { id: 'notion', name: 'Block editor', note: 'Placeholder, task lists, drag handle' },
+  { id: 'comment', name: 'Comment box', note: 'Two marks, a counter, a button' },
+  { id: 'docs', name: 'Document', note: 'Toolbar, headings, tables' },
+  { id: 'markdown', name: 'Markdown', note: 'Live output, no DOM needed' },
+  { id: 'chat', name: 'Chat composer', note: 'One block, send on Enter' },
+]
+---
+
+<section class="section" id="gallery">
+  <div class="wrap">
+    <p class="kicker"><span class="dot"></span>Headless, demonstrated</p>
+    <h2>The same package,<br />five different editors.</h2>
+    <p class="lede">
+      None of these is a theme or a preset. Each one is <span class="mono">createEditor</span>
+      with a different array of extensions and different CSS around it. Every one below is
+      live — type in any of them.
+    </p>
+
+    <div class="tabs" role="tablist">
+      {presets.map((preset, index) => (
+        <button
+          class={`tab ${index === 0 ? 'on' : ''}`}
+          role="tab"
+          data-target={preset.id}
+          aria-selected={index === 0 ? 'true' : 'false'}
+        >
+          <span class="tab-name">{preset.name}</span>
+          <span class="tab-note mono">{preset.note}</span>
+        </button>
+      ))}
+    </div>
+
+    <div class="stage">
+      <!-- Block editor -->
+      <div class="panel on" data-panel="notion">
+        <div class="notion-shell">
+          <div id="ed-notion" class="notion-ed"></div>
+        </div>
+      </div>
+
+      <!-- Comment box -->
+      <div class="panel" data-panel="comment">
+        <div class="comment-shell">
+          <div class="comment-head">
+            <span class="avatar" aria-hidden="true">N</span>
+            <span class="comment-who">Nahim commented</span>
+          </div>
+          <div id="ed-comment" class="comment-ed"></div>
+          <div class="comment-foot">
+            <div class="comment-tools">
+              <button data-cmd="toggleBold" data-for="comment"><b>B</b></button>
+              <button data-cmd="toggleItalic" data-for="comment"><i>I</i></button>
+              <button data-cmd="toggleCode" data-for="comment" class="mono">{'</>'}</button>
+            </div>
+            <div class="comment-right">
+              <span id="count-comment" class="mono count">0 characters</span>
+              <button class="post">Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document -->
+      <div class="panel" data-panel="docs">
+        <div class="docs-shell">
+          <div class="toolbar">
+            {[
+              ['toggleBold', 'B'],
+              ['toggleItalic', 'I'],
+              ['toggleStrike', 'S'],
+            ].map(([cmd, label]) => (
+              <button data-cmd={cmd} data-for="docs">{label}</button>
+            ))}
+            <span class="sep"></span>
+            <button data-cmd="toggleHeading" data-arg="1" data-for="docs">H1</button>
+            <button data-cmd="toggleHeading" data-arg="2" data-for="docs">H2</button>
+            <span class="sep"></span>
+            <button data-cmd="toggleBulletList" data-for="docs">List</button>
+            <button data-cmd="toggleBlockquote" data-for="docs">Quote</button>
+            <button data-cmd="insertTable" data-for="docs">Table</button>
+            <span class="sep"></span>
+            <button data-cmd="undo" data-for="docs">Undo</button>
+          </div>
+          <div class="page">
+            <div id="ed-docs" class="docs-ed"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Markdown -->
+      <div class="panel" data-panel="markdown">
+        <div class="md-shell">
+          <div class="md-side">
+            <div class="md-label mono">Editor</div>
+            <div id="ed-markdown" class="md-ed"></div>
+          </div>
+          <div class="md-side md-out">
+            <div class="md-label mono">toMarkdown() — live, no DOM</div>
+            <pre id="md-output" class="mono"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="panel" data-panel="chat">
+        <div class="chat-shell">
+          <div class="chat-log">
+            <div class="bubble them">Did the drag handle land?</div>
+            <div class="bubble me">It did — and it is free, which Tiptap's is not.</div>
+          </div>
+          <div class="chat-box">
+            <div id="ed-chat" class="chat-ed"></div>
+            <button class="send" aria-label="Send">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Every editor on this page shares one 22 kB download. Adding the fifth cost nothing but
+      the CSS.
+    </p>
+  </div>
+</section>
+
+<style>
+  .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
+
+  .tabs { display: flex; gap: 0; margin: 30px 0 0; border: 1px dashed var(--rule-strong); border-bottom: none; overflow-x: auto; }
+  .tab { flex: 1 1 0; min-width: 150px; background: transparent; border: none; border-right: 1px dashed var(--rule-strong); padding: 13px 15px; text-align: left; cursor: pointer; color: var(--ink-soft); font-family: inherit; }
+  .tab:last-child { border-right: none; }
+  .tab.on { background: var(--surface-2); color: var(--ink); }
+  .tab-name { display: block; font-size: 14px; }
+  .tab-note { display: block; font-size: 10px; color: var(--ink-faint); margin-top: 3px; }
+
+  .stage { border: 1px dashed var(--rule-strong); background: var(--surface); padding: 26px; }
+  .panel { display: none; }
+  .panel.on { display: block; }
+
+  /* --- block editor --------------------------------------------------- */
+  .notion-shell { max-width: 640px; margin: 0 auto; }
+  .notion-ed { font-size: 16px; line-height: 1.7; min-height: 260px; }
+  .notion-ed :global(h1) { font-family: var(--font-display); font-size: 34px; margin: 0 0 4px; }
+  .notion-ed :global(h2) { font-family: var(--font-display); font-size: 24px; margin: 22px 0 4px; }
+  .notion-ed :global(p) { margin: 0 0 3px; }
+  .notion-ed :global(.matra-task-list) { list-style: none; padding-left: 0; margin: 6px 0; }
+  .notion-ed :global(.matra-task-item) { display: flex; gap: 9px; align-items: flex-start; }
+  .notion-ed :global(.matra-task-item[data-checked='true']) { color: var(--ink-faint); text-decoration: line-through; }
+  .notion-ed :global(.is-empty::before) { content: attr(data-placeholder); color: var(--ink-faint); pointer-events: none; float: left; height: 0; }
+
+  /* --- comment box ------------------------------------------------------ */
+  .comment-shell { max-width: 560px; margin: 0 auto; border: 1px solid var(--rule-strong); background: var(--paper); }
+  .comment-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-bottom: 1px solid var(--rule); }
+  .avatar { width: 24px; height: 24px; background: var(--indigo); color: var(--paper); display: grid; place-items: center; font-size: 12px; border-radius: 50%; }
+  .comment-who { font-size: 13px; color: var(--ink-soft); }
+  .comment-ed { padding: 13px 14px; min-height: 92px; font-size: 14.5px; }
+  .comment-ed :global(p) { margin: 0 0 8px; }
+  .comment-ed :global(code) { background: var(--surface-2); padding: 1px 5px; font-family: var(--font-mono); font-size: 12.5px; }
+  .comment-foot { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-top: 1px solid var(--rule); }
+  .comment-tools { display: flex; gap: 4px; }
+  .comment-tools button, .toolbar button { background: transparent; border: 1px solid transparent; padding: 4px 9px; cursor: pointer; color: var(--ink-soft); font-size: 13px; font-family: inherit; }
+  .comment-tools button:hover, .toolbar button:hover { border-color: var(--rule-strong); color: var(--ink); }
+  .comment-right { display: flex; align-items: center; gap: 12px; }
+  .count { font-size: 11px; color: var(--ink-faint); }
+  .post, .send { background: var(--indigo); color: #fff; border: none; padding: 6px 15px; font-size: 13px; cursor: pointer; font-family: inherit; }
+
+  /* --- document --------------------------------------------------------- */
+  .docs-shell { border: 1px solid var(--rule-strong); background: var(--surface-2); }
+  .toolbar { display: flex; align-items: center; gap: 2px; padding: 7px 10px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+  .sep { width: 1px; height: 17px; background: var(--rule-strong); margin: 0 6px; }
+  .page { padding: 26px; display: flex; justify-content: center; }
+  .docs-ed { background: var(--paper); width: 100%; max-width: 560px; padding: 34px 40px; box-shadow: 0 1px 0 var(--rule-strong); min-height: 250px; font-size: 15px; }
+  .docs-ed :global(h1) { font-family: var(--font-display); font-size: 28px; margin: 0 0 10px; }
+  .docs-ed :global(h2) { font-family: var(--font-display); font-size: 21px; margin: 18px 0 8px; }
+  .docs-ed :global(p) { margin: 0 0 10px; }
+  .docs-ed :global(table) { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  .docs-ed :global(td), .docs-ed :global(th) { border: 1px solid var(--rule-strong); padding: 6px 9px; font-size: 13.5px; }
+  .docs-ed :global(blockquote) { border-left: 3px solid var(--indigo); margin: 0 0 10px; padding-left: 13px; color: var(--ink-soft); }
+
+  /* --- markdown --------------------------------------------------------- */
+  .md-shell { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--rule-strong); }
+  .md-side { padding: 0; }
+  .md-out { border-left: 1px dashed var(--rule-strong); background: var(--code-bg); }
+  .md-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); padding: 9px 14px; border-bottom: 1px dashed var(--rule); }
+  .md-ed { padding: 15px; min-height: 230px; font-size: 14.5px; }
+  .md-ed :global(p) { margin: 0 0 9px; }
+  .md-ed :global(h2) { font-family: var(--font-display); font-size: 20px; margin: 0 0 8px; }
+  .md-ed :global(ul) { margin: 0 0 9px; padding-left: 19px; }
+  #md-output { margin: 0; padding: 15px; font-size: 12px; line-height: 1.7; color: var(--code-fg); white-space: pre-wrap; min-height: 230px; }
+
+  /* --- chat ------------------------------------------------------------- */
+  .chat-shell { max-width: 480px; margin: 0 auto; }
+  .chat-log { display: flex; flex-direction: column; gap: 9px; margin-bottom: 13px; }
+  .bubble { padding: 9px 13px; font-size: 14px; max-width: 78%; }
+  .bubble.them { background: var(--surface-2); align-self: flex-start; }
+  .bubble.me { background: var(--indigo); color: #fff; align-self: flex-end; }
+  .chat-box { display: flex; align-items: flex-end; gap: 8px; border: 1px solid var(--rule-strong); background: var(--paper); padding: 8px 8px 8px 13px; border-radius: 22px; }
+  .chat-ed { flex: 1; font-size: 14.5px; max-height: 110px; overflow-y: auto; }
+  .chat-ed :global(p) { margin: 0; }
+  .send { border-radius: 50%; width: 30px; height: 30px; padding: 0; flex: none; }
+
+  @media (max-width: 720px) {
+    .stage { padding: 16px; }
+    .md-shell { grid-template-columns: 1fr; }
+    .md-out { border-left: none; border-top: 1px dashed var(--rule-strong); }
+    .docs-ed { padding: 20px; }
+  }
+</style>

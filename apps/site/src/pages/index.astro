@@ -1,4 +1,5 @@
 ---
+import Gallery from '../components/Gallery.astro'
 import Nav from '../components/Nav.astro'
 import Base from '../layouts/Base.astro'
 
@@ -126,8 +127,12 @@ const faqs = [
           <strong>21.9 kB gzipped</strong> against Tiptap's 117, no runtime dependencies,
           and measured faster in a real browser — not asserted.
         </p>
+        <div class="install-line">
+          <code class="mono">npm i @matrajs/core</code>
+          <button id="copy" class="copy mono" aria-label="Copy install command">copy</button>
+        </div>
         <div class="cta">
-          <a class="btn" href="#install">Install</a>
+          <a class="btn" href="#gallery">See five editors</a>
           <a class="btn ghost" href="#speed">See the numbers</a>
         </div>
         <ul class="proof">
@@ -159,6 +164,20 @@ const faqs = [
         Safari, median of seven samples, against Tiptap 3.30 on the same document in the
         same browser. The harness is in the repository, so you can disagree with it.
       </p>
+      <div class="meter">
+        <div class="meter-cell">
+          <b id="meter-key">measuring…</b>
+          <span>per keystroke, 2,000 paragraphs</span>
+        </div>
+        <div class="meter-cell">
+          <b id="meter-parse">—</b>
+          <span>to parse that document</span>
+        </div>
+        <div class="meter-cell meter-note-cell">
+          <span id="meter-note" class="mono">running in your browser…</span>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -183,6 +202,8 @@ const faqs = [
       </p>
     </div>
   </section>
+
+  <Gallery />
 
   <!-- Install -->
   <section class="section" id="install">
@@ -353,7 +374,15 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
   </footer>
 
   <script>
+    import '../scripts/gallery.ts'
     import { createEditor, starterKit } from '@matrajs/core'
+
+    const copy = document.getElementById('copy')
+    copy?.addEventListener('click', async () => {
+      await navigator.clipboard?.writeText('npm i @matrajs/core')
+      copy.textContent = 'copied'
+      setTimeout(() => { copy.textContent = 'copy' }, 1400)
+    })
 
     const element = document.getElementById('demo')
     if (element) {
@@ -377,7 +406,11 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; padding-top: 84px; padding-bottom: 84px; }
     .hero h1 { font-size: clamp(42px, 5.2vw, 68px); margin: 18px 0 20px; }
     .hero .lede strong { color: var(--ink); font-weight: 600; }
-    .cta { display: flex; gap: 12px; margin: 28px 0 34px; flex-wrap: wrap; }
+    .install-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 26px; border: 1px dashed var(--rule-strong); background: var(--surface); padding: 11px 13px; }
+    .install-line code { font-size: 13.5px; color: var(--ink); }
+    .copy { background: transparent; border: 1px solid var(--rule-strong); color: var(--ink-faint); font-size: 11px; padding: 4px 9px; cursor: pointer; }
+    .copy:hover { color: var(--ink); }
+    .cta { display: flex; gap: 12px; margin: 16px 0 34px; flex-wrap: wrap; }
     .proof { list-style: none; margin: 0; padding: 22px 0 0; border-top: 1px dashed var(--rule-strong); display: flex; gap: 34px; flex-wrap: wrap; }
     .proof li { display: flex; flex-direction: column; }
     .proof b { font-family: var(--font-display); font-size: 27px; font-weight: 400; }
@@ -394,6 +427,13 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     .demo :global(ul) { margin: 0 0 12px; padding-left: 20px; }
     .demo :global(blockquote) { margin: 0; padding-left: 14px; border-left: 2px solid var(--indigo); color: var(--ink-soft); }
     .demo-hint { padding: 10px 14px; border-top: 1px dashed var(--rule); font-size: 11px; color: var(--ink-faint); }
+
+    .meter { display: flex; gap: 0; margin-top: 28px; border: 1px dashed var(--rule-strong); background: var(--surface); flex-wrap: wrap; }
+    .meter-cell { flex: 1 1 190px; padding: 18px 20px; border-right: 1px dashed var(--rule-strong); display: flex; flex-direction: column; gap: 5px; }
+    .meter-cell:last-child { border-right: none; }
+    .meter-cell b { font-family: var(--font-display); font-size: 32px; font-weight: 400; line-height: 1; color: var(--indigo); }
+    .meter-cell span { font-size: 12px; color: var(--ink-faint); }
+    .meter-note-cell { justify-content: center; }
 
     .table-wrap { overflow-x: auto; margin-top: 26px; }
     td.note { color: var(--ink-faint); font-size: 13px; }
