@@ -1,0 +1,206 @@
+/*
+ * Tokens straight from the design file, as CSS custom properties.
+ *
+ * Two themes, switched by prefers-color-scheme and overridable with a
+ * data-theme attribute so the toggle can win in both directions.
+ */
+:root {
+  --paper: #f5f1e8;
+  --surface: #fbf8f1;
+  --surface-2: #f0ebde;
+  --ink: #1a1917;
+  --ink-soft: #5f5c53;
+  --ink-faint: #918d80;
+  --rule: #e4dfd1;
+  --rule-strong: #d3ccb8;
+  --indigo: #3a3d92;
+  --indigo-deep: #2a2c6b;
+  --indigo-wash: #e9e7f3;
+  --blood: #c2554d;
+  --invert-bg: #1f1e1b;
+  --invert-fg: #f5f1e8;
+  --invert-soft: #a8a49b;
+  --code-bg: #fdfbf6;
+  --code-chrome: #f2ede0;
+  --code-fg: #2a2823;
+  --code-key: #3a3d92;
+  --code-str: #3f6b4f;
+  --code-com: #918d80;
+  --dot-r: #c97870;
+  --dot-y: #d4ac5e;
+  --dot-g: #7fa678;
+
+  --font-display: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --page: 1200px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111114;
+    --surface: #191920;
+    --surface-2: #22222b;
+    --ink: #edebe6;
+    --ink-soft: #a8a49b;
+    --ink-faint: #6e6a63;
+    --rule: #2a2a33;
+    --rule-strong: #3a3a46;
+    --indigo: #a2a7ff;
+    --indigo-deep: #7c82e8;
+    --indigo-wash: #1e1f3a;
+    --blood: #e9776b;
+    --invert-bg: #22222b;
+    --invert-fg: #edebe6;
+    --code-bg: #0c0c10;
+    --code-chrome: #17171e;
+    --code-fg: #edebe6;
+    --code-key: #a2a7ff;
+    --code-str: #8fd0a8;
+    --code-com: #6e6a63;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #111114;
+  --surface: #191920;
+  --surface-2: #22222b;
+  --ink: #edebe6;
+  --ink-soft: #a8a49b;
+  --ink-faint: #6e6a63;
+  --rule: #2a2a33;
+  --rule-strong: #3a3a46;
+  --indigo: #a2a7ff;
+  --indigo-deep: #7c82e8;
+  --indigo-wash: #1e1f3a;
+  --blood: #e9776b;
+  --invert-bg: #22222b;
+  --invert-fg: #edebe6;
+  --code-bg: #0c0c10;
+  --code-chrome: #17171e;
+  --code-fg: #edebe6;
+  --code-key: #a2a7ff;
+  --code-str: #8fd0a8;
+  --code-com: #6e6a63;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+/* Every section is separated by one dashed rule and nothing else. */
+.section {
+  border-top: 1px dashed var(--rule-strong);
+}
+.wrap {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 72px 24px;
+}
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lede {
+  color: var(--ink-soft);
+  font-size: 17px;
+  max-width: 62ch;
+}
+.mono {
+  font-family: var(--font-mono);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+.btn:hover {
+  opacity: 0.88;
+}
+
+.card {
+  border: 1px dashed var(--rule-strong);
+  background: var(--surface);
+  padding: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+th,
+td {
+  text-align: left;
+  padding: 11px 12px;
+  border-bottom: 1px dashed var(--rule);
+}
+th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+td.win {
+  color: var(--indigo);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .wrap {
+    padding: 48px 18px;
+  }
+}

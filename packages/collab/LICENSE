@@ -16,22 +16,28 @@ package is not.
    d. internal tools at an organisation with fewer than three developers
       working on software that includes this package.
 
+   e. any use at all, if you are a registered charity or a student.
+
    No key, no signup, no phone-home. We do not check. This clause is the
    licence, not a trial period.
 
 2. PAID USE
 
-   Any other use in production requires a current subscription, one seat per
-   developer working on software that includes this package. If the software
-   you ship earns money and more than two developers touch it, that is paid
-   use.
+   Any other use in production requires a current subscription. Plans are
+   priced per organisation with a cap on the number of developers working on
+   software that includes this package — not per seat, so adding a developer
+   inside your plan's cap costs nothing and needs no paperwork.
+
+   If the software you ship earns money and more than two developers touch it,
+   that is paid use.
 
 3. WHAT YOU MAY ALWAYS DO
 
    Read the source. Modify it for your own licensed use. Fork it privately.
    Keep running the version you licensed, forever, even if your subscription
-   lapses — a lapsed subscription ends updates and support, not the software
-   you already shipped.
+   lapses — a lapsed subscription ends access to new versions and to support,
+   not the software you already shipped. Nothing in this package checks a
+   licence at runtime, and nothing in it contacts us.
 
 4. WHAT YOU MAY NOT DO
 

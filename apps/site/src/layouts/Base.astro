@@ -1,0 +1,25 @@
+---
+import '../styles/global.css'
+interface Props {
+  title: string
+  description: string
+}
+const { title, description } = Astro.props
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#111114" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%233a3d92'/><rect x='7' y='8' width='3' height='16' fill='white'/><rect x='14' y='8' width='3' height='16' fill='white'/><rect x='21' y='8' width='3' height='16' fill='white'/><rect x='7' y='8' width='17' height='3' fill='white'/></svg>" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

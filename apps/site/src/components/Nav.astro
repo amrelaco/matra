@@ -1,0 +1,35 @@
+---
+const links = [
+  ['Docs', '/docs'],
+  ['Extensions', '/extensions'],
+  ['Benchmarks', '#speed'],
+  ['Pricing', '#pricing'],
+]
+---
+<nav>
+  <div class="wrap bar">
+    <a href="/" class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span>Matra</span>
+    </a>
+    <div class="links">
+      {links.map(([label, href]) => <a href={href}>{label}</a>)}
+      <a class="btn" href="https://github.com/amrelaco/matra">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<style>
+  nav { border-bottom: 1px dashed var(--rule-strong); position: sticky; top: 0; background: var(--paper); z-index: 20; }
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; text-decoration: none; }
+  .mark { width: 16px; height: 16px; background: var(--indigo); display: inline-block; }
+  .links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
+  .links a { text-decoration: none; color: var(--ink-soft); }
+  .links a:hover { color: var(--ink); }
+  .links .btn { color: var(--paper); }
+  @media (max-width: 720px) {
+    .bar { padding: 12px 18px; }
+    .links a:not(.btn) { display: none; }
+  }
+</style>

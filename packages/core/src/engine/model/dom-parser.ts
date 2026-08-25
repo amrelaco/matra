@@ -43,7 +43,7 @@ export class DOMParser {
 
   /** Parse an element's children into a document. */
   parse(dom: globalThis.Node): Node {
-    const content = this.wrapLooseInline(this.parseChildren(dom, []))
+    const content = this.fitContent(this.schema.topNodeType, this.parseChildren(dom, []))
     const doc = this.schema.topNodeType.createAndFill(null, content)
     if (!doc) throw new Error('Matra: could not build a document from that DOM')
     return doc
@@ -52,16 +52,20 @@ export class DOMParser {
   /**
    * Give loose inline content a block to live in.
    *
-   * Pasting `hello` or a bare `<strong>hi</strong>` yields inline nodes with no
-   * parent block. Dropping them would lose the paste; wrapping them in the
-   * default textblock is what the user meant.
+   * Pasting `hello`, a bare `<strong>hi</strong>`, or — far more commonly —
+   * `<li>text</li>`, yields inline nodes where the parent expects blocks.
+   * Dropping them loses the content, and `<li>` without an inner `<p>` is how
+   * almost every list on the web is written, so dropping it means pasting a
+   * list from anywhere arrives empty.
+   *
+   * This runs for any parent, not only the document. It used to run only at the
+   * top level, which is exactly why list items came back blank.
    */
-  private wrapLooseInline(fragment: Fragment): Fragment {
-    const top = this.schema.topNodeType
-    if (top.validContent(fragment)) return fragment
+  private fitContent(type: NodeType, fragment: Fragment): Fragment {
+    if (type.validContent(fragment)) return fragment
 
-    const wrapper = top.contentMatch.allowed.find(
-      (type) => (type as NodeType).isTextblock && (type as NodeType).fillable,
+    const wrapper = type.contentMatch.allowed.find(
+      (candidate) => (candidate as NodeType).isTextblock && (candidate as NodeType).fillable,
     ) as NodeType | undefined
     if (!wrapper) return fragment
 
@@ -127,7 +131,9 @@ export class DOMParser {
       const type = matched.owner as NodeType
       const attrs = this.attrsFor(matched, element)
       if (attrs === false) return this.parseChildren(element, marks, depth).content.slice()
-      const content = type.isLeaf ? Fragment.empty : this.parseChildren(element, marks, depth)
+      const content = type.isLeaf
+        ? Fragment.empty
+        : this.fitContent(type, this.parseChildren(element, marks, depth))
       const node = type.createAndFill(attrs, content)
       return node ? [node] : []
     }
