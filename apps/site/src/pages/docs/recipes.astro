@@ -1,0 +1,86 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Recipes — Matra docs" description="Autosave, read-only, Markdown, a table of contents, search highlighting, and the things people ask for on day one." section="Reference" heading="Recipes">
+  <p>The things people need on the first day, in the fewest lines that actually work.</p>
+
+  <h2>Autosave, without saving on every keystroke</h2>
+  <pre><code>let timer
+editor.on('change', () =&gt; &#123;
+  clearTimeout(timer)
+  timer = setTimeout(() =&gt; save(editor.getJSON()), 800)
+&#125;)</code></pre>
+  <p>Store the JSON, not the HTML. It survives schema changes better and diffs cleanly.</p>
+
+  <h2>Read-only</h2>
+  <pre><code>editor.setEditable(false)</code></pre>
+  <p>
+    The document still renders and decorations still draw, so this is the right way to show a
+    published version rather than rendering the HTML somewhere else and hoping it matches.
+  </p>
+
+  <h2>Markdown, on a server</h2>
+  <pre><code>import &#123; fromMarkdown, toMarkdown &#125; from '@matrajs/core'
+
+const doc = fromMarkdown(await readFile('post.md', 'utf8'))
+await writeFile('post.md', toMarkdown(doc))</code></pre>
+  <p>No DOM involved, so this runs in Node, in a worker, and at the edge.</p>
+
+  <h2>A table of contents that is never stale</h2>
+  <pre><code>import &#123; tableOfContents &#125; from '@matrajs/core'
+
+const entries = tableOfContents(editor.getJSON())
+// [&#123; level, text, pos, id &#125;]
+entries.forEach((entry) =&gt; &#123;
+  link.onclick = () =&gt; editor.commands.select(entry.pos + 1)
+&#125;)</code></pre>
+  <p>
+    Derived on demand rather than cached, so it cannot disagree with the document — which is how
+    a cached outline ends up pointing at a heading that was renamed.
+  </p>
+
+  <h2>Search highlighting</h2>
+  <pre><code>const search = (query) =&gt; (&#123;
+  kind: 'extension',
+  name: 'search',
+  decorations: (ctx) =&gt; matches(ctx.doc, query).map((range) =&gt; (&#123;
+    type: 'inline', from: range.from, to: range.to,
+    attrs: &#123; class: 'hit' &#125;,
+  &#125;)),
+&#125;)</code></pre>
+  <p>Decorations are drawn over the document, so a highlight never ends up in a copy or an export.</p>
+
+  <h2>Stable ids for anchoring comments</h2>
+  <pre><code>import &#123; assignIds &#125; from '@matrajs/core'
+
+const doc = assignIds(editor.getJSON())   // every block gains a stable id
+editor.setContent(doc)</code></pre>
+  <p>
+    Call it when you load and when you save, not on every transaction — an editor that rewrites
+    attributes behind your back makes every document dirty and every undo stack strange.
+  </p>
+
+  <h2>A character limit</h2>
+  <pre><code>editor.on('change', () =&gt; &#123;
+  const over = editor.getText().length &gt; 280
+  button.disabled = over
+&#125;)</code></pre>
+  <p>
+    Refuse to submit rather than refusing the keystroke. Blocking input mid-word is how you make
+    someone lose a sentence they were pasting.
+  </p>
+
+  <h2>Loading HTML you did not write</h2>
+  <pre><code>editor.setContent(untrustedHtml)</code></pre>
+  <p>
+    Safe by construction. Executable attributes are never set, URL attributes are scheme-checked,
+    undeclared attributes are dropped, and every route into the DOM — JSON, paste, command,
+    decoration — passes the same gate. See
+    <a href="https://github.com/amrelaco/matra/blob/main/SECURITY.md">SECURITY.md</a>.
+  </p>
+
+  <div class="note">
+    <code>getHTML()</code> output is safe to render in the editor. If you store it and serve it
+    somewhere else, sanitise at that boundary too — defence in depth is the point.
+  </div>
+</Docs>

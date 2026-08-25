@@ -22,15 +22,41 @@ const nav = [
     ],
   ],
   [
+    'Frameworks',
+    [
+      ['React', '/docs/react'],
+      ['Vue', '/docs/vue'],
+    ],
+  ],
+  [
     'Concepts',
     [
       ['Document model', '/docs/document-model'],
       ['Commands', '/docs/commands'],
       ['Position mapping', '/docs/position-mapping'],
+      ['Writing an extension', '/docs/extensions'],
+    ],
+  ],
+  [
+    'Reference',
+    [
+      ['API', '/docs/api'],
+      ['Keyboard shortcuts', '/docs/shortcuts'],
+      ['Recipes', '/docs/recipes'],
     ],
   ],
 ] as const
+
 const here = Astro.url.pathname.replace(/\/$/, '') || '/docs'
+
+/** Flattened once, so previous/next follow the sidebar rather than a second list. */
+const flat = nav.flatMap(([, items]) => items as unknown as [string, string][])
+const index = flat.findIndex(([, href]) => href === here)
+const previous = index > 0 ? flat[index - 1] : null
+const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null
+const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages${
+  here === '/docs' ? '/docs/index' : here
+}.astro`
 ---
 <Base title={title} description={description}>
   <Nav />
@@ -49,6 +75,23 @@ const here = Astro.url.pathname.replace(/\/$/, '') || '/docs'
       <p class="crumb mono">{section}</p>
       <h1>{heading}</h1>
       <slot />
+
+      <nav class="pager">
+        {previous ? (
+          <a href={previous[1]} class="pager-link prev">
+            <span class="mono">← previous</span>
+            <b>{previous[0]}</b>
+          </a>
+        ) : <span />}
+        {next && (
+          <a href={next[1]} class="pager-link next">
+            <span class="mono">next →</span>
+            <b>{next[0]}</b>
+          </a>
+        )}
+      </nav>
+
+      <p class="edit"><a href={source}>Edit this page on GitHub</a></p>
     </main>
   </div>
   <Footer />
@@ -72,10 +115,40 @@ const here = Astro.url.pathname.replace(/\/$/, '') || '/docs'
     .article :global(pre) { border: 1px dashed var(--rule-strong); background: var(--code-bg); color: var(--code-fg); padding: 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; margin: 0 0 16px; }
     .article :global(pre code) { background: none; padding: 0; font-size: inherit; }
     .article :global(.note) { border-left: 2px solid var(--indigo); background: var(--indigo-wash); padding: 12px 14px; font-size: 14px; color: var(--ink); margin: 0 0 16px; }
+    .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 48px; padding-top: 24px; border-top: 1px dashed var(--rule-strong); }
+    .pager-link { display: flex; flex-direction: column; gap: 4px; text-decoration: none; border: 1px dashed var(--rule-strong); padding: 14px 18px; min-width: 180px; }
+    .pager-link:hover { border-color: var(--indigo); }
+    .pager-link span { font-size: 10.5px; color: var(--ink-faint); }
+    .pager-link b { font-weight: 500; font-size: 14.5px; }
+    .pager-link.next { text-align: right; align-items: flex-end; }
+    .edit { margin-top: 22px; font-size: 12.5px; }
+    .edit a { color: var(--ink-faint); }
+    .article :global(pre) { position: relative; }
+    .article :global(.copy-code) { position: absolute; top: 8px; right: 8px; font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border: 1px solid var(--rule-strong); background: var(--paper); color: var(--ink-faint); cursor: pointer; opacity: 0; transition: opacity 120ms; }
+    .article :global(pre:hover .copy-code) { opacity: 1; }
+    .article :global(.copy-code:hover) { color: var(--ink); }
+
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; gap: 26px; }
       .side { position: static; border-right: none; border-bottom: 1px dashed var(--rule); padding: 0 0 18px; display: flex; gap: 26px; flex-wrap: wrap; }
       .group { margin-bottom: 0; }
     }
   </style>
+
+  <script>
+    // A copy button on every block, added here rather than written into each
+    // page — docs that make you select code by hand are docs nobody trusts.
+    for (const block of document.querySelectorAll('.article pre')) {
+      const button = document.createElement('button')
+      button.className = 'copy-code'
+      button.type = 'button'
+      button.textContent = 'copy'
+      button.addEventListener('click', async () => {
+        await navigator.clipboard?.writeText(block.querySelector('code')?.textContent ?? '')
+        button.textContent = 'copied'
+        setTimeout(() => { button.textContent = 'copy' }, 1400)
+      })
+      block.appendChild(button)
+    }
+  </script>
 </Base>

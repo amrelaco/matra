@@ -15,7 +15,8 @@
   },
   "keywords": ["editor", "rich-text", "collaborative", "matra", "ot"],
   "publishConfig": {
-    "access": "restricted"
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com"
   },
   "type": "module",
   "sideEffects": false,

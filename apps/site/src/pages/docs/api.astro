@@ -1,0 +1,145 @@
+---
+import Docs from '../../layouts/Docs.astro'
+
+const editorApi = [
+  [
+    'commands',
+    'CommandsOf<T> & CoreCommands',
+    'Every command from every extension you passed in, typed.',
+  ],
+  [
+    'batch(run)',
+    'boolean',
+    'Run several commands as one undo step. Rolls back entirely if any returns false.',
+  ],
+  ['getJSON()', 'DocNode', 'The document as plain JSON. No engine types.'],
+  ['getHTML()', 'string', 'Serialised HTML, through the same security gate as rendering.'],
+  ['getText()', 'string', 'Block-separated plain text.'],
+  ['setContent(content)', 'void', 'Replace the document with JSON or an HTML string.'],
+  ['selection', 'Selection', 'Current from, to, anchor, head and empty.'],
+  ['editable / setEditable(v)', 'boolean / void', 'Read-only mode.'],
+  [
+    'on(event, fn)',
+    '() => void',
+    "'change' | 'focus' | 'blur' | 'selectionChange'. Returns its own unsubscribe.",
+  ],
+  ['extensionState(name)', 'S | undefined', 'What a stateful extension is currently holding.'],
+  ['mount(element)', 'void', 'Attach to the DOM.'],
+  ['destroy()', 'void', 'Detach and clean up.'],
+]
+
+const coreCommands = [
+  ['select(range)', 'Range | Pos', 'Move the selection.'],
+  [
+    'insert(content, at?)',
+    'DocNode | DocNode[] | string',
+    'Insert at a position, or at the caret.',
+  ],
+  ['replace(range, content)', 'Range, content', 'Swap a range for something else.'],
+  ['remove(range?)', 'Range?', 'Delete a range, or the selection.'],
+  ['moveBlock(from, to)', 'Pos, Pos', 'Move a whole block — what a drag does.'],
+  ['focus()', '—', 'Put the caret back.'],
+]
+
+const ctxApi = [
+  ['doc / selection', 'The document and where the caret is.'],
+  ['hasMark(name, attrs?)', 'True if the mark covers the whole selection.'],
+  ['inNode(name, attrs?)', 'True if the selection sits inside such a node.'],
+  ['addMark / removeMark / toggleMark', 'Marks across a range.'],
+  ['setBlockType(name, attrs?)', 'Turn the block into another type.'],
+  ['wrapIn(name, attrs?) / lift()', 'Wrap the selection, or unwrap it.'],
+  ['insert / replace / delete / select', 'The same primitives the core commands expose.'],
+  ['mark()', 'A PosMarker. Map positions through changes made after this point.'],
+]
+---
+<Docs title="API — Matra docs" description="The editor object, the core commands, and the command context, in one page." section="Reference" heading="API">
+  <p>
+    Everything public, on one page. No engine type appears in any signature here — that is the
+    contract, not a coincidence.
+  </p>
+
+  <h2>Editor</h2>
+  <div class="api">
+    <table>
+      <thead><tr><th>Member</th><th>Returns</th><th></th></tr></thead>
+      <tbody>
+        {editorApi.map(([name, type, note]) => (
+          <tr>
+            <td class="mono n">{name}</td>
+            <td class="mono t">{type}</td>
+            <td class="d">{note}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Core commands</h2>
+  <p>Always present, whatever extensions you loaded. Every one returns a boolean.</p>
+  <div class="api">
+    <table>
+      <thead><tr><th>Command</th><th>Arguments</th><th></th></tr></thead>
+      <tbody>
+        {coreCommands.map(([name, args, note]) => (
+          <tr>
+            <td class="mono n">{name}</td>
+            <td class="mono t">{args}</td>
+            <td class="d">{note}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    A command never throws. Positions that are not finite integers inside the document return
+    false — <code>NaN</code> included, which slips past naive range checks because both
+    <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
+  </div>
+
+  <h2>Ctx — what a command receives</h2>
+  <div class="api">
+    <table>
+      <tbody>
+        {ctxApi.map(([name, note]) => (
+          <tr><td class="mono n">{name}</td><td class="d">{note}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Types worth knowing</h2>
+  <pre><code>type Pos = number &amp; &#123; readonly __pos: unique symbol &#125;
+type Range = &#123; from: Pos; to: Pos &#125;
+
+interface DocNode &#123;
+  type: string
+  attrs?: Record&lt;string, unknown&gt;
+  content?: DocNode[]
+  text?: string
+  marks?: DocMark[]
+&#125;</code></pre>
+  <p>
+    <code>Pos</code> is branded so a raw number cannot be passed by accident. Cast at the
+    boundary where you genuinely know the number is a position.
+  </p>
+
+  <h2>Functions that need no editor</h2>
+  <pre><code>import &#123; toMarkdown, fromMarkdown, tableOfContents, assignIds &#125; from '@matrajs/core'
+
+toMarkdown(doc)          // DocNode  -> string
+fromMarkdown(source)     // string   -> DocNode
+tableOfContents(doc)     // DocNode  -> TocEntry[]
+assignIds(doc, options)  // DocNode  -> DocNode with stable block ids</code></pre>
+  <p>None of these touches the DOM, so all four run on a server.</p>
+
+  <style>
+    .api { overflow-x: auto; margin: 0 0 18px; }
+    .api table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+    .api td, .api th { text-align: left; padding: 9px 12px; border-bottom: 1px dashed var(--rule); vertical-align: top; }
+    .api th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
+    .api td.n { white-space: nowrap; color: var(--ink); }
+    .api td.t { white-space: nowrap; color: var(--indigo); font-size: 12px; }
+    .api td.d { color: var(--ink-soft); }
+  </style>
+</Docs>

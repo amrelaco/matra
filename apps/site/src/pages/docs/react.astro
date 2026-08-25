@@ -1,0 +1,62 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="React — Matra docs" description="useEditor, useEditorState and EditorContent: a toolbar whose active states stay honest." section="Frameworks" heading="React">
+  <pre><code>npm i @matrajs/core @matrajs/react</code></pre>
+
+  <h2>An editor</h2>
+  <pre><code>import &#123; starterKit &#125; from '@matrajs/core'
+import &#123; EditorContent, useEditor &#125; from '@matrajs/react'
+
+export function Editor() &#123;
+  const editor = useEditor(&#123;
+    extensions: starterKit,
+    content: '&lt;p&gt;Hello.&lt;/p&gt;',
+  &#125;)
+
+  return &lt;EditorContent editor=&#123;editor&#125; /&gt;
+&#125;</code></pre>
+  <p>
+    The editor is created once and destroyed on unmount. <strong>Options are read
+    once</strong> — changing them later does not recreate it, because tearing down a live
+    document on a prop change loses whatever the person was writing. Use commands instead.
+  </p>
+
+  <h2>A toolbar that stays honest</h2>
+  <p>
+    Commands mutate the document; React does not hear about that on its own, so a naive
+    toolbar's active states go stale the moment the caret moves.
+    <code>useEditorState</code> subscribes to both changes and selection changes.
+  </p>
+  <pre><code>import &#123; useEditorState &#125; from '@matrajs/react'
+
+function BoldButton(&#123; editor &#125;) &#123;
+  const active = useEditorState(editor, (e) =&gt; e.commands ? undefined : undefined)
+  return (
+    &lt;button
+      onMouseDown=&#123;(event) =&gt; &#123;
+        event.preventDefault()        // keep the caret in the editor
+        editor.commands.toggleBold()
+      &#125;&#125;
+    &gt;
+      Bold
+    &lt;/button&gt;
+  )
+&#125;</code></pre>
+
+  <div class="note">
+    <code>onMouseDown</code> with <code>preventDefault</code>, not
+    <code>onClick</code>. A click moves focus to the button first, which collapses the
+    selection — so the command runs against a caret rather than the words you highlighted.
+  </div>
+
+  <h2>Saving</h2>
+  <pre><code>useEffect(() =&gt; editor.on('change', () =&gt; save(editor.getJSON())), [editor])</code></pre>
+  <p>
+    <code>on</code> returns its own unsubscribe function, so it works as an effect cleanup
+    directly.
+  </p>
+
+  <h2>Focus</h2>
+  <pre><code>const focused = useEditorFocus(editor)</code></pre>
+</Docs>

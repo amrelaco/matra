@@ -1,0 +1,45 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Vue — Matra docs" description="useEditor and EditorContent for Vue 3, first-class rather than community-maintained." section="Frameworks" heading="Vue">
+  <pre><code>npm i @matrajs/core @matrajs/vue</code></pre>
+  <p>
+    Vue is first-class here rather than a community package that lags the React one. Both
+    bindings are written together and released together.
+  </p>
+
+  <h2>An editor</h2>
+  <pre><code>&lt;script setup&gt;
+import &#123; starterKit &#125; from '@matrajs/core'
+import &#123; EditorContent, useEditor &#125; from '@matrajs/vue'
+
+const editor = useEditor(&#123;
+  extensions: starterKit,
+  content: '&lt;p&gt;Hello.&lt;/p&gt;',
+&#125;)
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;EditorContent :editor="editor" /&gt;
+&lt;/template&gt;</code></pre>
+  <p>The editor is destroyed automatically when the component unmounts.</p>
+
+  <h2>A toolbar</h2>
+  <pre><code>&lt;script setup&gt;
+import &#123; useEditorState &#125; from '@matrajs/vue'
+
+const props = defineProps(['editor'])
+const characters = useEditorState(props.editor, (e) =&gt; e.getText().length)
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;button @mousedown.prevent="editor.commands.toggleBold()"&gt;Bold&lt;/button&gt;
+  &lt;span&gt;&#123;&#123; characters &#125;&#125;&lt;/span&gt;
+&lt;/template&gt;</code></pre>
+
+  <div class="note">
+    <code>@mousedown.prevent</code> rather than <code>@click</code>. A click moves focus to
+    the button first and collapses the selection, so the command runs against a caret instead
+    of the words that were highlighted.
+  </div>
+</Docs>

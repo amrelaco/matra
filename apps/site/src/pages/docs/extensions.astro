@@ -1,0 +1,95 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs title="Writing an extension — Matra docs" description="An extension is a plain object. Nodes, marks and behaviour, with command types inferred rather than declared." section="Concepts" heading="Writing an extension">
+  <p>
+    An extension is a plain object with the same power as the built-ins. There is no base class
+    to extend, nothing to register, and no declaration merging — pass it to
+    <code>createEditor</code> and its commands appear on <code>editor.commands</code>, typed.
+  </p>
+
+  <h2>A mark</h2>
+  <pre><code>import type &#123; Command, MarkDef &#125; from '@matrajs/core'
+
+export const spoiler: MarkDef&lt;&#123; toggleSpoiler: Command &#125;&gt; = &#123;
+  kind: 'mark',
+  name: 'spoiler',
+  parseDOM: [&#123; tag: 'span[data-spoiler]' &#125;],
+  toDOM: () =&gt; ['span', &#123; 'data-spoiler': '', class: 'spoiler' &#125;, 0],
+  commands: &#123;
+    toggleSpoiler: (ctx) =&gt; ctx.toggleMark('spoiler'),
+  &#125;,
+  keys: &#123; 'Mod-Shift-S': 'toggleSpoiler' &#125;,
+&#125;</code></pre>
+  <p>
+    The generic is what makes <code>editor.commands.toggleSpoiler</code> exist and be typed. It
+    is the only ceremony, and it buys autocomplete on every call site.
+  </p>
+
+  <h2>A node</h2>
+  <pre><code>export const callout: NodeDef&lt;&#123; setCallout: Command&lt;[tone: string]&gt; &#125;&gt; = &#123;
+  kind: 'node',
+  name: 'callout',
+  group: 'block',
+  content: 'block+',
+  attrs: &#123; tone: &#123; default: 'note' &#125; &#125;,
+  parseDOM: [&#123;
+    tag: 'div[data-callout]',
+    getAttrs: (dom) =&gt; (&#123; tone: dom.getAttribute('data-callout') &#125;),
+  &#125;],
+  toDOM: (node) =&gt; ['div', &#123; 'data-callout': node.attrs?.tone &#125;, 0],
+  commands: &#123;
+    setCallout: (ctx, tone) =&gt; ctx.wrapIn('callout', &#123; tone &#125;),
+  &#125;,
+&#125;</code></pre>
+
+  <div class="note">
+    Declare every attribute you intend to keep. Undeclared attributes are dropped on the way in
+    — that is a security property, not an oversight, and it is what stops a document supplying
+    <code>onclick</code> to a node type that spreads its attrs.
+  </div>
+
+  <h2>Input rules</h2>
+  <p>Text that becomes something else as it is typed. Each match is one undo step.</p>
+  <pre><code>inputRules: [&#123;
+  match: /^&gt;&gt;\s$/,
+  handler: (ctx, _match, range) =&gt; ctx.delete(range) &amp;&amp; ctx.wrapIn('callout'),
+&#125;]</code></pre>
+
+  <h2>State</h2>
+  <p>
+    An extension can keep state, reduced on every transaction. This is how the character counter
+    works without publishing a global.
+  </p>
+  <pre><code>export const wordGoal = (target: number): ExtensionDef&lt;Record&lt;string, never&gt;, boolean&gt; =&gt; (&#123;
+  kind: 'extension',
+  name: 'wordGoal',
+  state: &#123;
+    init: (ctx) =&gt; count(ctx.doc) &gt;= target,
+    apply: (ctx) =&gt; count(ctx.doc) &gt;= target,
+  &#125;,
+&#125;)
+
+// anywhere
+editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
+
+  <h2>Decorations</h2>
+  <p>
+    Drawing over the document without putting anything in it — search highlights, remote
+    cursors, squiggles. Decorations never travel with a copy, an export or an undo.
+  </p>
+  <pre><code>decorations: (ctx) =&gt; findMatches(ctx.doc, query).map((range) =&gt; (&#123;
+  type: 'inline',
+  from: range.from,
+  to: range.to,
+  attrs: &#123; class: 'search-hit' &#125;,
+&#125;))</code></pre>
+
+  <h2>Ordering</h2>
+  <p>
+    Extensions load in array order, adjustable with <code>priority</code>. Later ones win a key
+    binding conflict, and a more specific <code>parseDOM</code> rule needs a higher priority to
+    beat a general one — which is how a task list beats a plain bulleted list for the same
+    <code>&lt;ul&gt;</code>.
+  </p>
+</Docs>
