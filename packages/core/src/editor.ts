@@ -11,6 +11,7 @@ import {
   type NodeViewFactory as EngineNodeViewFactory,
 } from './engine/view'
 import { core } from './extensions/core'
+import { ISOLATE } from './internal'
 import { buildSchema, sortByPriority } from './schema'
 import type {
   AnyCommand,
@@ -80,7 +81,9 @@ export function createEditor<const T extends readonly AnyDef[]>(
     const selectionMoved = !tr.selection.eq(state.selection)
     const before = state.doc
     const selectionBefore = { anchor: state.selection.anchor, head: state.selection.head }
-    if (tr.docChanged) history.record(tr, before, selectionBefore, Date.now())
+    if (tr.docChanged) {
+      history.record(tr, before, selectionBefore, Date.now(), tr.getMeta(ISOLATE) === true)
+    }
 
     const next = state.apply(tr)
     // A plugin refusing the transaction returns the same state object.
@@ -243,6 +246,20 @@ export function createEditor<const T extends readonly AnyDef[]>(
       if (failed) return false
       if (tr.docChanged || tr.selectionSet || tr.storedMarksSet || tr.metaSet) apply(tr)
       return true
+    },
+
+    /**
+     * Is this mark on, or is the caret inside this node?
+     *
+     * A toolbar without this is a row of buttons that all look the same
+     * whether or not the thing they do is already done — you press bold and
+     * have to look at the text to find out what happened. The commands could
+     * always answer the question; only nothing outside a command could ask it.
+     */
+    isActive: (name: string, attrs?: Record<string, unknown>) => {
+      const tr = state.tr
+      const ctx = createCtx(host, state, tr)
+      return schema.marks[name] ? ctx.hasMark(name, attrs) : ctx.inNode(name, attrs)
     },
 
     extensionState: <S = unknown>(name: string) => state.pluginState(name) as S | undefined,

@@ -23,6 +23,8 @@ export interface NodeSpec {
   group?: string
   inline?: boolean
   atom?: boolean
+  /** Behaves like an item in a list · see NodeDef.listItem. */
+  listItem?: boolean
   /** Space-separated mark names allowed inside; `_` all, `''` none. */
   marks?: string
   attrs?: Record<string, { default?: unknown; required?: boolean }>

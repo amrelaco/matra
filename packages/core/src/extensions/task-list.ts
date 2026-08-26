@@ -1,4 +1,6 @@
-import type { Command, NodeDef } from '../types'
+import { liftListItem, sinkListItem, splitListItem } from '../engine/list-commands'
+import { engine } from '../internal'
+import type { Command, NodeDef, Pos } from '../types'
 
 /**
  * A checklist.
@@ -27,11 +29,14 @@ export const taskList: NodeDef<{ toggleTaskList: Command }> = {
       match: /^\s*\[([ xX]?)\]\s$/,
       handler: (ctx, match, range) => {
         const checked = (match[1] ?? '').toLowerCase() === 'x'
-        return (
-          ctx.delete(range) &&
-          ctx.wrapIn('taskList') &&
-          ctx.setBlockType('taskItem', { checked })
-        )
+        // Wrapping in the list builds the item too — the schema says a list
+        // holds items, and findWrapping fills in the levels between. The old
+        // version tried to change the paragraph's *type* to taskItem, which a
+        // node holding blocks can never be, so the rule was refused halfway
+        // and `[] ` stayed on screen as two brackets and a space.
+        if (!ctx.delete(range)) return false
+        if (!ctx.wrapIn('taskList')) return false
+        return checked ? ctx.setNodeAttrs('taskItem', { checked: true }) : true
       },
     },
   ],
@@ -39,9 +44,27 @@ export const taskList: NodeDef<{ toggleTaskList: Command }> = {
 
 const name = 'taskItem'
 
-export const taskItem: NodeDef<{ toggleTaskItem: Command }> = {
+/** Enter, Tab and Shift-Tab, on whichever kind of item the caret is in. */
+const runItem =
+  (which: 'split' | 'lift' | 'sink'): Command =>
+  (ctx) => {
+    const { state, tr } = engine(ctx)
+    const itemType = state.schema.nodes[name]
+    if (!itemType) return false
+    const apply =
+      which === 'split' ? splitListItem : which === 'lift' ? liftListItem : sinkListItem
+    return apply(state, tr, itemType)
+  }
+
+export const taskItem: NodeDef<{
+  toggleTaskItem: Command<[at?: Pos]>
+  splitTaskItem: Command
+  liftTaskItem: Command
+  sinkTaskItem: Command
+}> = {
   kind: 'node',
   name,
+  listItem: true,
   priority: 100,
   content: 'paragraph block*',
   attrs: { checked: { default: false } },
@@ -94,13 +117,12 @@ export const taskItem: NodeDef<{ toggleTaskItem: Command }> = {
       // The generic Editor type does not know this extension's commands, which
       // is the price of the extension not knowing the editor's.
       const commands = editor.commands as unknown as {
-        select(at: number): boolean
-        toggleTaskItem(): boolean
+        toggleTaskItem(at: number): boolean
       }
-      // Put the selection inside the item first: the command reads where the
-      // caret is, and a click on a checkbox does not move it.
-      commands.select(getPos() + 1)
-      commands.toggleTaskItem()
+      // The view knows exactly which item it draws, so it says so. Moving the
+      // caret onto the item first — which is what this did — meant ticking a
+      // box halfway down a list dragged your cursor there with it.
+      commands.toggleTaskItem(getPos())
     })
 
     label.appendChild(box)
@@ -126,13 +148,42 @@ export const taskItem: NodeDef<{ toggleTaskItem: Command }> = {
   },
 
   commands: {
-    toggleTaskItem: (ctx) => {
-      if (!ctx.inNode('taskItem')) return false
-      const checked = ctx.inNode('taskItem', { checked: true })
-      return ctx.setBlockType('taskItem', { checked: !checked })
+    splitTaskItem: runItem('split'),
+    liftTaskItem: runItem('lift'),
+    sinkTaskItem: runItem('sink'),
+
+    /**
+     * Tick or untick, at the caret or at a position you already know.
+     *
+     * An attribute on the item, not a change of block type. The item holds
+     * blocks, so `setBlockType` refused it outright and the box ticked itself
+     * in the DOM while the document stayed exactly as it was.
+     */
+    toggleTaskItem: (ctx, at) => {
+      if (at !== undefined) {
+        const node = engine(ctx).tr.doc.resolve(at).nodeAfter
+        if (!node || node.type.name !== name) return false
+        return ctx.setNodeAttrs(name, { checked: node.attrs?.checked !== true }, at)
+      }
+      if (!ctx.inNode(name)) return false
+      const checked = ctx.inNode(name, { checked: true })
+      return ctx.setNodeAttrs(name, { checked: !checked })
     },
   },
-  keys: { 'Mod-Enter': 'toggleTaskItem' },
+  /**
+   * The same keys a bullet list binds, bound again here.
+   *
+   * An editor may have checklists without bullet lists, and the bindings live
+   * on the item extension · so a checklist on its own would otherwise have no
+   * Enter, no Tab, and no way out. The commands resolve which kind of item the
+   * caret is in, so having both is not a conflict.
+   */
+  keys: {
+    'Mod-Enter': 'toggleTaskItem',
+    Enter: 'splitTaskItem',
+    Tab: 'sinkTaskItem',
+    'Shift-Tab': 'liftTaskItem',
+  },
 }
 
 /** Enough styling to make a checklist look like one. */

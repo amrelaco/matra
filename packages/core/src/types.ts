@@ -61,6 +61,13 @@ export interface Ctx {
   toggleMark(name: string, attrs?: Record<string, unknown>): boolean
 
   setBlockType(name: string, attrs?: Record<string, unknown>): boolean
+  /**
+   * Change the attributes of the nearest ancestor node of this type.
+   *
+   * For nodes that hold blocks rather than text — a checklist item, a table
+   * cell — where `setBlockType` does not apply and never did.
+   */
+  setNodeAttrs(name: string, attrs: Record<string, unknown>, at?: Pos): boolean
   wrapIn(name: string, attrs?: Record<string, unknown>): boolean
   lift(): boolean
 
@@ -78,6 +85,16 @@ export interface Ctx {
    * This is what makes async work (AI streaming) safe against concurrent edits.
    */
   mark(): PosMarker
+
+  /**
+   * Make this change its own undo step.
+   *
+   * Undo groups by time, which is what you want for typing and not what you
+   * want for a deliberate structural change: restoring a saved version, or
+   * accepting a rewrite, should not be merged into whatever sentence was being
+   * written a moment before and lost with it.
+   */
+  isolateUndo(): boolean
 }
 
 export interface PosMarker {
@@ -141,6 +158,16 @@ export interface NodeDef<C extends CommandMap = CommandMap> {
   draggable?: boolean
   selectable?: boolean
   attrs?: Record<string, AttrSpec>
+  /**
+   * This node is an item in a list.
+   *
+   * Enter splits it, Tab nests it, Backspace at its start lifts it out, and
+   * emptying it leaves the list. Declared rather than detected, so a callout or
+   * a step in a recipe can behave like a list item without the engine having to
+   * guess from its name — and so `taskItem` gets the same behaviour `listItem`
+   * has, which it did not for a long time.
+   */
+  listItem?: boolean
   parseDOM?: ParseRule[]
   toDOM?: (node: DocNode) => DomOutput
   /**
@@ -287,6 +314,13 @@ export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
   /** Run several commands as one undo step. Rolls back entirely if any returns false. */
   batch(run: (c: CommandsOf<T> & CoreCommands) => void): boolean
 
+  /**
+   * Is this mark on, or is the caret inside a node of this type?
+   *
+   * Marks are looked up first, then nodes, so `isActive('bold')` and
+   * `isActive('heading', { level: 2 })` both read naturally.
+   */
+  isActive(name: string, attrs?: Record<string, unknown>): boolean
   getJSON(): DocNode
   getHTML(): string
   getText(): string

@@ -2,7 +2,7 @@ import { Fragment, type Node, type Schema } from './engine/model'
 import type { EditorState, Transaction } from './engine/state'
 import { TextSelection } from './engine/state'
 import { type Mapping, findWrapping, liftTarget, stepFromJSON } from './engine/transform'
-import { attachEngine } from './internal'
+import { ISOLATE, attachEngine } from './internal'
 import type { Ctx, DocNode, Pos, PosMarker, Range, Selection } from './types'
 
 /** The editor internals a Ctx is allowed to see. Deliberately tiny. */
@@ -172,6 +172,39 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       return true
     },
 
+    /**
+     * Change the attributes of the nearest ancestor of `name`.
+     *
+     * The counterpart to `setBlockType` for nodes that are not textblocks: a
+     * checklist item, a table cell, a callout. Ticking a box is a change to one
+     * attribute of a node the caret is *inside*, and there was no way to say
+     * that — `setBlockType` refuses anything whose content is blocks rather
+     * than text, so the command underneath the checkbox returned false every
+     * time and the document never heard about it.
+     */
+    setNodeAttrs(name, attrs, at) {
+      const type = schema.nodes[name]
+      if (!type) return false
+
+      // Given a position, use it. A control that already knows which node it
+      // belongs to should not have to move the caret onto that node first —
+      // clicking a checkbox would then take your cursor with it.
+      if (at !== undefined) {
+        const node = tr.doc.resolve(at).nodeAfter
+        if (!node || node.type !== type) return false
+        tr.setNodeAttrs(at, attrs ?? {})
+        return true
+      }
+
+      const $from = tr.selection.$from
+      for (let depth = $from.depth; depth > 0; depth--) {
+        if ($from.node(depth).type !== type) continue
+        tr.setNodeAttrs($from.before(depth), attrs ?? {})
+        return true
+      }
+      return false
+    },
+
     wrapIn(name, attrs) {
       const type = schema.nodes[name]
       if (!type) return false
@@ -258,6 +291,11 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     mark() {
       // Mapping index at the moment of the call; every later transaction adds one.
       return markerFrom(host.mappings.length)
+    },
+
+    isolateUndo() {
+      tr.setMeta(ISOLATE, true)
+      return true
     },
   }
 

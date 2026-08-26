@@ -25,6 +25,15 @@ export interface EngineAccess {
 
 const ENGINE = Symbol.for('matra.engine')
 
+/**
+ * Transaction meta that refuses to be merged into the previous undo entry.
+ *
+ * History groups by time, which is right for typing and wrong for a deliberate
+ * structural change: restoring an old version of a document should not
+ * disappear into the sentence somebody happened to be writing.
+ */
+export const ISOLATE = 'history:isolate'
+
 export function attachEngine(ctx: Ctx, access: EngineAccess): void {
   Object.defineProperty(ctx, ENGINE, { value: access, enumerable: false })
 }

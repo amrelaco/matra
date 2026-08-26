@@ -21,6 +21,7 @@ export const listItem: NodeDef<{
 }> = {
   kind: 'node',
   name: 'listItem',
+  listItem: true,
   content: 'paragraph block*',
   parseDOM: [{ tag: 'li' }],
   toDOM: () => ['li', 0],

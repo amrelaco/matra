@@ -134,6 +134,25 @@ export class Transform {
     return this
   }
 
+  /**
+   * Change one node's attributes and nothing else.
+   *
+   * `setBlockType` cannot do this: it only touches textblocks, so a checklist
+   * item — whose content is blocks, not text — was silently refused by it, and
+   * a checkbox that wrote nothing to the document looked like it worked right
+   * up until you saved.
+   *
+   * The replacement is the same size as what it replaces, so every position
+   * inside the node survives and the caret does not move.
+   */
+  setNodeAttrs(pos: number, attrs: Record<string, unknown>): this {
+    const node = this.doc.resolve(pos).nodeAfter
+    if (!node) return this
+    const merged = { ...node.attrs, ...attrs }
+    const replacement = node.type.create(merged, node.content, node.marks)
+    return this.replaceWith(pos, pos + node.nodeSize, replacement)
+  }
+
   /** Split the textblock at `pos` into two of the same type. */
   split(pos: number): this {
     if (!canSplit(this.doc, pos)) return this

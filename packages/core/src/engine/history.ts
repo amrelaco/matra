@@ -8,6 +8,8 @@ export interface HistoryEntry {
   /** Selection to restore, as raw positions. */
   selection: { anchor: number; head: number }
   time: number
+  /** Closed to merging, from either side · see `record`'s `isolate`. */
+  sealed?: boolean
 }
 
 export interface HistoryOptions {
@@ -62,6 +64,7 @@ export class History {
     before: Node,
     selection: { anchor: number; head: number },
     now: number,
+    isolate = false,
   ): void {
     if (!tr.steps.length) return
 
@@ -74,12 +77,21 @@ export class History {
     const previous = this.undoStack[this.undoStack.length - 1]
     const inverted = invert(tr)
 
-    if (previous && now - previous.time < this.groupMs) {
+    // `isolate` is how a deliberate, structural change refuses to be merged
+    // into whatever was typed a moment earlier. Restoring an old version of a
+    // document is one press of undo away from being lost inside the sentence
+    // somebody happened to be writing when they pressed it.
+    //
+    // It seals from both sides. Refusing to merge backwards and then letting
+    // the next keystroke merge forwards would give exactly the same result one
+    // character later, which is a guarantee that holds only until somebody
+    // keeps typing.
+    if (!isolate && previous && !previous.sealed && now - previous.time < this.groupMs) {
       // Merge: the older inverse must run last to rewind in the right order.
       previous.steps = [...inverted, ...previous.steps]
       previous.time = now
     } else {
-      this.undoStack.push({ steps: inverted, selection, time: now })
+      this.undoStack.push({ steps: inverted, selection, time: now, sealed: isolate })
       if (this.undoStack.length > this.depth) this.undoStack.shift()
     }
 

@@ -1,4 +1,4 @@
-import { liftListItem } from '../list-commands'
+import { escapeList, liftListItem } from '../list-commands'
 import { Fragment } from '../model/fragment'
 import type { ResolvedPos } from '../model/resolved-pos'
 import type { Schema } from '../model/schema'
@@ -174,6 +174,12 @@ function joinBackward(state: EditorState, $from: ResolvedPos): Transaction | nul
       tr.selectAt($from.pos)
       if (liftListItem(state, tr, itemType) && tr.docChanged) return tr
     }
+    // A top-level list has nothing to lift into, so the item becomes an
+    // ordinary paragraph instead. Without this, Backspace on the last bullet
+    // does nothing at all — the list keeps you and the only escape is Enter.
+    const out = state.tr
+    out.selectAt($from.pos)
+    if (escapeList(state, out, $from, depth - 1) && out.docChanged) return out
   }
 
   // An empty block inside a wrapper — the empty list item you cannot get rid

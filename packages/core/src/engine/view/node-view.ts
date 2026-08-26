@@ -108,6 +108,11 @@ export class NodeViewManager {
     ;(dom as unknown as { __matraSetPos?: (n: number) => void }).__matraSetPos?.(pos)
   }
 
+  /** Is this element owned by a mounted view? */
+  owns(dom: globalThis.Node): boolean {
+    return this.live.has(dom)
+  }
+
   contentDOM(dom: globalThis.Node): globalThis.Node | null {
     return this.live.get(dom)?.spec.contentDOM ?? null
   }

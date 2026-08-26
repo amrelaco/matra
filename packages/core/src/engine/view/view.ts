@@ -246,6 +246,12 @@ export class EditorView {
   private onKeyDown(event: KeyboardEvent): void {
     if (this.composing) return
     if (this.renderer.nodeViews.stopsEvent(event.target as globalThis.Node, event)) return
+    // Read where the caret actually is before asking a command about it.
+    // `beforeinput` already works from the DOM; keymaps worked from whatever
+    // the model was last told, and `selectionchange` does not always land
+    // before the next key — click into a paragraph and type immediately and
+    // the command ran against the previous caret.
+    this.readSelectionFromDOM()
     if (this.options.handleKeyDown?.(event)) {
       event.preventDefault()
     }
