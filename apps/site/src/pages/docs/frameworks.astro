@@ -1,0 +1,168 @@
+---
+import Docs from '../../layouts/Docs.astro'
+
+/**
+ * Every framework, because the editor does not have a favourite.
+ *
+ * React and Vue have bindings; nothing else needs one. That was true before
+ * this page existed and invisible, which is a conversion problem rather than a
+ * technical one — a Svelte developer landing on a page listing React and Vue
+ * concludes it is not for them.
+ *
+ * The lifecycle every snippet below wraps is the same three calls, and it is
+ * tested in `packages/core/src/lifecycle.test.ts` rather than being plausible
+ * in six places nobody ran.
+ */
+const bindings: [string, string, string][] = [
+  ['React', '@matrajs/react', 'useEditor, useEditorState, useEditorFocus, EditorContent'],
+  ['Vue', '@matrajs/vue', 'useEditor, EditorContent'],
+]
+---
+<Docs
+  title="Frameworks · Matra docs"
+  description="React and Vue have bindings. Svelte, Solid, Angular, Qwik and plain JavaScript need ten lines, and here they are."
+  section="Getting started"
+  heading="Frameworks"
+>
+  <p>
+    Matra is a document model and a view that attaches to an element. It has no opinion about
+    what renders around it, so <strong>every framework already works</strong> — the only
+    question is how much sugar there is.
+  </p>
+
+  <h2>Two have bindings</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th></th><th>Package</th><th>What you get</th></tr></thead>
+      <tbody>
+        {bindings.map(([name, pkg, what]) => (
+          <tr><td>{name}</td><td><code>{pkg}</code></td><td>{what}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Both are MIT, both are under a hundred lines, and neither re-implements anything. They
+    exist because React and Vue both want the editor's changes to become a re-render, and
+    doing that by hand is the one piece of boilerplate worth removing.
+  </p>
+
+  <h2>Everything else is three calls</h2>
+  <p>Create it, mount it into an element, destroy it when the element goes away.</p>
+
+  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+
+const editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+editor.mount(document.querySelector('#editor'))
+
+// later
+editor.destroy()`}</code></pre>
+
+  <p>
+    That is the whole of it. <code>destroy()</code> removes the listeners and the
+    <code>contenteditable</code> attribute, so the element is safe to reuse — which is what a
+    hot reload, a route change and a recycled list row all rely on.
+  </p>
+
+  <div class="note">
+    <p>
+      The guard worth copying is <code>editor.unsafe.view</code>. It is truthy once mounted, so
+      a component that renders twice does not attach a second view to one element. Both
+      bindings use it and so should yours.
+    </p>
+  </div>
+
+  <h2>Svelte</h2>
+  <p>An action, which is exactly the shape Svelte has for this. No package needed.</p>
+  <pre><code>{`<script>
+  import { createEditor, starterKit } from '@matrajs/core'
+
+  let editor = $state(null)
+
+  function matra(node) {
+    const instance = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+    instance.mount(node)
+    editor = instance
+    return { destroy: () => instance.destroy() }
+  }
+</script>
+
+<button onclick={() => editor?.commands.toggleBold()}>Bold</button>
+<div use:matra></div>`}</code></pre>
+
+  <h2>Solid</h2>
+  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+import { onCleanup, onMount } from 'solid-js'
+
+export function Editor() {
+  let element
+  let editor
+
+  onMount(() => {
+    editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+    editor.mount(element)
+    onCleanup(() => editor.destroy())
+  })
+
+  return <div ref={element} />
+}`}</code></pre>
+
+  <h2>Angular</h2>
+  <p>A directive, so the element stays in the template where it belongs.</p>
+  <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject } from '@angular/core'
+import { createEditor, starterKit } from '@matrajs/core'
+
+@Directive({ selector: '[matra]', standalone: true, exportAs: 'matra' })
+export class MatraDirective implements OnInit, OnDestroy {
+  private host = inject(ElementRef<HTMLElement>)
+  editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+
+  ngOnInit() {
+    if (!this.editor.unsafe.view) this.editor.mount(this.host.nativeElement)
+  }
+
+  ngOnDestroy() {
+    this.editor.destroy()
+  }
+}
+
+// <div matra #ed="matra"></div>
+// <button (click)="ed.editor.commands.toggleBold()">Bold</button>`}</code></pre>
+
+  <h2>Qwik, Astro, Lit, or no framework</h2>
+  <p>
+    The same three calls, wherever you can get an element and a teardown hook. In Astro or a
+    plain page, a <code>&lt;script&gt;</code> tag is enough — every editor on this site is
+    exactly that.
+  </p>
+
+  <h2>Keeping a toolbar in step</h2>
+  <p>
+    The one thing worth knowing outside React and Vue: <code>editor.on('change')</code> and
+    <code>editor.on('selectionChange')</code> both return an unsubscribe function, and
+    <code>editor.isActive('bold')</code> reads the state from the document. That is everything
+    a toolbar needs, in any framework:
+  </p>
+
+  <pre><code>{`const off = editor.on('selectionChange', () => {
+  boldButton.setAttribute('aria-pressed', String(editor.isActive('bold')))
+})
+
+// on teardown
+off()`}</code></pre>
+
+  <h2>Server rendering</h2>
+  <p>
+    <code>createEditor</code> needs no DOM. Build a document, read
+    <code>getHTML()</code> or <code>getJSON()</code>, and send it — the view only exists once
+    something calls <code>mount</code>. That is also why
+    <a href="/docs/api"><code>toMarkdown</code></a> runs on a server with no jsdom in sight.
+  </p>
+
+  <h2>The paid packages, anywhere</h2>
+  <p>
+    <code>@matrajs/ai</code>, <code>@matrajs/collab</code> and
+    <code>@matrajs/versions</code> are extensions, not components. They go in the same array
+    and know nothing about what renders around them, in every framework on this page.
+  </p>
+</Docs>
