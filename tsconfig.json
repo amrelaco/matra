@@ -17,7 +17,9 @@
       "@matrajs/core": ["packages/core/src/index.ts"],
       "@matrajs/ai": ["packages/ai/src/index.ts"],
       "@matrajs/collab": ["packages/collab/src/index.ts"],
-      "@matrajs/versions": ["packages/versions/src/index.ts"]
+      "@matrajs/versions": ["packages/versions/src/index.ts"],
+      "@matrajs/svelte": ["packages/svelte/src/index.ts"],
+      "@matrajs/solid": ["packages/solid/src/index.ts"]
     },
     "jsx": "react-jsx"
   },

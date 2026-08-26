@@ -9,7 +9,7 @@ cd packages/core && pnpm publish --access public
 # wait for it to actually exist before publishing anything that depends on it
 until [ "$(npm view @matrajs/core version)" = "1.2.3" ]; do sleep 20; done
 
-for p in react vue ai collab versions; do (cd packages/$p && pnpm publish --access public); done
+for p in react vue svelte solid ai collab versions; do (cd packages/$p && pnpm publish --access public); done
 ```
 
 Dependants pin `@matrajs/core` by range, so core has to be *available* — not
