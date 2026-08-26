@@ -70,6 +70,37 @@ layout decision belongs.
 
 `versionDiffCSS` is a starting stylesheet for the three classes.
 
+## Where the versions live
+
+Without a store they live until the tab closes, which is undo with labels
+rather than history. `store` is a `load` and a `save`:
+
+```ts
+import { versions, localVersionStore } from '@matrajs/versions'
+
+versions({ store: localVersionStore(`matra:${documentId}`) })
+```
+
+`localVersionStore` is there for the case that needs no server. For anything
+real, pass your own — the shape is two functions, and what is behind them is
+your database:
+
+```ts
+versions({
+  store: {
+    load: () => cache.get(documentId) ?? null,
+    save: (list) => { cache.set(documentId, list); void fetch(`/docs/${documentId}/versions`, {
+      method: 'PUT', body: JSON.stringify(list),
+    }) },
+  },
+})
+```
+
+`load` is read once when the editor is created, so it is synchronous — hydrate
+your cache before you mount, or pass the list you already have. `save` is called
+only when the list changes, not on every keystroke, and a store that throws is
+logged rather than allowed to take the transaction down with it.
+
 ## Restoring
 
 `restoreVersion` replaces the document in one transaction and snapshots where

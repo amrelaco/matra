@@ -9,6 +9,7 @@ export {
   type WordRun,
 } from './diff'
 export {
+  localVersionStore,
   versionClasses,
   versionDiffCSS,
   versionList,
@@ -16,4 +17,5 @@ export {
   type Version,
   type VersionsOptions,
   type VersionsState,
+  type VersionStore,
 } from './versions'

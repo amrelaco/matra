@@ -9,7 +9,7 @@
 import { createEditor, starterKit } from '@matrajs/core'
 import { describe, expect, it } from 'vitest'
 import { diffDocs, diffWords, sizeOf, textOf } from './diff'
-import { versions } from './versions'
+import { type Version, versions } from './versions'
 
 const para = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
 const doc = (...texts: string[]) => ({ type: 'doc', content: texts.map(para) })
@@ -207,6 +207,93 @@ describe('the extension', () => {
     expect(state?.previewing).toBe(null)
     expect(state?.versions.length).toBe(0)
     expect(editor.commands.forgetVersion(id)).toBe(false)
+  })
+
+  it('loads what a store remembers, instead of starting over', () => {
+    const saved: Version[] = [
+      { id: 7, label: 'Yesterday', at: 1, doc: doc('older') as never, size: 9 },
+      { id: 9, label: 'This morning', at: 2, doc: doc('newer') as never, size: 9 },
+    ]
+    const store = { load: () => saved, save: () => {} }
+    const editor = createEditor({
+      extensions: [...starterKit, versions({ now: clock(), idleMs: null, store })],
+      content: doc('now') as never,
+    })
+
+    const state = editor.extensionState<{ versions: Version[] }>('versions')
+    expect(state?.versions.map((entry) => entry.label)).toEqual(['Yesterday', 'This morning'])
+
+    // Ids continue from what was loaded rather than colliding with it.
+    editor.commands.snapshotVersion('after')
+    const ids = editor
+      .extensionState<{ versions: Version[] }>('versions')
+      ?.versions.map((entry) => entry.id)
+    expect(ids).toEqual([7, 9, 10])
+  })
+
+  it('saves the list whenever it changes, and not when it does not', () => {
+    const writes: number[] = []
+    const store = { load: () => null, save: (list: Version[]) => writes.push(list.length) }
+    const editor = createEditor({
+      extensions: [...starterKit, versions({ now: clock(), idleMs: null, store })],
+      content: doc('hello') as never,
+    })
+
+    editor.commands.select(1 as never)
+    editor.commands.insert('x')
+    expect(editor.commands.snapshotVersion('second')).toBe(true)
+
+    // Typing alone does not write · only the list changing does.
+    expect(writes).toEqual([2])
+    editor.commands.previewVersion(null)
+    expect(writes).toEqual([2])
+  })
+
+  it('survives a store that cannot read', () => {
+    const editor = createEditor({
+      extensions: [
+        ...starterKit,
+        versions({
+          now: clock(),
+          idleMs: null,
+          store: {
+            load: () => {
+              throw new Error('corrupt')
+            },
+            save: () => {},
+          },
+        }),
+      ],
+      content: doc('hello') as never,
+    })
+    // Falls back to taking one now rather than refusing to open the document.
+    const state = editor.extensionState<{ versions: Version[] }>('versions')
+    expect(state?.versions.map((entry) => entry.label)).toEqual(['Opened'])
+  })
+
+  it('survives a store that cannot write', () => {
+    const editor = createEditor({
+      extensions: [
+        ...starterKit,
+        versions({
+          now: clock(),
+          idleMs: null,
+          store: {
+            load: () => null,
+            save: () => {
+              throw new Error('quota')
+            },
+          },
+        }),
+      ],
+      content: doc('hello') as never,
+    })
+    // Typing does not change the list, so it would not have called `save` at
+    // all · the snapshot is what actually reaches the throwing store.
+    editor.commands.select(1 as never)
+    editor.commands.insert('x')
+    expect(() => editor.commands.snapshotVersion('second')).not.toThrow()
+    expect(editor.extensionState<{ versions: Version[] }>('versions')?.versions.length).toBe(2)
   })
 
   it('keeps the first version and the newest ones when trimming', () => {

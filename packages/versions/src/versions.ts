@@ -20,6 +20,45 @@ export interface VersionsState {
   diff: DocDiff | null
 }
 
+/**
+ * Where the list lives between visits.
+ *
+ * Without one, a version history is undo with labels: the snapshots are in
+ * memory and the tab closing takes them. `load` is read once when the editor is
+ * created and `save` is called whenever the list changes — a `localStorage`
+ * pair, a `fetch` to your own endpoint, whatever you already have. Nothing here
+ * knows or cares which.
+ */
+export interface VersionStore {
+  /** The versions this document had last time. Sync, so the first render has them. */
+  load(): Version[] | null
+  /** Called whenever the list changes. Debouncing it is yours to decide. */
+  save(versions: Version[]): void
+}
+
+/** A store backed by the browser, for the case that needs no server. */
+export function localVersionStore(key: string): VersionStore {
+  return {
+    load() {
+      try {
+        const raw = globalThis.localStorage?.getItem(key)
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed) ? (parsed as Version[]) : null
+      } catch {
+        // Corrupt, quota-blocked or a private window. A history that cannot be
+        // read is not worth taking the editor down for.
+        return null
+      }
+    },
+    save(versions) {
+      try {
+        globalThis.localStorage?.setItem(key, JSON.stringify(versions))
+      } catch {}
+    },
+  }
+}
+
 export interface VersionsOptions {
   /**
    * Where "now" comes from.
@@ -39,6 +78,8 @@ export interface VersionsOptions {
   keep?: number
   /** Called whenever the list or the preview changes. */
   onChange?: (state: VersionsState) => void
+  /** Where the list lives between visits. Without one it lives until reload. */
+  store?: VersionStore
 }
 
 const SET = 'versions:set'
@@ -173,7 +214,16 @@ export function versions(options: VersionsOptions = {}): ExtensionDef<
       // The first version exists from the moment the editor does, mounted or
       // not. Taking it from a lifecycle hook meant a headless editor — a test,
       // a server render, an import job — had no "before" to compare against.
-      init: (ctx) => ({ versions: [take(ctx.doc, 'Opened')], previewing: null, diff: null }),
+      init: (ctx) => {
+        // What the store remembers comes first, and the ids continue from it
+        // rather than starting at one and colliding with what was loaded.
+        const loaded = readStore(options.store)
+        if (loaded) {
+          nextId = Math.max(...loaded.map((entry) => entry.id)) + 1
+          return { versions: loaded, previewing: null, diff: null }
+        }
+        return { versions: [take(ctx.doc, 'Opened')], previewing: null, diff: null }
+      },
       apply: (ctx, previous) => {
         const change = engineOf(ctx).tr.getMeta(SET) as SetMeta | undefined
         let versions = previous.versions
@@ -194,6 +244,16 @@ export function versions(options: VersionsOptions = {}): ExtensionDef<
         const diff = against ? diffDocs(against.doc, ctx.doc) : null
 
         const next: VersionsState = { versions, previewing, diff }
+        // A store that cannot write — a full quota, a private window, a fetch
+        // that rejects — must not take the transaction with it. Losing the
+        // history is bad; losing the sentence somebody was typing is worse.
+        if (versions !== previous.versions && options.store) {
+          try {
+            options.store.save(versions)
+          } catch (error) {
+            console.error('Matra: the version store refused to save', error)
+          }
+        }
         if (versions !== previous.versions || previewing !== previous.previewing || diff) {
           options.onChange?.(next)
         }
@@ -252,6 +312,18 @@ export function versions(options: VersionsOptions = {}): ExtensionDef<
       idleTimer = null
       editorRef = null
     },
+  }
+}
+
+/** What the store remembers, or nothing if it cannot say. */
+function readStore(store: VersionStore | undefined): Version[] | null {
+  if (!store) return null
+  try {
+    const loaded = store.load()
+    return Array.isArray(loaded) && loaded.length > 0 ? loaded : null
+  } catch (error) {
+    console.error('Matra: the version store refused to load', error)
+    return null
   }
 }
 
