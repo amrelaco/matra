@@ -1,39 +1,148 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Document model · Matra docs" description="Your document is plain JSON: a tree of nodes you can log, diff, store and send over the wire." section="Concepts" heading="Document model">
+<Docs
+  title="Document model · Matra docs"
+  description="Your document is plain JSON: a tree of nodes you can log, diff, store and send over the wire. What positions mean, what the schema refuses, and why it is immutable."
+  section="Concepts"
+  heading="Document model"
+>
   <p>
     Your document is plain JSON. Not a class, not an engine object · a tree of nodes you can
     log, diff, store and send over the wire.
   </p>
-  <pre><code>&#123; type: 'doc', content: [
-  &#123; type: 'heading', attrs: &#123; level: 1 &#125;,
-    content: [&#123; type: 'text', text: 'Title' &#125;] &#125;
-] &#125;</code></pre>
+  <pre><code>{`{ type: 'doc', content: [
+  { type: 'heading', attrs: { level: 1 },
+    content: [{ type: 'text', text: 'Title' }] },
+  { type: 'paragraph', content: [
+    { type: 'text', text: 'Some ' },
+    { type: 'text', text: 'bold', marks: [{ type: 'bold' }] },
+    { type: 'text', text: ' text.' },
+  ] },
+] }`}</code></pre>
+
+  <p>
+    That is the whole format. <code>editor.getJSON()</code> hands it to you and
+    <code>editor.setContent()</code> takes it back, and nothing in between is proprietary.
+  </p>
 
   <h2>Nodes and marks</h2>
   <p>
-    A <strong>node</strong> is a thing in the document: a paragraph, a heading, an image. A
-    <strong>mark</strong> is something applied to a range of text: bold, a link, a comment
-    thread. Nodes nest; marks decorate.
+    A <strong>node</strong> is a thing in the document: a paragraph, a heading, an image, a
+    table cell. A <strong>mark</strong> is something applied to a range of text: bold, a link, a
+    comment thread. Nodes nest; marks decorate.
   </p>
+  <p>The distinction matters when you write an extension, because it decides three things:</p>
+  <ul>
+    <li>
+      <strong>Where it can go.</strong> A node lives in another node's <code>content</code>; a
+      mark lives on a text node's <code>marks</code> array.
+    </li>
+    <li>
+      <strong>What it costs in positions.</strong> A node has borders and takes space (below); a
+      mark takes none at all.
+    </li>
+    <li>
+      <strong>How it splits.</strong> Marks split and merge freely as you type through them.
+      Nodes do not — splitting one is a deliberate operation.
+    </li>
+  </ul>
 
   <h2>Positions</h2>
   <p>
-    Positions are integers into this tree. The document starts at 0, each node border costs one,
-    and each character costs one. A paragraph containing "hi" occupies 0 to 4: the opening
-    border, two characters, the closing border.
+    Positions are integers into this tree, and the arithmetic is worth learning once because
+    every command, every selection and every comment anchor is one.
   </p>
+  <ul>
+    <li>The document starts at <code>0</code>.</li>
+    <li>Each character of text costs <strong>one</strong>.</li>
+    <li>Each node border costs <strong>one</strong> — so a paragraph costs two, plus its inside.</li>
+    <li>
+      A leaf — a hard break, an image, a mention — costs exactly <strong>one</strong>, whatever
+      it renders as. A five-letter mention is one position, not five.
+    </li>
+    <li>A mark costs <strong>nothing</strong>. Bold text is the same width as plain text.</li>
+  </ul>
+
+  <pre><code>{`<p>hi</p>
+
+0  1  2  3
+│  h  i  │
+│           └─ 3 · after the closing border
+│        └──── 2 · after "i", still inside
+│  └─────────── 1 · the start of the text
+└────────────── 0 · before the paragraph`}</code></pre>
+
+  <p>
+    So a document holding one paragraph of "hi" has a size of 4, and its content spans 0 to 3.
+    Selecting the word means <code>&#123; from: 1, to: 3 &#125;</code>.
+  </p>
+
   <div class="note">
-    Never do arithmetic on a position across an await. Take a marker with
-    <code>ctx.mark()</code> and map through it · see
-    <a href="/docs/position-mapping">position mapping</a>.
+    <p>
+      Never do arithmetic on a position across an <code>await</code>. Take a marker with
+      <code>ctx.mark()</code> and map through it — see
+      <a href="/docs/position-mapping">position mapping</a>, which is the page that explains
+      why this one is worth reading.
+    </p>
   </div>
 
-  <h2>Why JSON</h2>
+  <h2>The schema decides what is possible</h2>
+  <p>
+    The extensions you pass build a schema, and the schema is enforced on every change. This is
+    not decoration: a transaction that would produce an invalid document is <em>refused</em>,
+    and the command that asked for it returns <code>false</code>.
+  </p>
+  <pre><code>{`const editor = createEditor({ extensions: [document, paragraph, text, bold] })
+
+editor.setContent('<h1>A heading</h1><p>Some <em>italic</em>.</p>')
+editor.getHTML()
+// '<p>A heading</p><p>Some italic.</p>'`}</code></pre>
+  <p>
+    The heading became a paragraph and the emphasis was dropped, because there is no node or
+    mark in that schema to hold them. A node can also name the marks it accepts —
+    <code>marks: ''</code> is why the text in a code block stays literal, whatever you paste
+    into it. That is what makes a comment box a comment box: somebody
+    pasting three pages of a Word document into it gets three paragraphs of text, not three
+    pages of headings and tables.
+  </p>
+
+  <h2>It is immutable</h2>
+  <p>
+    Every change produces a new document rather than editing the old one. Two consequences you
+    will actually notice:
+  </p>
+  <ul>
+    <li>
+      <strong>An old document stays valid.</strong> Hold on to <code>getJSON()</code> from ten
+      seconds ago and it is still exactly what it was — which is how version history and
+      collaborative rebasing work at all.
+    </li>
+    <li>
+      <strong>Unchanged parts are the same object.</strong> Editing one paragraph leaves every
+      other paragraph as literally the same reference, which is what lets the renderer skip
+      them by identity rather than by comparison.
+    </li>
+  </ul>
+
+  <h2>Reading it without an editor</h2>
   <p>
     Because it is ordinary data, you can persist it anywhere, compare two revisions with any
-    diff library, and read it on a server without loading an editor. It is also what makes the
-    Markdown converter possible without a DOM.
+    diff library, and read it on a server without loading an editor at all.
   </p>
+  <pre><code>{`import { toMarkdown } from '@matrajs/core'
+
+// On a server, in a worker, in a test · no DOM anywhere.
+const markdown = toMarkdown(JSON.parse(row.body))`}</code></pre>
+  <p>
+    <code>toMarkdown</code> walks the JSON. It never touches a DOM, which is why it runs on a
+    server with no jsdom in sight and why it is in the benchmark rather than in a caveat.
+  </p>
+
+  <h2>Next</h2>
+  <ul>
+    <li><a href="/docs/commands">Commands</a> · how a change is made and why they return booleans.</li>
+    <li><a href="/docs/position-mapping">Position mapping</a> · how a position survives an edit.</li>
+    <li><a href="/docs/extensions">Writing an extension</a> · adding a node or a mark of your own.</li>
+  </ul>
 </Docs>

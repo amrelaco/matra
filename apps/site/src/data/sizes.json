@@ -4,36 +4,36 @@
       "id": "engine",
       "label": "The engine on its own",
       "note": "createEditor, with an empty array",
-      "min": 72.4,
-      "gz": 23.3
+      "min": 72.8,
+      "gz": 23.5
     },
     {
       "id": "two-marks",
       "label": "Bold and underline",
       "note": "document, paragraph, text, bold, underline",
-      "min": 73.2,
-      "gz": 23.6
+      "min": 73.6,
+      "gz": 23.8
     },
     {
       "id": "marks",
       "label": "The everyday six",
       "note": "every mark, and nothing that makes a block",
-      "min": 74.3,
-      "gz": 23.9
+      "min": 74.7,
+      "gz": 24.1
     },
     {
       "id": "starter",
       "label": "The starter kit",
       "note": "what most applications start from",
-      "min": 76.5,
-      "gz": 24.5
+      "min": 76.9,
+      "gz": 24.6
     },
     {
       "id": "everything",
       "label": "Starter kit, tables and checklists",
       "note": "more than most pages need",
-      "min": 78.5,
-      "gz": 25.1
+      "min": 78.9,
+      "gz": 25.2
     }
   ],
   "tiptap": {

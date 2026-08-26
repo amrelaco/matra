@@ -1,43 +1,154 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Commands · Matra docs" description="Commands are functions that either change the document and return true, or change nothing and return false." section="Concepts" heading="Commands">
+<Docs
+  title="Commands · Matra docs"
+  description="Commands are functions that either change the document and return true, or change nothing and return false. How they compose, how they are typed, and why the boolean matters."
+  section="Concepts"
+  heading="Commands"
+>
   <p>
     A command is a function that takes a context and returns a boolean:
     <strong>true if it did something, false if it declined.</strong> It never throws · one that
-    does is caught, logged, and its half-built transaction discarded.
+    does is caught, logged, and its half-built transaction discarded rather than applied.
   </p>
-  <pre><code>const toggleBold: Command = (ctx) =&gt; ctx.toggleMark('bold')</code></pre>
+  <pre><code>{`const toggleBold: Command = (ctx) => ctx.toggleMark('bold')`}</code></pre>
 
-  <h2>Types are inferred</h2>
+  <h2>The boolean is the interesting part</h2>
   <p>
-    <code>editor.commands</code> is built from the extensions array you passed in. Add an
-    extension and its commands appear, typed, with their argument types intact. Remove it and
-    calling them is a compile error.
+    A command returning <code>false</code> is not an error. It is the answer to "can this happen
+    here?", and it is how the schema, the selection and the document shape all get a say without
+    anybody writing a check.
+  </p>
+  <pre><code>{`// In a comment box with no heading in its schema:
+editor.commands.toggleHeading(2)   // undefined · not a command at all
+
+// In a full editor, with the caret inside a code block:
+editor.commands.toggleBold()       // false · code blocks accept no marks
+
+// With nothing selected:
+editor.commands.askAi('shorten')   // false · there is nothing to shorten`}</code></pre>
+  <p>
+    So a toolbar button can disable itself by asking, and a keyboard shortcut that returns
+    <code>false</code> falls through to the browser's own handling rather than swallowing the
+    key.
+  </p>
+
+  <h2>Types are inferred, not declared</h2>
+  <p>
+    <code>editor.commands</code> is built from the extensions array you passed. Add an extension
+    and its commands appear, typed, with their argument types intact. Leave it out and calling
+    them is a compile error rather than a runtime surprise.
+  </p>
+  <pre><code>{`const editor = createEditor({ extensions: [document, paragraph, text, bold] })
+
+editor.commands.toggleBold()     // fine
+editor.commands.toggleItalic()   // Property 'toggleItalic' does not exist`}</code></pre>
+  <p>
+    There is no module augmentation and nothing to declare. This is the one thing here that
+    other editors cannot copy without changing their architecture: Tiptap's commands live in a
+    global interface, so every installed extension's commands appear on every editor whether
+    you passed them or not.
   </p>
 
   <h2>Running several as one</h2>
-  <pre><code>editor.batch((commands) =&gt; &#123;
+  <pre><code>{`editor.batch((commands) => {
   commands.toggleBold()
   commands.insert(' and this')
-&#125;)</code></pre>
+})`}</code></pre>
   <p>
-    One undo step, and all or nothing · if any command returns false the whole batch rolls back.
+    One undo step, and all or nothing · if any command returns <code>false</code> the whole
+    batch rolls back and <code>batch</code> itself returns <code>false</code>. Nothing
+    half-applied reaches the document.
+  </p>
+
+  <h2>Making a change its own undo step</h2>
+  <p>
+    Undo groups by time, which is right for typing and wrong for anything deliberate. A command
+    that restores a template, applies a rewrite or accepts a suggestion should not disappear
+    into the sentence somebody was writing a second earlier.
+  </p>
+  <pre><code>{`const applyTemplate: Command = (ctx) => {
+  if (!ctx.replace({ from: 0, to: size }, template)) return false
+  return ctx.isolateUndo()
+}`}</code></pre>
+  <p>
+    It seals from both sides: nothing merges into it from before, and the next keystroke does
+    not merge into it either.
   </p>
 
   <h2>The core commands</h2>
-  <ul>
-    <li><code>select(range)</code> · move the selection</li>
-    <li><code>insert(content, at?)</code> · insert JSON, an array, or an HTML string</li>
-    <li><code>replace(range, content)</code></li>
-    <li><code>remove(range?)</code></li>
-    <li><code>moveBlock(from, to)</code> · what a drag does</li>
-    <li><code>focus()</code></li>
-  </ul>
+  <p>These exist whatever extensions you pass, because the engine provides them:</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>select(range)</code></td><td>Move the selection · a position or a range</td></tr>
+        <tr><td><code>insert(content, at?)</code></td><td>JSON, an array of nodes, or an HTML string</td></tr>
+        <tr><td><code>replace(range, content)</code></td><td>Swap a span for something else</td></tr>
+        <tr><td><code>remove(range?)</code></td><td>Delete a span, or the selection</td></tr>
+        <tr><td><code>moveBlock(from, to)</code></td><td>What a drag handle does</td></tr>
+        <tr><td><code>focus()</code></td><td>Put the caret back in the editor</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>What the context gives you</h2>
+  <p>
+    Inside a command, <code>ctx</code> is the whole surface. The document as JSON, the
+    selection, and the operations that change them:
+  </p>
+  <pre><code>{`ctx.doc                              // the document, as plain JSON
+ctx.selection                        // { from, to, anchor, head, empty }
+
+ctx.toggleMark('bold')               // and addMark, removeMark
+ctx.setBlockType('heading', { level: 2 })
+ctx.setNodeAttrs('taskItem', { checked: true })
+ctx.wrapIn('blockquote')              // and lift()
+
+ctx.insert(content, at?)             // replace, delete, select, focus
+ctx.mark()                           // a position marker · see position mapping
+ctx.isolateUndo()`}</code></pre>
 
   <div class="note">
-    Positions that are not finite integers inside the document return false rather than
-    throwing. <code>NaN</code> included · it slips past naive range checks, because both
-    <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
+    <p>
+      <code>setBlockType</code> only applies to textblocks — nodes that hold text. For a node
+      that holds <em>blocks</em>, like a checklist item or a table cell, use
+      <code>setNodeAttrs</code>. Ticking a checkbox with <code>setBlockType</code> silently does
+      nothing, which is a mistake worth making only once.
+    </p>
+  </div>
+
+  <h2>Writing your own</h2>
+  <p>
+    A command is a plain function on an extension. Nothing registers it, nothing wraps it, and
+    the name you give it is the name on <code>editor.commands</code>:
+  </p>
+  <pre><code>{`import type { Command, ExtensionDef } from '@matrajs/core'
+
+const shout: Command<[times?: number]> = (ctx, times = 1) => {
+  const { from, to } = ctx.selection
+  if (from === to) return false          // nothing selected · decline
+  return ctx.insert('!'.repeat(times), to)
+}
+
+export const emphasis: ExtensionDef<{ shout: Command<[times?: number]> }> = {
+  kind: 'extension',
+  name: 'emphasis',
+  commands: { shout },
+  keys: { 'Mod-Alt-!': 'shout' },
+}`}</code></pre>
+  <p>
+    <code>editor.commands.shout(3)</code> now exists and is typed, because the array it came
+    from says so. See <a href="/docs/extensions">writing an extension</a> for the rest of the
+    shape.
+  </p>
+
+  <div class="note">
+    <p>
+      Positions that are not finite integers inside the document return <code>false</code>
+      rather than throwing — <code>NaN</code> included. It slips past a naive range check,
+      because both <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
+    </p>
   </div>
 </Docs>
