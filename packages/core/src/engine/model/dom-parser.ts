@@ -98,7 +98,12 @@ export class DOMParser {
    * a stack frame. Past this depth the content is discarded rather than
    * followed — five thousand nested blockquotes are an attack, not a document.
    */
-  private parseChildren(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Fragment {
+  private parseChildren(
+    dom: globalThis.Node,
+    marks: readonly Mark[],
+    depth = 0,
+    parent: NodeType | null = null,
+  ): Fragment {
     if (depth > Schema.MAX_DEPTH) return Fragment.empty
     const children = Array.from(dom.childNodes)
     const out: Node[] = []
@@ -109,13 +114,18 @@ export class DOMParser {
       // its own paragraph, and a document written across several lines gains a
       // blank paragraph between every pair of blocks.
       if (child.nodeType === 3 && isBlank(child.nodeValue) && nextToBlock(child)) continue
-      out.push(...this.parseOne(child, marks, depth + 1))
+      out.push(...this.parseOne(child, marks, depth + 1, parent))
     }
 
     return Fragment.from(trimEdges(out))
   }
 
-  private parseOne(dom: globalThis.Node, marks: readonly Mark[], depth = 0): Node[] {
+  private parseOne(
+    dom: globalThis.Node,
+    marks: readonly Mark[],
+    depth = 0,
+    parent: NodeType | null = null,
+  ): Node[] {
     // Scaffolding the view puts in empty blocks so they have height. Reading it
     // back would turn every empty paragraph into one containing a hard break.
     if (dom.nodeType === 1 && (dom as Element).hasAttribute('data-matra-filler')) return []
@@ -133,25 +143,39 @@ export class DOMParser {
     if (matched?.kind === 'mark') {
       const type = matched.owner as MarkType
       const attrs = this.attrsFor(matched, element)
-      if (attrs === false) return this.parseChildren(element, marks, depth).content.slice()
-      const mark = type.create(attrs)
-      return this.parseChildren(element, mark.addToSet(marks), depth).content.slice()
+      if (attrs === false) {
+        return this.parseChildren(element, marks, depth, parent).content.slice()
+      }
+      // The node this text is landing in may not accept the mark. A code block
+      // says it accepts none — so the `<code>` inside a `<pre>` is the fence's
+      // own tag, not an inline code mark, and reading it as one produced
+      // `<pre><code><code>` on the way back out.
+      const carried =
+        parent && !parent.allowsMarkType(type) ? marks : type.create(attrs).addToSet(marks)
+      return this.parseChildren(element, carried, depth, parent).content.slice()
     }
 
     if (matched?.kind === 'node') {
       const type = matched.owner as NodeType
       const attrs = this.attrsFor(matched, element)
-      if (attrs === false) return this.parseChildren(element, marks, depth).content.slice()
+      if (attrs === false) {
+        return this.parseChildren(element, marks, depth, parent).content.slice()
+      }
+      // Marks this node will not accept are dropped at its border rather than
+      // carried in and rendered back out.
+      const inherited = marks.filter((mark) => type.allowsMarkType(mark.type))
       const content = type.isLeaf
         ? Fragment.empty
-        : this.fitContent(type, this.parseChildren(element, marks, depth))
+        : this.fitContent(type, this.parseChildren(element, inherited, depth, type))
       const node = type.createAndFill(attrs, content)
       return node ? [node] : []
     }
 
     // Inline styles can carry marks even when the tag means nothing.
-    const styleMarks = this.marksFromStyle(element, marks)
-    return this.parseChildren(element, styleMarks, depth).content.slice()
+    const styleMarks = this.marksFromStyle(element, marks).filter(
+      (mark) => !parent || parent.allowsMarkType(mark.type),
+    )
+    return this.parseChildren(element, styleMarks, depth, parent).content.slice()
   }
 
   private matchElement(element: Element): CompiledRule | null {

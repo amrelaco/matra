@@ -5,7 +5,11 @@ export const codeBlock: NodeDef<{ toggleCodeBlock: Command<[string?]> }> = {
   name: 'codeBlock',
   content: 'text*',
   group: 'block',
-  // Marks are meaningless inside code; the text is literal.
+  // Marks are meaningless inside code · the text is literal. This line is the
+  // difference between saying that in a comment and the schema enforcing it:
+  // without it, parsing `<pre><code>x</code></pre>` put a `code` mark on the
+  // text and rendered `<pre><code><code>x</code></code></pre>` back out.
+  marks: '',
   attrs: { language: { default: null } },
   parseDOM: [
     {

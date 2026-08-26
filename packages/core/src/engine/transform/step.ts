@@ -139,8 +139,14 @@ export class AddMarkStep extends Step {
 
   apply(doc: Node): StepResult {
     return ok(
-      mapTextRange(doc, this.from, this.to, (node) =>
-        node.withMarks(this.mark.addToSet(node.marks)),
+      mapTextRange(doc, this.from, this.to, (node, parent) =>
+        // A node may say which marks its text can carry · a code block says
+        // none, because the text in it is literal. Asked before this, the
+        // schema knew that and nothing consulted it, so bold inside a fence
+        // produced a document that rendered as something nobody typed.
+        parent.type.allowsMarkType(this.mark.type)
+          ? node.withMarks(this.mark.addToSet(node.marks))
+          : node,
       ),
     )
   }
@@ -316,7 +322,12 @@ function replaceNodeAt(doc: Node, contentStart: number, node: Node): Node {
 }
 
 /** Apply `fn` to every text node touched by the range. */
-function mapTextRange(doc: Node, from: number, to: number, fn: (node: Node) => Node): Node {
+function mapTextRange(
+  doc: Node,
+  from: number,
+  to: number,
+  fn: (node: Node, parent: Node) => Node,
+): Node {
   const rebuild = (node: Node, start: number): Node => {
     if (node.isText) return node
     const children: Node[] = []
@@ -335,7 +346,7 @@ function mapTextRange(doc: Node, from: number, to: number, fn: (node: Node) => N
         const middle = text.slice(localFrom, localTo)
         const tail = text.slice(localTo)
         if (head) children.push(child.withText(head))
-        if (middle) children.push(fn(child.withText(middle)))
+        if (middle) children.push(fn(child.withText(middle), node))
         if (tail) children.push(child.withText(tail))
         continue
       }

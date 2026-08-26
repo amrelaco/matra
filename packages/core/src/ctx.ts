@@ -1,4 +1,4 @@
-import { Fragment, type Node, type Schema } from './engine/model'
+import { Fragment, type MarkType, type Node, type Schema } from './engine/model'
 import type { EditorState, Transaction } from './engine/state'
 import { TextSelection } from './engine/state'
 import { type Mapping, findWrapping, liftTarget, stepFromJSON } from './engine/transform'
@@ -49,6 +49,25 @@ function resolveRange(tr: Transaction, range?: Range): { from: number; to: numbe
  * A string is inline text — `insert('hi')` types, it does not create a block.
  * Structure is expressed with DocNode objects, which say what they are.
  */
+/**
+ * Does any textblock in this range accept the mark?
+ *
+ * A range spanning a paragraph and a code block should still bold the
+ * paragraph, so this asks whether *anything* can carry it rather than whether
+ * everything can.
+ */
+function acceptsMark(doc: Node, from: number, to: number, type: MarkType): boolean {
+  let allowed = false
+  doc.descendants((node, pos) => {
+    if (allowed) return false
+    if (!node.isTextblock) return true
+    if (pos + node.nodeSize <= from || pos >= to) return false
+    if (node.type.allowsMarkType(type)) allowed = true
+    return false
+  })
+  return allowed
+}
+
 function toNodes(schema: Schema, content: DocNode | DocNode[] | string): Node[] {
   if (typeof content === 'string') {
     return content.length ? [schema.text(content)] : []
@@ -121,10 +140,20 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
       const type = schema.marks[name]
       if (!type) return false
       const { from, to } = resolveRange(tr, range)
+
       if (from === to) {
+        // A stored mark applies to whatever is typed next, which lands in the
+        // block the caret is in · so that block has to accept it.
+        if (!tr.selection.$head.parent.type.allowsMarkType(type)) return false
         tr.addStoredMark(type.create(attrs))
         return true
       }
+
+      // Nothing in the range can carry this mark, so the step would apply to
+      // nothing. Reporting success for that is how a toolbar lights a button
+      // that did not do anything.
+      if (!acceptsMark(tr.doc, from, to, type)) return false
+
       tr.addMark(from, to, type.create(attrs))
       return true
     },

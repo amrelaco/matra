@@ -57,6 +57,7 @@ export function buildSchema(defs: readonly AnyDef[]): Schema {
         inline: def.inline,
         atom: def.atom,
         listItem: def.listItem,
+        marks: def.marks,
         attrs: toAttrs(def.attrs),
         parseDOM: toParseDOM(def.parseDOM),
         toDOM: def.toDOM ? (node) => def.toDOM?.(node.toJSON() as never) as never : undefined,

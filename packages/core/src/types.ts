@@ -168,6 +168,15 @@ export interface NodeDef<C extends CommandMap = CommandMap> {
    * has, which it did not for a long time.
    */
   listItem?: boolean
+  /**
+   * Which marks this node's text may carry.
+   *
+   * A space-separated list of mark names, or `''` for none at all. Left off, a
+   * node accepts every mark in the schema — which is right for a paragraph and
+   * wrong for a code block, where the text is literal and a `<strong>` inside
+   * it is a document that renders as something nobody typed.
+   */
+  marks?: string
   parseDOM?: ParseRule[]
   toDOM?: (node: DocNode) => DomOutput
   /**
