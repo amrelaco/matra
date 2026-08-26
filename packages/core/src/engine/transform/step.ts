@@ -299,16 +299,19 @@ function planReplace($from: ResolvedPos, $to: ResolvedPos, slice: Slice): Replac
   return { shared, sharedStart, regionStart, regionEnd, middle }
 }
 
-/** Put `node` back where it came from, rebuilding its ancestors. */
+/**
+ * Put `node` back where it came from, rebuilding its ancestors.
+ *
+ * Exactly one child changes at each level, so each level swaps that child
+ * rather than cutting the run in two and joining it back around the
+ * replacement. On a two-thousand-block document that is the difference between
+ * a keystroke costing the document and costing the block.
+ */
 function replaceNodeAt(doc: Node, contentStart: number, node: Node): Node {
   if (contentStart === 0) return node
   const $at = doc.resolve(contentStart - 1)
   const parent = $at.parent
-  const index = $at.index()
-  const content = parent.content
-    .cut(0, $at.parentOffset)
-    .append(Fragment.from([node]))
-    .append(parent.content.cut($at.parentOffset + parent.child(index).nodeSize))
+  const content = parent.content.replaceChild($at.index(), node)
   return replaceNodeAt(doc, $at.start(), parent.copy(content))
 }
 

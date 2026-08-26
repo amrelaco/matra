@@ -25,6 +25,17 @@ export class Renderer {
   private dirty: { from: number; to: number } | null = null
   private decorations = DecorationSet.empty
   private root: HTMLElement | null = null
+  /**
+   * Where each rendered node keeps its children.
+   *
+   * Usually the node's own element, but `toDOM` may put the hole further down —
+   * a table is `['table', ['tbody', 0]]`, so its rows live in the `<tbody>` and
+   * not in the `<table>`. Patching into the outer element instead walks the
+   * wrong list: model children get lined up against the single `<tbody>`, cells
+   * are patched as if they were rows, and the table quietly doubles. Recorded
+   * on the way out of `buildNode`, which is the only place the pairing is known.
+   */
+  private readonly holes = new WeakMap<globalThis.Node, HTMLElement>()
 
   constructor(
     private readonly schema: Schema,
@@ -44,9 +55,15 @@ export class Renderer {
     // skipping past it would leave it undrawn.
     this.dirty = dirty && decorations.eq(this.previousDecorations) ? dirty : null
     this.decorations = decorations
-    // Enough edits have piled up that replaying them costs more than starting
-    // over, so the next patch re-records everything and resets the backlog.
-    const canPatch = this.previous !== null && this.root === target && !this.map.stale
+    const canPatch = this.previous !== null && this.root === target
+    // Enough edits have piled up that replaying them for a cold entry costs
+    // more than saying where everything is again. That used to mean rebuilding
+    // the document's DOM from scratch — every sixty-fourth keystroke tore down
+    // and rebuilt every block, which on a long document was the most expensive
+    // thing typing did and also dropped every node view's state on the way
+    // past. The backlog is what went stale, not the DOM, so only the backlog is
+    // thrown away.
+    const backlog = canPatch && this.map.stale
     // Only a full rebuild may drop the index: on a patch, entries for subtrees
     // that kept their position are the ones deliberately not rewritten.
     if (!canPatch) this.map.clear()
@@ -55,10 +72,24 @@ export class Renderer {
 
     if (!canPatch) {
       this.nodeViews.destroyAll()
-      target.replaceChildren()
-      this.buildFragment(doc.content, target, 0)
+      // Built detached and attached in one go. Appending each block straight
+      // into a mounted element is two hundred separate insertions into a live
+      // tree, each one something the browser has to account for; a fragment is
+      // one.
+      const holder = document.createDocumentFragment()
+      this.buildFragment(doc.content, holder, 0)
+      target.replaceChildren(holder)
     } else {
       this.patchFragment(target, this.previous as Node, doc, 0)
+    }
+
+    // After the patch, not before: re-recording has to be done in the
+    // coordinates the document is in now, and before the patch it is still in
+    // the ones the edit moved away from.
+    if (backlog) {
+      this.map.reindex()
+      this.map.record(target, 0)
+      this.recordWithin(doc.content, target, 0)
     }
 
     this.previous = doc
@@ -73,48 +104,74 @@ export class Renderer {
 
   // --- building ------------------------------------------------------------
 
-  private buildFragment(fragment: Fragment, target: HTMLElement, start: number): void {
-    let openMarks: Mark[] = []
-    let openTargets: HTMLElement[] = [target]
+  /**
+   * Build a run of nodes into `target`.
+   *
+   * Written as a plain loop over the run rather than around the offset
+   * generator, and every allocation in it is behind the condition that needs
+   * it. This is the whole of a first render: on two hundred blocks the mark
+   * stack was three arrays per child for marks no block has, and the two
+   * decoration filters were two more per text node for a document nobody had
+   * decorated.
+   */
+  private buildFragment(fragment: Fragment, target: globalThis.Node, start: number): void {
+    const children = fragment.content
+    const decorated = this.decorations.size > 0
+    const openMarks: Mark[] = []
+    const openTargets: globalThis.Node[] = [target]
+    let offset = 0
 
-    for (const [child, offset] of fragment.entries()) {
-      let keep = 0
-      while (
-        keep < openMarks.length &&
-        keep < child.marks.length &&
-        (openMarks[keep] as Mark).eq(child.marks[keep] as Mark)
-      ) {
-        keep++
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index] as Node
+      let parent = target
+
+      // Only pay for the mark stack when marks are in play at all.
+      if (openMarks.length !== 0 || child.marks.length !== 0) {
+        let keep = 0
+        while (
+          keep < openMarks.length &&
+          keep < child.marks.length &&
+          (openMarks[keep] as Mark).eq(child.marks[keep] as Mark)
+        ) {
+          keep++
+        }
+        openMarks.length = keep
+        openTargets.length = keep + 1
+
+        for (let m = keep; m < child.marks.length; m++) {
+          const mark = child.marks[m] as Mark
+          const spec = this.schema.marks[mark.type.name]?.spec
+          const rendered = spec?.toDOM
+            ? renderSpec(spec.toDOM(mark) as DOMOutputSpec)
+            : { dom: document.createElement('span'), hole: null }
+          ;(openTargets[openTargets.length - 1] as globalThis.Node).appendChild(rendered.dom)
+          openMarks.push(mark)
+          openTargets.push((rendered.hole ?? rendered.dom) as globalThis.Node)
+        }
+        parent = openTargets[openTargets.length - 1] as globalThis.Node
       }
-      openMarks = openMarks.slice(0, keep)
-      openTargets = openTargets.slice(0, keep + 1)
 
-      for (const mark of child.marks.slice(keep)) {
-        const spec = this.schema.marks[mark.type.name]?.spec
-        const rendered = spec?.toDOM
-          ? renderSpec(spec.toDOM(mark) as DOMOutputSpec)
-          : { dom: document.createElement('span'), hole: null }
-        ;(openTargets[openTargets.length - 1] as HTMLElement).appendChild(rendered.dom)
-        openMarks.push(mark)
-        openTargets.push((rendered.hole ?? rendered.dom) as HTMLElement)
-      }
-
-      const parent = openTargets[openTargets.length - 1] as HTMLElement
       const pos = start + offset
-      this.insertWidgets(parent, pos)
+      if (decorated) this.insertWidgets(parent, pos)
 
       if (child.isText) {
-        for (const piece of this.buildDecoratedText(child, pos)) parent.appendChild(piece)
-        continue
+        if (decorated) {
+          for (const piece of this.buildDecoratedText(child, pos)) parent.appendChild(piece)
+        } else {
+          parent.appendChild(document.createTextNode(child.text ?? ''))
+        }
+      } else {
+        const dom = this.buildNode(child, pos)
+        parent.appendChild(decorated ? this.decorate(dom, child, pos) : dom)
       }
-      parent.appendChild(this.decorate(this.buildNode(child, pos), child, pos))
+      offset += child.nodeSize
     }
 
     // Widgets sitting at the very end of the fragment.
-    this.insertWidgets(target, start + fragment.size)
+    if (decorated) this.insertWidgets(target, start + fragment.size)
   }
 
-  private insertWidgets(target: HTMLElement, pos: number): void {
+  private insertWidgets(target: globalThis.Node, pos: number): void {
     for (const item of this.decorations.items) {
       if (item.type !== 'widget' || item.pos !== pos) continue
       target.appendChild(this.buildWidget(item))
@@ -206,7 +263,9 @@ export class Renderer {
     if (view) {
       if (view.contentDOM && !node.type.isLeaf) {
         this.map.record(view.contentDOM, pos + 1)
-        this.buildFragment(node.content, view.contentDOM as HTMLElement, pos + 1)
+        this.buildFragment(node.content, view.contentDOM, pos + 1)
+      } else {
+        this.map.recordAtom(view.dom)
       }
       return view.dom
     }
@@ -215,16 +274,45 @@ export class Renderer {
     if (!spec.toDOM) {
       throw new Error(`Matra: node "${node.type.name}" has no toDOM, so it cannot be rendered`)
     }
-    const { dom, hole } = renderSpec(spec.toDOM(node))
+    const out = spec.toDOM(node)
+    // `['p', 0]` — a tag and a hole — is what most nodes render as, and there
+    // is one of these per block on the page. Taking it directly skips the
+    // walk and the result object renderSpec would allocate to say the same
+    // thing.
+    if (
+      !node.type.isLeaf &&
+      Array.isArray(out) &&
+      out.length === 2 &&
+      typeof out[0] === 'string' &&
+      out[1] === 0
+    ) {
+      const simple = document.createElement(out[0])
+      this.map.record(simple, pos + 1)
+      this.buildFragment(node.content, simple, pos + 1)
+      fillEmptyTextblock(simple, node)
+      return simple
+    }
+    const { dom, hole } = renderSpec(out)
     if (hole && !node.type.isLeaf) {
+      if (hole !== dom) this.holes.set(dom, hole as HTMLElement)
       this.map.record(hole, pos + 1)
-      this.buildFragment(node.content, hole as HTMLElement, pos + 1)
+      this.buildFragment(node.content, hole, pos + 1)
       fillEmptyTextblock(hole as HTMLElement, node)
+    } else {
+      // A break, a rule, an image, a mention: one position, no insides. Said
+      // here because this is where a leaf and a mark wrapper stop looking alike.
+      this.map.recordAtom(dom)
     }
     return dom
   }
 
   // --- patching ------------------------------------------------------------
+
+  /** The element holding this node's children · a view's, a nested hole, or itself. */
+  private contentOf(dom: globalThis.Node): HTMLElement {
+    const view = this.nodeViews.contentDOM(dom)
+    return (view ?? this.holes.get(dom) ?? dom) as HTMLElement
+  }
 
   /** Reconcile one container's children, reusing DOM wherever the node is unchanged. */
   private patchFragment(
@@ -258,6 +346,13 @@ export class Renderer {
     }
 
     const count = Math.max(oldChildren.childCount, newChildren.childCount)
+    // Read straight out of the runs and hoist what the loop would otherwise
+    // ask for once per child. At two thousand blocks the loop runs two thousand
+    // times per keystroke however little each turn does, so what each turn does
+    // is the whole cost.
+    const oldList = oldChildren.content
+    const newList = newChildren.content
+    const plainDocument = this.nodeViews.empty
 
     // When the edit is confined and no blocks were added or removed, the loop
     // can start at the first child the edit reached instead of at zero.
@@ -269,8 +364,26 @@ export class Renderer {
     let offset = window.offset
 
     for (let i = window.from; i < count; i++) {
-      const oldChild = i < oldChildren.childCount ? oldChildren.child(i) : null
-      const newChild = i < newChildren.childCount ? newChildren.child(i) : null
+      const oldChild = oldList[i] ?? null
+      const newChild = newList[i] ?? null
+
+      // Outside the edit entirely: same node, same DOM, and the position map
+      // already accounts for the shift. There is nothing to ask about, so the
+      // loop steps over it without reaching into the DOM at all — `childNodes`
+      // is a live list, and indexing it for a child nobody is going to touch
+      // was the single most expensive thing a keystroke did on a long
+      // document. This is what makes a keystroke cost the size of the
+      // paragraph rather than the size of the document.
+      if (
+        oldChild !== null &&
+        oldChild === newChild &&
+        plainDocument &&
+        this.untouched(contentStart + offset, newChild.nodeSize)
+      ) {
+        offset += newChild.nodeSize
+        continue
+      }
+
       const dom = target.childNodes[i] ?? null
 
       if (!newChild) {
@@ -287,19 +400,6 @@ export class Renderer {
 
       if (!oldChild || !dom) {
         target.appendChild(this.buildNode(newChild, contentStart + offset))
-        offset += newChild.nodeSize
-        continue
-      }
-
-      // Outside the edit entirely: same node, same DOM, and the position map
-      // already accounts for the shift. There is nothing to ask about, so the
-      // loop just steps over it. This is what makes a keystroke cost the size
-      // of the paragraph rather than the size of the document.
-      if (
-        oldChild === newChild &&
-        this.nodeViews.empty &&
-        this.untouched(contentStart + offset, newChild.nodeSize)
-      ) {
         offset += newChild.nodeSize
         continue
       }
@@ -344,10 +444,18 @@ export class Renderer {
         continue
       }
 
-      if (oldChild.sameMarkup(newChild) && !newChild.isText && dom.nodeType === 1) {
+      // A view is offered the change whenever the type still matches, even if
+      // the attributes moved. `sameMarkup` compares attributes too, so ticking
+      // a checkbox used to tear the item's DOM out and build it again — which
+      // made `update` a hook that could never fire for the thing it exists for,
+      // and cost a rebuild per tick on a list with a hundred items.
+      const owned = dom.nodeType === 1 && this.nodeViews.owns(dom)
+      const patchable = owned ? oldChild.type === newChild.type : oldChild.sameMarkup(newChild)
+
+      if (patchable && !newChild.isText && dom.nodeType === 1) {
         const updated = this.nodeViews.update(dom, newChild, contentStart + offset)
         if (updated) {
-          const contentDOM = this.nodeViews.contentDOM(dom) ?? (dom as HTMLElement)
+          const contentDOM = this.contentOf(dom)
           this.map.record(contentDOM, contentStart + offset + 1)
           this.patchFragment(
             contentDOM as HTMLElement,
@@ -418,17 +526,16 @@ export class Renderer {
    */
   private positionUnchanged(node: Node, dom: globalThis.Node, pos: number): boolean {
     if (node.isText || dom.nodeType !== 1) return true
-    const contentDOM = this.nodeViews.contentDOM(dom) ?? dom
-    return this.map.contentStart(contentDOM) === pos + 1
+    return this.map.contentStart(this.contentOf(dom)) === pos + 1
   }
 
   /** Re-register positions for a subtree whose DOM was left untouched. */
   private recordNode(node: Node, dom: globalThis.Node, pos: number): void {
     if (node.isText || dom.nodeType !== 1) return
     this.nodeViews.reposition(dom, pos)
-    const contentDOM = this.nodeViews.contentDOM(dom) ?? dom
+    const contentDOM = this.contentOf(dom)
     this.map.record(contentDOM, pos + 1)
-    this.recordWithin(node.content, contentDOM as HTMLElement, pos + 1)
+    this.recordWithin(node.content, contentDOM, pos + 1)
   }
 
   private recordWithin(fragment: Fragment, target: HTMLElement, start: number): void {
@@ -493,21 +600,24 @@ export function renderSpec(spec: DOMOutputSpec): {
 } {
   if (typeof spec === 'string') return { dom: document.createElement(spec), hole: null }
 
-  const [tag, ...rest] = spec
-  const dom = document.createElement(tag)
+  // Indexed rather than destructured: `[tag, ...rest]` allocates a second array
+  // for every element on the page, and `rest.slice(start)` allocates a third.
+  // A spec is usually two entries long and there is one per node.
+  const dom = document.createElement(spec[0] as string)
   let hole: globalThis.Node | null = null
-  let start = 0
+  let start = 1
 
-  const first = rest[0]
+  const first = spec[1]
   if (first && typeof first === 'object' && !Array.isArray(first)) {
     for (const [name, value] of Object.entries(first as Record<string, unknown>)) {
       setSafeAttribute(dom, name, value)
     }
     finalizeElement(dom)
-    start = 1
+    start = 2
   }
 
-  for (const child of rest.slice(start)) {
+  for (let i = start; i < spec.length; i++) {
+    const child = spec[i]
     if (child === 0) {
       hole = dom
       continue

@@ -29,6 +29,22 @@ interface Entry {
  */
 export class DOMMap {
   private readonly starts = new WeakMap<globalThis.Node, Entry>()
+  /**
+   * Elements that stand for a node with no content of its own.
+   *
+   * A `<br>`, an `<img>`, an `<hr>`, a mention — each is one position in the
+   * model and none of them is a recorded container, so counting their borders
+   * gives zero and every caret position after one of them in the same block
+   * comes back one short. That is not a rounding error: press Enter at the end
+   * of a heading that contains a line break and the split lands one character
+   * early, so the last letter of the heading walks off into the new block.
+   *
+   * The renderer knows which elements these are at the moment it builds them,
+   * so it says so rather than leaving this to guess from the DOM shape — a
+   * `<br>` the editor put there and a `<br>` holding an empty block open look
+   * identical from here, and only one of them is content.
+   */
+  private readonly atoms = new WeakSet<globalThis.Node>()
   /** Current-coordinate position → DOM. A cache; every read is verified. */
   private readonly nodes = new Map<number, globalThis.Node>()
   /** One StepMap per edit since the last full record. */
@@ -46,7 +62,16 @@ export class DOMMap {
 
   record(dom: globalThis.Node, contentStart: number): void {
     if (contentStart === 0) this.root = dom
-    this.starts.set(dom, { pos: contentStart, gen: this.maps.length })
+    // Reuse the entry when there is one. Re-recording is what a patch does to
+    // every node whose subtree it kept, and a fresh object per node per edit is
+    // garbage generated to say what the old object already said.
+    const entry = this.starts.get(dom)
+    if (entry) {
+      entry.pos = contentStart
+      entry.gen = this.maps.length
+    } else {
+      this.starts.set(dom, { pos: contentStart, gen: this.maps.length })
+    }
     this.nodes.set(contentStart, dom)
   }
 
@@ -54,6 +79,19 @@ export class DOMMap {
     this.nodes.clear()
     this.maps = []
     this.root = null
+  }
+
+  /**
+   * Drop the backlog and start a fresh generation.
+   *
+   * The caller must re-record every entry immediately afterwards, in current
+   * coordinates — anything left behind would be read as current when it is not.
+   * This is how the backlog is cleared without throwing the rendered DOM away
+   * with it.
+   */
+  reindex(): void {
+    this.nodes.clear()
+    this.maps = []
   }
 
   /**
@@ -197,9 +235,17 @@ export class DOMMap {
     return this.starts.has(dom) ? 1 : 0
   }
 
+  /** This element is one model position and has no insides worth counting. */
+  recordAtom(dom: globalThis.Node): void {
+    this.atoms.add(dom)
+  }
+
   /** Model size of a rendered DOM node, borders included. */
   private modelSize(dom: globalThis.Node): number {
     if (dom.nodeType === 3) return dom.nodeValue?.length ?? 0
+    // A leaf costs one whatever it renders as. A mention draws its own label as
+    // text, and adding that text up would make a five-letter name cost five.
+    if (this.atoms.has(dom)) return 1
     let inner = 0
     for (const child of Array.from(dom.childNodes)) inner += this.modelSize(child)
     return inner + this.borderSize(dom) * 2

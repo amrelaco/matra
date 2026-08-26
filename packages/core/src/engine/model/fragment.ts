@@ -9,10 +9,24 @@ import type { Node } from './node'
 export class Fragment {
   readonly size: number
 
-  private constructor(readonly content: readonly Node[]) {
-    let size = 0
-    for (const child of content) size += child.nodeSize
-    this.size = size
+  /**
+   * `size` is passed only where the caller already knows it.
+   *
+   * Summing the children is a walk of the whole run, and a fragment is built
+   * once per edit at every level between the change and the root — so on a long
+   * document the sum, not the change, is what typing costs.
+   */
+  private constructor(
+    readonly content: readonly Node[],
+    size?: number,
+  ) {
+    if (size !== undefined) {
+      this.size = size
+      return
+    }
+    let total = 0
+    for (const child of content) total += child.nodeSize
+    this.size = total
   }
 
   static empty = new Fragment([])
@@ -66,6 +80,31 @@ export class Fragment {
     if (!other.size) return this
     if (!this.size) return other
     return new Fragment(joinText([...this.content, ...other.content]))
+  }
+
+  /**
+   * The same run with one child swapped.
+   *
+   * This is the shape every nested edit takes: a paragraph changes, and each
+   * ancestor up to the document is rebuilt around the one child that moved.
+   * Doing it by cut-append-append walks the run three times and re-derives a
+   * size that differs from the old one by exactly one child, which is why a
+   * keystroke used to cost the length of the document. Here it is one array
+   * copy and one subtraction.
+   *
+   * Text is the exception: a text node can merge with its neighbours, so the
+   * canonical form has to be rebuilt rather than assumed. Nothing else can, so
+   * everything else takes the short way.
+   */
+  replaceChild(index: number, node: Node): Fragment {
+    const old = this.content[index]
+    if (!old) throw new RangeError(`Matra: no child at index ${index}`)
+    if (old === node) return this
+
+    const next = this.content.slice()
+    next[index] = node
+    if (old.isText || node.isText) return Fragment.from(next)
+    return new Fragment(next, this.size - old.nodeSize + node.nodeSize)
   }
 
   /** The index and offset of the child containing `pos`. */
