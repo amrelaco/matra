@@ -257,3 +257,7 @@ if (document.readyState === 'loading') {
 } else {
   watch()
 }
+
+// Client-side navigation swaps the document without reloading, so the new page
+// arrives static unless this runs again.
+document.addEventListener('astro:page-load', watch)

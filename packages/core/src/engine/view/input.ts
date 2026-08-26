@@ -1,8 +1,11 @@
+import { liftListItem } from '../list-commands'
 import { Fragment } from '../model/fragment'
+import type { ResolvedPos } from '../model/resolved-pos'
 import type { Schema } from '../model/schema'
 import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
 import { Slice } from '../transform/slice'
+import { ReplaceStep } from '../transform/step'
 
 /**
  * What the user asked the browser to do.
@@ -64,13 +67,30 @@ export function applyIntent(
 
     case 'deleteContentBackward': {
       if (handlers.onBackspace?.()) return null
-      const tr = state.tr
-      // An empty selection means "remove the character before the caret".
-      const start = from === to ? Math.max(0, from - 1) : from
-      if (start === to) return null
-      tr.delete(start, to)
-      tr.selectAt(start)
-      return tr
+
+      if (from !== to) {
+        const tr = state.tr
+        tr.delete(from, to)
+        tr.selectAt(from)
+        return tr
+      }
+
+      const $from = state.doc.resolve(from)
+      // Inside the text of a block: take the character before the caret.
+      if ($from.parentOffset > 0) {
+        const tr = state.tr
+        tr.delete(from - 1, from)
+        tr.selectAt(from - 1)
+        return tr
+      }
+
+      // At the very start of a block, backspace is not a character delete at
+      // all — it joins this block to the one before it, or lifts it out of the
+      // list it is in. Treating it as "delete one position back" produces a
+      // step that crosses a node boundary, which the schema refuses, and the
+      // key appears to do nothing. That is how an empty list item becomes
+      // impossible to remove.
+      return joinBackward(state, $from)
     }
 
     case 'deleteContentForward': {
@@ -127,4 +147,72 @@ export function splitBlock(state: EditorState, from: number, to: number): Transa
   // Land the caret at the start of the new block.
   tr.selectAt(blockStart + first.nodeSize + 1)
   return tr
+}
+
+/**
+ * Backspace at the start of a block.
+ *
+ * Three things it might mean, tried in the order a person expects:
+ * lift the block out of its parent, merge it into the block before it, or —
+ * when the thing before it is not text at all, like a rule or an image —
+ * remove that.
+ */
+function joinBackward(state: EditorState, $from: ResolvedPos): Transaction | null {
+  const depth = $from.depth
+  if (depth === 0) return null
+
+  // An item inside a list gets lifted out rather than merged into the item
+  // above it, which is what every editor does and what people expect.
+  const parent = $from.node(depth - 1)
+  if (depth > 1 && parent.type.name === 'listItem') {
+    const itemType = state.schema.nodes.listItem
+    if (itemType) {
+      const tr = state.tr
+      // The caret came from a DOM event, so the state's selection is wherever
+      // it was last put. List lifting reads the selection, and reads the wrong
+      // one unless it is moved here first.
+      tr.selectAt($from.pos)
+      if (liftListItem(state, tr, itemType) && tr.docChanged) return tr
+    }
+  }
+
+  // An empty block inside a wrapper — the empty list item you cannot get rid
+  // of — is removed wrapper and all. Merging it into the item above would leave
+  // the bullet behind, which is the thing that felt broken.
+  if ($from.parent.content.size === 0 && depth > 1) {
+    const itemDepth = depth - 1
+    const itemStart = $from.before(itemDepth)
+    const itemEnd = $from.after(itemDepth)
+    const tr = state.tr
+    if (tr.maybeStep(new ReplaceStep(itemStart, itemEnd, Slice.empty))) {
+      tr.selectAt(Math.max(0, itemStart - 1))
+      return tr
+    }
+  }
+
+  const blockStart = $from.before(depth)
+  if (blockStart <= 0) return null
+
+  const tr = state.tr
+  // Removing the boundary between the two blocks is what merges them.
+  const step = new ReplaceStep(blockStart - 1, blockStart + 1, Slice.empty)
+  if (tr.maybeStep(step)) {
+    tr.selectAt(blockStart - 1)
+    return tr
+  }
+
+  // Whatever sits before this block cannot be merged with — a rule, an image,
+  // a table. Remove it instead of doing nothing at all.
+  const $before = tr.doc.resolve(blockStart)
+  const previous = $before.nodeBefore
+  if (previous) {
+    const removeFrom = blockStart - previous.nodeSize
+    const remove = new ReplaceStep(removeFrom, blockStart, Slice.empty)
+    if (tr.maybeStep(remove)) {
+      tr.selectAt(removeFrom)
+      return tr
+    }
+  }
+
+  return null
 }

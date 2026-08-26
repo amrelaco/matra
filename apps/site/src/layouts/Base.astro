@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions'
 import '../styles/global.css'
 interface Props {
   title: string
@@ -20,9 +21,34 @@ const { title, description, editable = true } = Astro.props
     <meta name="theme-color" content="#111114" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--
+      Client-side navigation. Moving between pages swaps the document instead of
+      reloading it, so the fonts stay warm and the page does not flash white
+      between one doc page and the next.
+    -->
+    <ClientRouter />
   </head>
   <body>
     <slot />
+
+    <script>
+      /**
+       * Anything leaving the site opens in a new tab.
+       *
+       * Marked here rather than on each link: one rule cannot be forgotten,
+       * and rel=noopener is not optional — a new tab gets a handle on this one
+       * without it.
+       */
+      const markExternal = () => {
+        for (const link of document.querySelectorAll('a[href^="http"]')) {
+          if (link.host === window.location.host) continue
+          link.setAttribute('target', '_blank')
+          link.setAttribute('rel', 'noopener noreferrer')
+        }
+      }
+      markExternal()
+      document.addEventListener('astro:page-load', markExternal)
+    </script>
     {editable && <script>import '../scripts/editable.ts'</script>}
 
 
