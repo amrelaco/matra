@@ -35,6 +35,8 @@ const nav = [
       ['All of them', '/docs/frameworks'],
       ['React', '/docs/react'],
       ['Vue', '/docs/vue'],
+      ['Svelte', '/docs/svelte'],
+      ['Solid', '/docs/solid'],
     ],
   ],
   [
@@ -123,11 +125,22 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
   <Footer />
 
   <script>
-    // Built from the article that actually rendered, so it cannot advertise a
-    // heading that is not there.
-    const article = document.getElementById('article')
-    const toc = document.getElementById('toc')
-    if (article && toc) {
+    /**
+     * Wire the article, on arrival and on every arrival after that.
+     *
+     * A module only ever runs once, so on a client-side navigation between two
+     * docs pages this happened on whichever one you landed on first and never
+     * again — leaving "On this page" with a heading and nothing under it, and
+     * every code block without its copy button.
+     */
+    function wireArticle() {
+      const article = document.getElementById('article')
+      const toc = document.getElementById('toc')
+      if (!article || !toc) return
+
+      // Built from the article that actually rendered, so it cannot advertise
+      // a heading that is not there.
+      toc.replaceChildren()
       const headings = Array.from(article.querySelectorAll('h2'))
       for (const heading of headings) {
         if (!heading.id) {
@@ -143,22 +156,51 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
         link.textContent = heading.textContent
         toc.appendChild(link)
       }
-      if (headings.length === 0) toc.closest('.docs-toc')?.setAttribute('hidden', '')
+
+      const aside = toc.closest('.docs-toc')
+      if (headings.length === 0) aside?.setAttribute('hidden', '')
+      else aside?.removeAttribute('hidden')
+
+      // Mark the section being read. A contents list that never says where you
+      // are is a list of links, not a map.
+      if ('IntersectionObserver' in window && headings.length > 0) {
+        const links = new Map(
+          Array.from(toc.querySelectorAll('a')).map((link) => [link.hash.slice(1), link]),
+        )
+        const seen = new Set()
+        const watcher = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) seen.add(entry.target.id)
+              else seen.delete(entry.target.id)
+            }
+            for (const [id, link] of links) link.classList.toggle('on', seen.has(id))
+          },
+          { rootMargin: '-80px 0px -70% 0px' },
+        )
+        for (const heading of headings) watcher.observe(heading)
+      }
+
+      // A copy button on every block. Docs that make you select code by hand
+      // are docs nobody trusts.
+      for (const block of article.querySelectorAll('pre')) {
+        if (block.querySelector('.copy-code')) continue
+        const button = document.createElement('button')
+        button.className = 'copy-code'
+        button.type = 'button'
+        button.textContent = 'copy'
+        button.addEventListener('click', async () => {
+          await navigator.clipboard?.writeText(block.querySelector('code')?.textContent ?? '')
+          button.textContent = 'copied'
+          setTimeout(() => {
+            button.textContent = 'copy'
+          }, 1400)
+        })
+        block.appendChild(button)
+      }
     }
 
-    // A copy button on every block. Docs that make you select code by hand are
-    // docs nobody trusts.
-    for (const block of document.querySelectorAll('.docs-article pre')) {
-      const button = document.createElement('button')
-      button.className = 'copy-code'
-      button.type = 'button'
-      button.textContent = 'copy'
-      button.addEventListener('click', async () => {
-        await navigator.clipboard?.writeText(block.querySelector('code')?.textContent ?? '')
-        button.textContent = 'copied'
-        setTimeout(() => { button.textContent = 'copy' }, 1400)
-      })
-      block.appendChild(button)
-    }
+    wireArticle()
+    document.addEventListener('astro:page-load', wireArticle)
   </script>
 </Base>

@@ -179,7 +179,16 @@ function wire(): void {
   for (const button of buttons()) {
     if (button.dataset.wired === 'true') continue
     button.dataset.wired = 'true'
-    button.appendChild(icon(KeyboardIcon as IconData, 17))
+    button.appendChild(icon(KeyboardIcon as IconData, 15))
+
+    // The button says what it is and which key does it, rather than being a
+    // square with a glyph in it that you have to press to find out.
+    const label = document.createElement('span')
+    label.textContent = 'Shortcuts'
+    const key = document.createElement('kbd')
+    key.textContent = '?'
+    button.append(label, key)
+
     button.addEventListener('click', toggle)
   }
 }

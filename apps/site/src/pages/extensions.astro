@@ -616,13 +616,17 @@ const spell = (n: number) => WORDS[n] ?? String(n)
         core stays MIT whatever happens to them.
       </p>
 
-      <div class="paid bleed">
-        {paid.map((item) => (
-          <div class="paid-card boxed filled">
-            <div class="paid-head">
-              <b>{item.name}</b>
-              <span class="mono">{item.pkg}</span>
-            </div>
+      <!--
+        One band of three, not three cards in a grid built for two.
+        The third card used to sit alone on a second row beside a hole, which
+        is what a grid does when the count and the columns disagree.
+      -->
+      <div class="paid fills bleed" data-static>
+        {paid.map((item, index) => (
+          <div class="paid-card">
+            <p class="paid-no mono">{String(index + 1).padStart(2, '0')}</p>
+            <b>{item.name}</b>
+            <code class="paid-pkg mono">npm i {item.pkg}</code>
             <p>{item.what}</p>
             <ul class="chips" data-static>
               {item.items.map((thing) => (
@@ -959,12 +963,45 @@ const spell = (n: number) => WORDS[n] ?? String(n)
     .dir-copy:hover { color: var(--ink); }
     .dir-copy.done { color: var(--indigo); }
 
-    .paid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-top: var(--s4); }
-    .paid-card { padding: 24px 26px; }
-    .paid-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-    .paid-head b { font-family: var(--font-display); font-size: 21px; font-weight: 400; }
-    .paid-head span { font-size: 11px; color: var(--ink-faint); }
-    .paid-card p { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 16px; line-height: 1.6; }
+    /* One cell per package, counted from the list · see .hanging on the home
+       page, which broke the day an eighth group shipped. */
+    .paid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+      margin-top: var(--s4);
+    }
+    .paid-card {
+      padding: var(--s4) calc(var(--inset) + 20px);
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-position: 100% 0;
+      background-repeat: no-repeat;
+    }
+    .paid-card:last-child { background-image: none; }
+    .paid-no { font-size: 11px; color: var(--indigo); letter-spacing: 0.1em; margin: 0; }
+    .paid-card b {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 23px;
+      font-weight: 400;
+      margin: 10px 0 8px;
+    }
+    /* The command, because "paid" should not mean "ask us how". */
+    .paid-pkg {
+      display: block;
+      font-size: 11px;
+      color: var(--ink-soft);
+      padding: 7px 9px;
+      background-color: var(--code-bg);
+      --dash: 4px;
+      --dash-gap: 4px;
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
+    .paid-card p { color: var(--ink-soft); font-size: 14px; margin: 14px 0 16px; line-height: 1.6; }
 
     @media (max-width: 900px) {
       .ext-row { grid-template-columns: 1fr; gap: var(--s3); }
@@ -979,7 +1016,13 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       .dir-what { grid-column: 1 / -1; }
       .dir-use { grid-column: 1 / -1; }
       .paid { grid-template-columns: 1fr; }
-      .paid-card { padding: 20px; }
+      .paid-card {
+        padding: var(--s3) calc(var(--inset) + 18px);
+        background-image: var(--dash-h);
+        background-size: 100% 1px;
+        background-position: 0 100%;
+      }
+      .paid-card:last-child { background-image: none; }
       .counts div { padding: 16px 18px; }
     }
   </style>

@@ -507,6 +507,11 @@ th {
     right: 14px;
     bottom: 14px;
   }
+  /* Just the icon at this width · the label is the first thing to go. */
+  .keys-button span,
+  .keys-button kbd {
+    display: none;
+  }
   .keys-panel {
     right: 12px;
     left: 12px;
@@ -610,19 +615,33 @@ th {
   max-width: var(--page-wide);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 200px;
-  gap: var(--s5);
+  grid-template-columns: 250px minmax(0, 1fr) 230px;
+  /* No gap · the dividers are the gap, and they belong to the article. */
+  gap: 0;
   padding: var(--s5) calc(var(--gutter) + var(--inset)) var(--s6);
 }
+
+/*
+ * The dividers hang off the article, not off the columns beside it.
+ *
+ * A sticky sidebar is only as tall as its own list, so a rule drawn on it
+ * stopped a third of the way down the page and left two lines ending in
+ * mid-air. The article is the tall column; its edges are the full height of
+ * the page by definition.
+ */
+.docs-article {
+  padding: 0 var(--s4);
+  background-image: var(--dash-v), var(--dash-v);
+  background-size: 1px 100%, 1px 100%;
+  background-position: 0 0, 100% 0;
+  background-repeat: no-repeat;
+}
+
 .docs-side {
   position: sticky;
   top: 96px;
   align-self: start;
-  background-image: var(--dash-v);
-  background-size: 1px 100%;
-  background-position: 100% 0;
-  background-repeat: no-repeat;
-  padding-right: var(--s3);
+  padding-right: var(--s4);
 }
 .docs-group {
   margin-bottom: var(--s3);
@@ -669,6 +688,7 @@ th {
 .docs-article {
   min-width: 0;
 }
+
 .docs-article h1 {
   font-size: clamp(34px, 4vw, 46px);
   margin: 14px 0 var(--s3);
@@ -776,12 +796,7 @@ th {
   position: sticky;
   top: 96px;
   align-self: start;
-  /* The mirror of the sidebar's rule · three tracks, two dividers. */
-  background-image: var(--dash-v);
-  background-size: 1px 100%;
-  background-position: 0 0;
-  background-repeat: no-repeat;
-  padding-left: var(--s3);
+  padding-left: var(--s4);
 }
 .docs-toc a {
   display: block;
@@ -799,13 +814,19 @@ th {
   background-repeat: no-repeat;
   line-height: 1.45;
 }
-.docs-toc a:hover {
+.docs-toc a:hover,
+.docs-toc a.on {
   color: var(--ink);
   background-image: repeating-linear-gradient(
     to bottom,
     var(--indigo) 0 var(--dash),
     transparent var(--dash) calc(var(--dash) + var(--dash-gap))
   );
+}
+
+/* Where you are, rather than where the pointer is. */
+.docs-toc a.on {
+  color: var(--indigo);
 }
 
 .docs-pager {
@@ -1350,29 +1371,53 @@ html[data-theme-changing] {
 
 /* --- the keyboard panel ---------------------------------------------------- */
 
+/*
+ * The shortcut button, drawn in the site's own frame.
+ *
+ * It had its own copy of the dashed border, at the page's light weight, on a
+ * fill — which is the one place that weight disappears. It takes the firmer
+ * rule the window chrome takes, and says what it is rather than being a square
+ * with a glyph in it.
+ */
 .keys-button {
   position: fixed;
   right: 22px;
   bottom: 22px;
   z-index: 55;
-  width: 42px;
-  height: 42px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 9px 13px;
+  --rule-strong: var(--rule-firm);
   background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
   background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
   background-position: 0 0, 0 100%, 0 0, 100% 0;
   background-repeat: no-repeat;
-  background-color: var(--paper);
+  background-color: var(--surface);
   color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
   cursor: pointer;
+}
+
+.keys-button kbd {
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 5px;
+  color: var(--ink);
+  --dash: 3px;
+  --dash-gap: 3px;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
 }
 
 .keys-button:hover,
 .keys-button[aria-expanded="true"] {
   color: var(--ink);
-  border-color: var(--ink);
+  background-color: var(--surface-2);
 }
 
 .keys-panel {
