@@ -85,15 +85,16 @@ export function strokeFromEvent(event: KeyboardEvent): KeyStroke {
 }
 
 export function strokesMatch(a: KeyStroke, b: KeyStroke): boolean {
-  // Shift is implied by the character on most layouts, so it is only compared
-  // for named keys like Enter or Tab.
-  const compareShift = a.key.length > 1
+  // Shift is compared for every key, including single characters. Skipping it
+  // there made `Mod-b` and `Mod-Shift-b` the same stroke, so Mod-B fired bold
+  // *and* blockquote — the binding that happened to be registered first won,
+  // and the other one fired too.
   return (
     a.key === b.key &&
+    a.shift === b.shift &&
     a.alt === b.alt &&
     a.ctrl === b.ctrl &&
-    a.meta === b.meta &&
-    (!compareShift || a.shift === b.shift)
+    a.meta === b.meta
   )
 }
 
@@ -101,6 +102,13 @@ export function strokesMatch(a: KeyStroke, b: KeyStroke): boolean {
 export class Keymap {
   private readonly entries: Array<{ stroke: KeyStroke; run: () => boolean }> = []
 
+  /**
+   * Several bindings may share a stroke, deliberately.
+   *
+   * Enter splits a list item when the caret is in one and returns false when it
+   * is not, so the next binding gets its turn. Removing the earlier binding
+   * would break that chain — the fallthrough is the feature.
+   */
   add(binding: string, run: () => boolean): void {
     this.entries.push({ stroke: parseBinding(binding), run })
   }

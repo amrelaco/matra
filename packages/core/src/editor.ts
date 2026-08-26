@@ -296,7 +296,11 @@ export function createEditor<const T extends readonly AnyDef[]>(
         if (def.kind !== 'node' || !def.nodeView) continue
         const factory = def.nodeView
         nodeViews[def.name] = ({ node, getPos }) => {
-          const spec = factory({ node: node.toJSON() as unknown as DocNode, getPos })
+          const spec = factory({
+            node: node.toJSON() as unknown as DocNode,
+            getPos,
+            editor: editor as Editor,
+          })
           return {
             dom: spec.dom,
             contentDOM: spec.contentDOM,

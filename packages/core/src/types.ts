@@ -118,6 +118,14 @@ export interface NodeViewProps {
   node: DocNode
   /** Where this node starts, read at call time rather than cached. */
   getPos(): number
+  /**
+   * The editor this view belongs to.
+   *
+   * Without it a node view can render a control and not act on it — a checkbox
+   * that ticks visually and leaves the document untouched, which is worse than
+   * no checkbox.
+   */
+  editor: Editor
 }
 
 export type NodeViewFactory = (props: NodeViewProps) => NodeViewSpec

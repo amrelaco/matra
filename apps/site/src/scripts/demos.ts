@@ -91,6 +91,45 @@ mount('chat', () =>
   }),
 )
 
+// --- the chat actually sends ------------------------------------------------
+/**
+ * Enter sends, Shift-Enter breaks the line.
+ *
+ * A send button that does nothing is worse than no send button: the section is
+ * arguing that constraining an editor is real work, and a dead control argues
+ * the opposite.
+ */
+const chat = editors.get('chat')
+const log = window.document.getElementById('chat-log')
+const send = window.document.getElementById('chat-send')
+
+if (chat && log && send) {
+  const post = () => {
+    const text = chat.getText().trim()
+    if (!text) return
+
+    const bubble = window.document.createElement('div')
+    bubble.className = 'bubble me'
+    // textContent, not innerHTML: this is somebody else's typing.
+    bubble.textContent = text
+    log.appendChild(bubble)
+    log.scrollTop = log.scrollHeight
+
+    chat.setContent('<p></p>')
+    chat.commands.focus()
+  }
+
+  send.addEventListener('click', post)
+
+  const element = window.document.getElementById('ed-chat')
+  element?.addEventListener('keydown', (event) => {
+    const key = event as KeyboardEvent
+    if (key.key !== 'Enter' || key.shiftKey) return
+    key.preventDefault()
+    post()
+  })
+}
+
 // --- toolbars ---------------------------------------------------------------
 for (const button of Array.from(
   window.document.querySelectorAll<HTMLButtonElement>('[data-cmd]'),

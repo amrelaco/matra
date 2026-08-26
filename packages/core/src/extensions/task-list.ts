@@ -37,9 +37,11 @@ export const taskList: NodeDef<{ toggleTaskList: Command }> = {
   ],
 }
 
+const name = 'taskItem'
+
 export const taskItem: NodeDef<{ toggleTaskItem: Command }> = {
   kind: 'node',
-  name: 'taskItem',
+  name,
   priority: 100,
   content: 'paragraph block*',
   attrs: { checked: { default: false } },
@@ -64,6 +66,65 @@ export const taskItem: NodeDef<{ toggleTaskItem: Command }> = {
       ['div', { class: 'matra-task-body' }, 0],
     ]
   },
+  /**
+   * A node view, so the checkbox does something.
+   *
+   * Rendered through toDOM the box was the browser's own: clicking it flipped
+   * its appearance and left the document alone, so nothing that depends on the
+   * attribute — the strike-through, the JSON you save — ever changed. The view
+   * owns the click and writes the attribute, which is the only version of this
+   * that is not a lie.
+   */
+  nodeView: ({ node, getPos, editor }) => {
+    const checked = node.attrs?.checked === true
+
+    const item = document.createElement('li')
+    item.className = 'matra-task-item'
+    item.setAttribute('data-checked', String(checked))
+
+    const label = document.createElement('label')
+    label.className = 'matra-task-check'
+    label.contentEditable = 'false'
+
+    const box = document.createElement('input')
+    box.type = 'checkbox'
+    box.checked = checked
+    box.addEventListener('mousedown', (event) => event.preventDefault())
+    box.addEventListener('change', () => {
+      // The generic Editor type does not know this extension's commands, which
+      // is the price of the extension not knowing the editor's.
+      const commands = editor.commands as unknown as {
+        select(at: number): boolean
+        toggleTaskItem(): boolean
+      }
+      // Put the selection inside the item first: the command reads where the
+      // caret is, and a click on a checkbox does not move it.
+      commands.select(getPos() + 1)
+      commands.toggleTaskItem()
+    })
+
+    label.appendChild(box)
+    const body = document.createElement('div')
+    body.className = 'matra-task-body'
+
+    item.append(label, body)
+
+    return {
+      dom: item,
+      contentDOM: body,
+      update: (next) => {
+        if (next.type !== name) return false
+        const now = next.attrs?.checked === true
+        item.setAttribute('data-checked', String(now))
+        box.checked = now
+        return true
+      },
+      // The checkbox is ours; the editor should not treat a click on it as a
+      // click into the document.
+      stopEvent: (event) => event.target === box,
+    }
+  },
+
   commands: {
     toggleTaskItem: (ctx) => {
       if (!ctx.inNode('taskItem')) return false
