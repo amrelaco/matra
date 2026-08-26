@@ -112,6 +112,51 @@ if (kits.size > 0) {
   }
 }
 
+// --- the extension directory --------------------------------------------------
+// The extensions page claims to list every extension in the package. That claim
+// went stale the moment one shipped without a row, and the page then disagreed
+// with itself: the strip at the top said 27 while the directory said 39. So the
+// list is compared against what the package actually exports.
+let listed = 0
+try {
+  const core = await import('../packages/core/dist/index.js')
+  const isDefinition = (value) =>
+    value && typeof value === 'object' && 'kind' in value && 'name' in value
+  const FACTORY =
+    /^(placeholder|characterCount|textAlign|suggestion|uniqueId|dragHandle|tableOfContents|mention)$/
+
+  const exported = new Set(
+    Object.entries(core)
+      .filter(
+        ([name, value]) =>
+          isDefinition(value) || (typeof value === 'function' && FACTORY.test(name)),
+      )
+      .map(([name]) => name),
+  )
+  // `core` is always on and is not something anybody adds to the array.
+  exported.delete('core')
+
+  const page = await readFile('apps/site/src/pages/extensions.astro', 'utf8')
+  const table = page.slice(page.indexOf('const directory:'), page.indexOf('const inPackage'))
+  // Helpers are functions rather than extensions, and are listed after them.
+  const extensionsOnly = table.slice(0, table.indexOf("group: 'Helpers'"))
+  const rows = new Set([...extensionsOnly.matchAll(/\{\s*name: '([^']+)'/g)].map((m) => m[1]))
+  listed = rows.size
+
+  for (const name of exported) {
+    if (rows.has(name)) continue
+    problems.push(`extensions page: "${name}" ships in @matrajs/core and has no row`)
+  }
+  for (const name of rows) {
+    if (exported.has(name)) continue
+    problems.push(`extensions page: "${name}" has a row but is not exported by @matrajs/core`)
+  }
+} catch (error) {
+  // A missing build is the developer running this before `pnpm build`, not a
+  // broken site. Say so rather than failing the run on it.
+  console.warn(`skipping the extension directory check · ${error.message}`)
+}
+
 if (problems.length > 0) {
   console.error('site wiring is broken:\n')
   for (const problem of problems) console.error(`  ${problem}`)
@@ -120,5 +165,5 @@ if (problems.length > 0) {
 
 console.log(
   `site wiring ok · ${defined.size} ids, ${prefixes.length} templated, ` +
-    `${mounted.size} editors, ${kits.size} kits`,
+    `${mounted.size} editors, ${kits.size} kits, ${listed} extensions listed`,
 )
