@@ -41,9 +41,11 @@ jobs:
         run: pnpm build
 
       # The bundle size is quoted on the landing page, so it is checked here
-      # rather than discovered by a reader.
+      # rather than discovered by a reader. `--check` also refuses a committed
+      # sizes.json that nobody regenerated: a number the site prints and the
+      # bundler disagrees with is worse than no number.
       - name: Bundle budget
-        run: node scripts/size.mjs
+        run: node scripts/size.mjs --check
 
       - name: Site builds, with no dead links
         run: |
