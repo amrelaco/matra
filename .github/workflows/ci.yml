@@ -49,3 +49,9 @@ jobs:
         run: |
           pnpm --filter @matra/site build
           node scripts/links.mjs
+
+      # A script asking for an element the markup does not have is not a type
+      # error and not a dead link, so nothing else here would notice. The chat
+      # demo's send button was dead for exactly that reason.
+      - name: Site wiring
+        run: node scripts/wiring.mjs

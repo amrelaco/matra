@@ -13,6 +13,12 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
-    include: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.test.tsx'],
+    // The site is not just a brochure — its slash menu and theme switch are
+    // real code with real edge cases, and they get tested like the packages do.
+    include: [
+      'packages/*/src/**/*.test.ts',
+      'packages/*/src/**/*.test.tsx',
+      'apps/site/src/**/*.test.ts',
+    ],
   },
 })

@@ -12,7 +12,8 @@
     "check": "biome check .",
     "fix": "biome check --write .",
     "size": "node scripts/size.mjs",
-    "links": "node scripts/links.mjs"
+    "links": "node scripts/links.mjs",
+    "wiring": "node scripts/wiring.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

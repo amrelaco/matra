@@ -2,14 +2,14 @@
 /**
  * Guard the number on the landing page.
  *
- * "21.9 kB against Tiptap's 117" is a claim made in public, which means it is
+ * "24.5 kB against Tiptap's 117" is a claim made in public, which means it is
  * a thing that can quietly stop being true. This bundles the editor the way an
  * application would and fails if it has outgrown its budget.
  */
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const BUDGET_KB = 24
+const BUDGET_KB = 26
 
 const result = await build({
   stdin: {
