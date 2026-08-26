@@ -1,0 +1,112 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs
+  title="Svelte · Matra docs"
+  description="A use: action, the editor, and a store that keeps a toolbar honest. Svelte 4 and 5 from one package."
+  section="Frameworks"
+  heading="Svelte"
+>
+  <pre><code>npm i @matrajs/core @matrajs/svelte</code></pre>
+
+  <h2>An editor</h2>
+  <pre><code>{`<script>
+  import { starterKit } from '@matrajs/core'
+  import { matra } from '@matrajs/svelte'
+
+  const { action, editor, state } = matra({
+    extensions: starterKit,
+    content: '<p>Hello.</p>',
+  })
+</script>
+
+<div use:action></div>`}</code></pre>
+
+  <p>
+    <code>matra()</code> gives you three things: the <code>action</code> to put on the element,
+    the <code>editor</code> itself, and a <code>state</code> store that republishes whenever the
+    document or the selection changes.
+  </p>
+
+  <div class="note">
+    <p>
+      The editor is created immediately, not on mount. <code>editor.getJSON()</code>,
+      <code>editor.getText()</code> and every command work before anything is on screen — which
+      is what a server render, a test, and a form that submits before the user scrolls to the
+      editor all need.
+    </p>
+  </div>
+
+  <h2>A toolbar that tells the truth</h2>
+  <p>
+    Subscribe to <code>state</code> and ask the editor. The pressed state comes from the
+    document rather than from what was last clicked, so it is right after an undo, after a
+    paste, and after somebody moves the caret with the arrow keys.
+  </p>
+
+  <pre><code>{`<script>
+  import { starterKit } from '@matrajs/core'
+  import { matra } from '@matrajs/svelte'
+
+  const { action, editor, state } = matra({ extensions: starterKit })
+</script>
+
+<div class="toolbar">
+  <button
+    onclick={() => editor.commands.toggleBold()}
+    aria-pressed={$state.isActive('bold')}
+  >Bold</button>
+
+  <button
+    onclick={() => editor.commands.toggleHeading(2)}
+    aria-pressed={$state.isActive('heading', { level: 2 })}
+  >H2</button>
+
+  <span>{$state.getText().length} characters</span>
+</div>
+
+<div use:action></div>`}</code></pre>
+
+  <h2>Svelte 4 and Svelte 5</h2>
+  <p>
+    One package for both. The store is a plain <code>svelte/store</code> readable, which
+    <code>$state</code> reads identically under runes — a rune-only build would be a version
+    boundary in exchange for nothing.
+  </p>
+
+  <h2>What the action does</h2>
+  <p>Two things you would otherwise write yourself, and one of them is easy to miss:</p>
+  <ul>
+    <li>
+      Mounts on attach and destroys on detach, so a route change or a
+      <code>&#123;#if&#125;</code> block leaves nothing behind.
+    </li>
+    <li>
+      <strong>Refuses to mount twice into one element.</strong> An action re-run by a hot
+      reload, or a component rendered twice, would otherwise attach a second view to one
+      element — which is two carets fighting over it, and it looks like a browser bug rather
+      than yours.
+    </li>
+  </ul>
+
+  <h2>Reaching the editor from elsewhere</h2>
+  <p>
+    <code>editor</code> is an ordinary object. Put it in a context, a store, or a prop — there
+    is nothing framework-shaped about it, and the paid extensions do not know Svelte exists.
+  </p>
+
+  <pre><code>{`import { setContext, getContext } from 'svelte'
+
+// in the parent
+setContext('editor', editor)
+
+// in any child
+const editor = getContext('editor')`}</code></pre>
+
+  <h2>Styling</h2>
+  <p>
+    Matra ships no appearance. <a href="/docs/styling">Styling</a> covers what you style
+    yourself, which extensions bring a stylesheet, and why a slash menu is state rather than a
+    menu.
+  </p>
+</Docs>

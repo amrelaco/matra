@@ -1,0 +1,100 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+<Docs
+  title="Solid · Matra docs"
+  description="createMatra: the editor, a ref, and a signal that re-runs only what reads it."
+  section="Frameworks"
+  heading="Solid"
+>
+  <pre><code>npm i @matrajs/core @matrajs/solid</code></pre>
+
+  <h2>An editor</h2>
+  <pre><code>{`import { starterKit } from '@matrajs/core'
+import { createMatra } from '@matrajs/solid'
+
+export function Editor() {
+  const { mount } = createMatra({
+    extensions: starterKit,
+    content: '<p>Hello.</p>',
+  })
+
+  return <div ref={mount} />
+}`}</code></pre>
+
+  <p>
+    <code>createMatra()</code> gives you the <code>editor</code>, a <code>mount</code> ref, and
+    a <code>state</code> accessor. It registers its own <code>onCleanup</code>, so disposing
+    the owner destroys the editor and leaves the element safe to reuse.
+  </p>
+
+  <div class="note">
+    <p>
+      The editor is created immediately, not in <code>onMount</code>. Commands,
+      <code>getJSON()</code> and <code>getText()</code> all work before anything is on screen —
+      which is what SSR needs, and what a test needs in order not to render at all.
+    </p>
+  </div>
+
+  <h2>A toolbar that tells the truth</h2>
+  <pre><code>{`import { starterKit } from '@matrajs/core'
+import { createMatra } from '@matrajs/solid'
+
+export function Editor() {
+  const { editor, mount, state } = createMatra({ extensions: starterKit })
+
+  return (
+    <>
+      <div class="toolbar">
+        <button
+          onClick={() => editor.commands.toggleBold()}
+          aria-pressed={state().isActive('bold')}
+        >Bold</button>
+
+        <button
+          onClick={() => editor.commands.toggleHeading(2)}
+          aria-pressed={state().isActive('heading', { level: 2 })}
+        >H2</button>
+
+        <span>{state().getText().length} characters</span>
+      </div>
+
+      <div ref={mount} />
+    </>
+  )
+}`}</code></pre>
+
+  <p>
+    Only the expressions that call <code>state()</code> re-run. Solid's reactivity is not a
+    render loop, so a document change does not re-render the component — it updates the two
+    attributes and the one text node that asked.
+  </p>
+
+  <h2>Why the accessor returns the editor</h2>
+  <p>
+    <code>state()</code> hands back the editor itself rather than a snapshot. A toolbar asks
+    <code>isActive</code> at render time, and cloning a document to answer that would be the
+    expensive way to do nothing.
+  </p>
+  <p>
+    What changes behind it is a version counter, because the editor is one object whose
+    identity never changes — a signal holding it directly would never notify. That is the whole
+    of the binding, and it is the piece worth not writing twice.
+  </p>
+
+  <h2>Reaching the editor from elsewhere</h2>
+  <pre><code>{`const EditorContext = createContext()
+
+// in the parent
+<EditorContext.Provider value={editor}>{props.children}</EditorContext.Provider>
+
+// in any child
+const editor = useContext(EditorContext)`}</code></pre>
+
+  <h2>Styling</h2>
+  <p>
+    Matra ships no appearance. <a href="/docs/styling">Styling</a> covers what you style
+    yourself, which extensions bring a stylesheet, and why a slash menu is state rather than a
+    menu.
+  </p>
+</Docs>

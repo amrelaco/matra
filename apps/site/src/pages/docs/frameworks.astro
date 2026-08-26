@@ -4,10 +4,10 @@ import Docs from '../../layouts/Docs.astro'
 /**
  * Every framework, because the editor does not have a favourite.
  *
- * React and Vue have bindings; nothing else needs one. That was true before
- * this page existed and invisible, which is a conversion problem rather than a
+ * Four have bindings and nothing else needs one. That was true before this
+ * page existed and invisible, which is a conversion problem rather than a
  * technical one — a Svelte developer landing on a page listing React and Vue
- * concludes it is not for them.
+ * concluded it was not for them.
  *
  * The lifecycle every snippet below wraps is the same three calls, and it is
  * tested in `packages/core/src/lifecycle.test.ts` rather than being plausible
@@ -16,11 +16,13 @@ import Docs from '../../layouts/Docs.astro'
 const bindings: [string, string, string][] = [
   ['React', '@matrajs/react', 'useEditor, useEditorState, useEditorFocus, EditorContent'],
   ['Vue', '@matrajs/vue', 'useEditor, EditorContent'],
+  ['Svelte', '@matrajs/svelte', 'matra — a use: action, the editor, and a store'],
+  ['Solid', '@matrajs/solid', 'createMatra — the editor, a ref and a signal'],
 ]
 ---
 <Docs
   title="Frameworks · Matra docs"
-  description="React and Vue have bindings. Svelte, Solid, Angular, Qwik and plain JavaScript need ten lines, and here they are."
+  description="React, Vue, Svelte and Solid have bindings. Angular, Qwik and plain JavaScript need three calls, and here they are."
   section="Getting started"
   heading="Frameworks"
 >
@@ -30,7 +32,7 @@ const bindings: [string, string, string][] = [
     question is how much sugar there is.
   </p>
 
-  <h2>Two have bindings</h2>
+  <h2>Four have bindings</h2>
   <div class="scroll">
     <table>
       <thead><tr><th></th><th>Package</th><th>What you get</th></tr></thead>
@@ -42,9 +44,10 @@ const bindings: [string, string, string][] = [
     </table>
   </div>
   <p>
-    Both are MIT, both are under a hundred lines, and neither re-implements anything. They
-    exist because React and Vue both want the editor's changes to become a re-render, and
-    doing that by hand is the one piece of boilerplate worth removing.
+    All four are MIT, all four are under a hundred lines, and none re-implements anything. They
+    exist for two reasons: turning the editor's changes into a re-render is the one piece of
+    boilerplate worth removing, and mounting twice into one element is the mistake everybody
+    makes once. Each binding guards it.
   </p>
 
   <h2>Everything else is three calls</h2>
@@ -67,48 +70,63 @@ editor.destroy()`}</code></pre>
   <div class="note">
     <p>
       The guard worth copying is <code>editor.unsafe.view</code>. It is truthy once mounted, so
-      a component that renders twice does not attach a second view to one element. Both
-      bindings use it and so should yours.
+      a component that renders twice does not attach a second view to one element. Every
+      binding uses it and so should yours.
     </p>
   </div>
 
   <h2>Svelte</h2>
-  <p>An action, which is exactly the shape Svelte has for this. No package needed.</p>
+  <p>
+    An action, which is exactly the shape Svelte has for this. Stores rather than runes, so
+    the same package works in Svelte 4 and 5.
+  </p>
   <pre><code>{`<script>
-  import { createEditor, starterKit } from '@matrajs/core'
+  import { starterKit } from '@matrajs/core'
+  import { matra } from '@matrajs/svelte'
 
-  let editor = $state(null)
-
-  function matra(node) {
-    const instance = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
-    instance.mount(node)
-    editor = instance
-    return { destroy: () => instance.destroy() }
-  }
+  const { action, editor, state } = matra({
+    extensions: starterKit,
+    content: '<p>Hello</p>',
+  })
 </script>
 
-<button onclick={() => editor?.commands.toggleBold()}>Bold</button>
-<div use:matra></div>`}</code></pre>
+<button onclick={() => editor.commands.toggleBold()}
+        aria-pressed={$state.isActive('bold')}>Bold</button>
+
+<div use:action></div>`}</code></pre>
 
   <h2>Solid</h2>
-  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
-import { onCleanup, onMount } from 'solid-js'
+  <p>
+    A signal rather than an external store · Solid's reactivity is not a render loop, so
+    everything reading <code>state()</code> re-runs and nothing else does.
+  </p>
+  <pre><code>{`import { starterKit } from '@matrajs/core'
+import { createMatra } from '@matrajs/solid'
 
 export function Editor() {
-  let element
-  let editor
-
-  onMount(() => {
-    editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
-    editor.mount(element)
-    onCleanup(() => editor.destroy())
+  const { editor, mount, state } = createMatra({
+    extensions: starterKit,
+    content: '<p>Hello</p>',
   })
 
-  return <div ref={element} />
+  return (
+    <>
+      <button onClick={() => editor.commands.toggleBold()}
+              aria-pressed={state().isActive('bold')}>Bold</button>
+      <div ref={mount} />
+    </>
+  )
 }`}</code></pre>
 
   <h2>Angular</h2>
-  <p>A directive, so the element stays in the template where it belongs.</p>
+  <p>
+    A directive, so the element stays in the template where it belongs. There is no
+    <code>@matrajs/angular</code> package, and the reason is worth saying rather than leaving
+    you to wonder: an Angular library has to be published through <code>ng-packagr</code> in
+    Angular's partial-compilation format, or it fails in every consumer's AOT build. Shipping
+    one that breaks in production builds would be worse than these fifteen lines, which
+    <em>your</em> compiler handles correctly because it compiles them.
+  </p>
   <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject } from '@angular/core'
 import { createEditor, starterKit } from '@matrajs/core'
 
@@ -138,7 +156,7 @@ export class MatraDirective implements OnInit, OnDestroy {
 
   <h2>Keeping a toolbar in step</h2>
   <p>
-    The one thing worth knowing outside React and Vue: <code>editor.on('change')</code> and
+    The one thing worth knowing without a binding: <code>editor.on('change')</code> and
     <code>editor.on('selectionChange')</code> both return an unsubscribe function, and
     <code>editor.isActive('bold')</code> reads the state from the document. That is everything
     a toolbar needs, in any framework:

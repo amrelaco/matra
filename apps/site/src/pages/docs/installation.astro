@@ -11,10 +11,12 @@ import Docs from '../../layouts/Docs.astro'
 
   <h2>Framework bindings</h2>
   <pre><code>npm i @matrajs/react   # useEditor, useEditorState, EditorContent
-npm i @matrajs/vue     # useEditor, EditorContent</code></pre>
+npm i @matrajs/vue     # useEditor, EditorContent
+npm i @matrajs/svelte  # matra — a use: action and a store
+npm i @matrajs/solid   # createMatra — a ref and a signal</code></pre>
   <p>
-    Both are MIT and both are thin · the editor does not care which framework renders around it,
-    and neither binding re-implements anything. <strong>Svelte, Solid, Angular, Qwik and plain
+    All four are MIT and all four are thin · the editor does not care which framework renders
+    around it, and no binding re-implements anything. <strong>Angular, Qwik and plain
     JavaScript need no package at all</strong> — three calls and a teardown, which
     <a href="/docs/frameworks">Frameworks</a> shows for each of them.
   </p>
