@@ -1,0 +1,63 @@
+Matra Commercial License
+Version 1.0, 24 August 2026
+Copyright (c) 2026 Amrela
+
+This package is source-available, not open source. The Matra core
+(@matrajs/core, @matrajs/react, @matrajs/vue) is MIT and always will be; this
+package is not.
+
+1. FREE USE
+
+   You may use, copy and modify this software at no cost for:
+
+   a. evaluation, development and testing;
+   b. personal projects that earn no revenue;
+   c. education, research and teaching;
+   d. internal tools at an organisation with fewer than three developers
+      working on software that includes this package.
+
+   e. any use at all, if you are a registered charity or a student.
+
+   No key, no signup, no phone-home. We do not check. This clause is the
+   licence, not a trial period.
+
+2. PAID USE
+
+   Any other use in production requires a current subscription. Plans are
+   priced per organisation with a cap on the number of developers working on
+   software that includes this package — not per seat, so adding a developer
+   inside your plan's cap costs nothing and needs no paperwork.
+
+   If the software you ship earns money and more than two developers touch it,
+   that is paid use.
+
+3. WHAT YOU MAY ALWAYS DO
+
+   Read the source. Modify it for your own licensed use. Fork it privately.
+   Keep running the version you licensed, forever, even if your subscription
+   lapses — a lapsed subscription ends access to new versions and to support,
+   not the software you already shipped. Nothing in this package checks a
+   licence at runtime, and nothing in it contacts us.
+
+4. WHAT YOU MAY NOT DO
+
+   Redistribute this package, modified or not, as part of a product that
+   competes with Matra. Remove or obscure this licence. Sublicense it.
+
+5. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+   OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
+
+6. TERMINATION
+
+   This licence ends if you breach it and do not fix the breach within 30 days
+   of being told. Clause 3's "keep running what you licensed" survives
+   termination for versions you had already licensed and shipped.
+
+7. GOVERNING LAW
+
+   The laws of Bangladesh.
+
+Questions, or a licence that does not fit your situation: licensing@amrela.co

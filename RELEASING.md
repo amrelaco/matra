@@ -9,7 +9,7 @@ cd packages/core && pnpm publish --access public
 # wait for it to actually exist before publishing anything that depends on it
 until [ "$(npm view @matrajs/core version)" = "1.2.3" ]; do sleep 20; done
 
-for p in react vue ai collab; do (cd packages/$p && pnpm publish --access public); done
+for p in react vue ai collab versions; do (cd packages/$p && pnpm publish --access public); done
 ```
 
 Dependants pin `@matrajs/core` by range, so core has to be *available* — not
@@ -27,7 +27,8 @@ scope, GitHub Packages under a second organisation, a private repository
 installed by git ref — before the obvious question got asked: what were they
 protecting?
 
-**The source is already public.** `packages/ai` and `packages/collab` are in
+**The source is already public.** `packages/ai`, `packages/collab` and
+`packages/versions` are in
 this repository, and this repository is public. Anyone can read
 `collab/src/collab.ts` in a browser, clone it, and build it. Every one of those
 schemes guarded the npm door of a building with no walls, and each cost real
@@ -38,7 +39,8 @@ would even notice.
 The alternative was making the repository private, which would trade the thing
 that actually brings people in for a lock that a `git clone` opens.
 
-So `@matrajs/ai` and `@matrajs/collab` publish publicly, and **the licence is
+So `@matrajs/ai`, `@matrajs/collab` and `@matrajs/versions` publish publicly,
+and **the licence is
 the boundary rather than the download**. That is the same arrangement as the
 Business Source License and the Functional Source License: read it, build it,
 run it in development, and pay when it goes to production beyond the free
