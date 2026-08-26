@@ -26,12 +26,13 @@ const tiers = [
     name: 'Pro',
     price: '$99',
     unit: 'per month · up to 5 developers',
-    tag: 'For teams shipping AI or collaboration in production.',
+    tag: 'For teams shipping AI, collaboration or history in production.',
     features: [
       'Everything in Core',
       'AI extension, streaming edits',
       'Collaboration and step rebasing',
       'Remote cursors and presence',
+      'Version history, diff and restore',
       'Email support, 2 working days',
       'Updates and support while it runs',
     ],
@@ -83,7 +84,7 @@ const questions = [
   ],
 ]
 ---
-<Base title="Pricing · Matra" description="The core is MIT and free forever. AI and collaboration are $99 a month for up to five developers, flat rather than per seat.">
+<Base title="Pricing · Matra" description="The core is MIT and free forever. AI, collaboration and version history are $99 a month for up to five developers, flat rather than per seat.">
   <Nav />
   <Head
     kicker="Pricing"
@@ -119,22 +120,34 @@ const questions = [
     <div class="wrap">
       <p class="kicker"><span class="dot"></span>What you are actually buying</p>
       <h2>Access, not permission.</h2>
-      <div class="two">
-        <div class="card">
+      <!--
+        Two claims, each with the thing that proves it underneath.
+        The claim on its own is what every vendor's pricing page says; the line
+        of code, or the licence it names, is the part that can be checked.
+      -->
+      <div class="two fills bleed" data-static>
+        <div class="claim">
+          <p class="claim-no mono">01</p>
           <h3>Nothing phones home</h3>
           <p>
-            There is no licence key, no telemetry and no runtime check · in development or in
-            production. Your editor never talks to us. We could not switch your app off if we
-            wanted to, and we built it that way deliberately.
+            No licence key, no telemetry, no runtime check · in development or in production.
+            Your editor never talks to us. We could not switch your app off if we wanted to.
+          </p>
+          <p class="claim-proof mono">
+            grep -r "matrajs.com" node_modules/@matrajs<span class="claim-out">→ no matches</span>
           </p>
         </div>
-        <div class="card">
+        <div class="claim">
+          <p class="claim-no mono">02</p>
           <h3>There is no gate</h3>
           <p>
             The source is public and the packages install from public npm. What you buy is the
-            right to run them in production, plus updates and support · the same arrangement as
-            the Business Source Licence. A lock a <span class="mono">git clone</span> opens is
-            not a lock, and building one would have cost you an account to administer.
+            right to run them in production, plus updates and support. A lock a
+            <span class="mono">git clone</span> opens is not a lock, and building one would
+            have cost you an account to administer.
+          </p>
+          <p class="claim-proof mono">
+            npm i @matrajs/ai<span class="claim-out">→ installs, no key</span>
           </p>
         </div>
       </div>
@@ -158,33 +171,98 @@ const questions = [
   <style>
     .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
     .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .tier { border: 1px dashed var(--rule-strong); padding: 24px; display: flex; flex-direction: column; }
+    .tier { background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat; padding: 24px; display: flex; flex-direction: column; }
     .tier.featured { background: var(--invert-bg); color: var(--invert-fg); border-style: solid; border-color: var(--invert-bg); }
     .tier.featured .tier-tag, .tier.featured li { color: var(--invert-soft); }
     .tier.featured .btn { background: var(--invert-fg); color: var(--invert-bg); border-color: var(--invert-fg); }
     .tier-head { display: flex; align-items: center; justify-content: space-between; }
     .tier-name { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
-    .badge { font-size: 10px; border: 1px solid currentColor; padding: 3px 7px; opacity: 0.8; }
+    .badge {
+      font-size: 10px;
+      padding: 3px 7px;
+      opacity: 0.8;
+      --dash: 5px;
+      --dash-gap: 4px;
+      background-image:
+        repeating-linear-gradient(to right, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap))),
+        repeating-linear-gradient(to right, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap))),
+        repeating-linear-gradient(to bottom, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap))),
+        repeating-linear-gradient(to bottom, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap)));
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
     .price { margin: 16px 0 10px; display: flex; flex-direction: column; }
     .price b { font-family: var(--font-display); font-size: 42px; font-weight: 400; line-height: 1; }
     .price span { font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
     .tier.featured .price span { color: var(--invert-soft); }
     .tier-tag { font-size: 13.5px; color: var(--ink-soft); min-height: 42px; }
-    .tier ul { list-style: none; margin: 20px 0 0; padding: 18px 0 0; border-top: 1px dashed currentColor; font-size: 13.5px; color: var(--ink-soft); }
+    .tier ul { list-style: none; margin: 20px 0 0; padding: 18px 0 0; background-image: repeating-linear-gradient(to right, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap)));
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat; font-size: 13.5px; color: var(--ink-soft); }
     .tier li { padding: 5px 0 5px 18px; position: relative; }
     .tier li::before { content: '·'; position: absolute; left: 4px; color: var(--indigo); font-weight: 700; }
     .tier .btn { justify-content: center; margin-top: 4px; }
     .footnote { color: var(--ink-faint); font-size: 13px; margin-top: 22px; }
-    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
-    .two h3 { font-size: 19px; margin-bottom: 8px; }
-    .two p { font-size: 14px; color: var(--ink-soft); margin: 0; }
-    .faq { margin-top: 26px; border-top: 1px dashed var(--rule); }
-    details { border-bottom: 1px dashed var(--rule); padding: 16px 0; }
+    /* Two cells of the page's own grid rather than two floating cards · the
+       divider between them is the same rule as everything else on the sheet. */
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: var(--s4); }
+    .claim {
+      padding: var(--s4) calc(var(--inset) + 22px);
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-position: 100% 0;
+      background-repeat: no-repeat;
+    }
+    .claim:last-child { background-image: none; }
+    .claim-no { font-size: 11px; color: var(--indigo); letter-spacing: 0.1em; }
+    .two h3 { font-size: 21px; margin: 12px 0 10px; }
+    .two p { font-size: 14.5px; color: var(--ink-soft); margin: 0; line-height: 1.65; }
+    /* The receipt for the claim above it. */
+    .claim-proof {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: var(--s3) !important;
+      padding: 10px 12px;
+      font-size: 11.5px;
+      color: var(--ink);
+      background-color: var(--code-bg);
+      --dash: 5px;
+      --dash-gap: 4px;
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
+    .claim-out { color: var(--indigo); }
+    .faq { margin-top: 26px; background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat; }
+    details { background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat; padding: 16px 0; }
     summary { cursor: pointer; font-size: 16px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
     summary::-webkit-details-marker { display: none; }
     summary::after { content: '+'; color: var(--ink-faint); font-family: var(--font-mono); }
     details[open] summary::after { content: '−'; }
     details p { color: var(--ink-soft); font-size: 14.5px; max-width: 72ch; margin: 12px 0 0; }
-    @media (max-width: 940px) { .tiers, .two { grid-template-columns: 1fr; } }
+    @media (max-width: 940px) {
+      .tiers, .two { grid-template-columns: 1fr; }
+      .claim {
+        padding: var(--s3) calc(var(--inset) + 18px);
+        background-image: var(--dash-h);
+        background-size: 100% 1px;
+        background-position: 0 100%;
+      }
+      .claim:last-child { background-image: none; }
+    }
   </style>
 </Base>

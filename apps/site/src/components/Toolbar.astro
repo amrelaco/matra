@@ -1,0 +1,106 @@
+---
+/**
+ * A row of buttons that are command calls.
+ *
+ * Each entry names a command and, optionally, its argument. `demos.ts` binds
+ * them by `data-cmd` and lights them by `data-active`, which reads
+ * `editor.isActive` — a toolbar whose buttons all look the same whether or not
+ * the thing they do is already done is a toolbar you have to check your text
+ * to use.
+ *
+ * Icons, not glyphs. `B`, `“` and `{ }` are a typographic impression of a
+ * toolbar; a bold mark and a quote mark are what every other editor draws, and
+ * a reader should not have to work out that `•—` means a bulleted list. Each
+ * icon is imported by name, so the page carries the dozen it uses and no more.
+ *
+ * `|` in the list is a divider rather than a button.
+ */
+import Icon from './Icon.astro'
+
+export type IconData = [string, Record<string, string>][]
+
+export interface Tool {
+  cmd: string
+  /** Passed to the command · a heading level, a table size. */
+  arg?: number
+  icon: IconData
+  /** What it is, for the tooltip and for screen readers. */
+  title: string
+  /** The state to light the button by, when it differs from the command. */
+  active?: string
+  activeArg?: number
+}
+
+interface Props {
+  /** Which mounted editor this drives · matches `mount('name')` in demos.ts. */
+  for: string
+  tools: (Tool | '|')[]
+}
+const { for: target, tools } = Astro.props
+---
+{tools.map((tool) =>
+  tool === '|' ? (
+    <span class="tool-split" aria-hidden="true"></span>
+  ) : (
+    <button
+      type="button"
+      class="tool"
+      title={tool.title}
+      aria-label={tool.title}
+      data-cmd={tool.cmd}
+      data-for={target}
+      data-arg={tool.arg}
+      data-active={tool.active ?? undefined}
+      data-active-arg={tool.activeArg ?? tool.arg}
+    >
+      <Icon icon={tool.icon} size={16} />
+    </button>
+  ),
+)}
+
+<style>
+  .tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 0;
+    padding: 5px 7px;
+    min-width: 27px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.2;
+    /* The strip scrolls rather than wraps, so nothing in it may be squeezed. */
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .tool :global(svg) {
+    display: block;
+  }
+
+  .tool:hover {
+    color: var(--ink);
+    background-color: var(--surface-2);
+  }
+
+  /* On, because the document says so · not because you last pressed it. */
+  .tool[aria-pressed="true"] {
+    color: var(--indigo);
+    background-color: var(--indigo-wash);
+  }
+
+  .tool-split {
+    width: 1px;
+    flex: none;
+    align-self: stretch;
+    margin: 0 4px;
+    --dash: 3px;
+    --dash-gap: 3px;
+    background-image: var(--dash-v);
+    background-size: 1px 100%;
+    background-repeat: no-repeat;
+  }
+</style>

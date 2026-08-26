@@ -15,14 +15,17 @@ const { kicker, title, lede, updated } = Astro.props
       <p class="lede">{lede}</p>
       <p class="updated mono">Last updated {updated}</p>
     </div>
-    <article class="legal-body" data-editable="typography"><slot /></article>
+    <article class="legal-body" data-editable="prose"><slot /></article>
   </div>
 </section>
 <style>
   .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
   .legal { display: grid; grid-template-columns: 360px 1fr; gap: 56px; align-items: start; padding-top: 64px; }
   .legal h1 { font-size: clamp(34px, 4vw, 46px); margin: 16px 0 16px; }
-  .updated { font-size: 11px; color: var(--ink-faint); margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--rule); }
+  .updated { font-size: 11px; color: var(--ink-faint); margin-top: 22px; padding-top: 16px; background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat; }
   .legal-side { position: sticky; top: 96px; }
   .legal-body :global(h2) { font-family: var(--font-display); font-size: 22px; margin: 34px 0 10px; }
   .legal-body :global(h2:first-child) { margin-top: 0; }

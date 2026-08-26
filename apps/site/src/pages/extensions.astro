@@ -1,129 +1,845 @@
 ---
+import {
+  CheckmarkSquare02Icon,
+  CodeSquareIcon,
+  Copy01Icon,
+  Heading01Icon,
+  Heading02Icon,
+  HighlighterIcon,
+  LeftToRightListBulletIcon,
+  LeftToRightListNumberIcon,
+  MinusSignIcon,
+  QuoteDownIcon,
+  Redo02Icon,
+  SourceCodeIcon,
+  Table01Icon,
+  TextAlignCenterIcon,
+  TextAlignLeftIcon,
+  TextBoldIcon,
+  TextItalicIcon,
+  TextStrikethroughIcon,
+  TextUnderlineIcon,
+  Tick02Icon,
+  Undo02Icon,
+} from '@hugeicons/core-free-icons'
 import Footer from '../components/Footer.astro'
 import Head from '../components/Head.astro'
+import Icon from '../components/Icon.astro'
 import Nav from '../components/Nav.astro'
+import Toolbar from '../components/Toolbar.astro'
+import Window from '../components/Window.astro'
 import Base from '../layouts/Base.astro'
 
-/** Every row here ships. A directory advertising installs that 404 is worse than none. */
-const rows = [
-  ['Bold', 'Toggle strong emphasis. Mod-B.', '@matrajs/core', 'free'],
-  ['Italic, strike, code', 'The rest of the everyday marks.', '@matrajs/core', 'free'],
-  ['Underline, highlight', 'Plus subscript and superscript.', '@matrajs/core', 'free'],
-  ['Link', 'Scheme-checked on every route into the DOM.', '@matrajs/core', 'free'],
-  ['Heading', 'Levels 1–6, with an input rule for #.', '@matrajs/core', 'free'],
-  ['Lists', 'Bulleted and ordered, Tab to nest.', '@matrajs/core', 'free'],
-  ['Task lists', 'Real checkboxes the caret cannot enter.', '@matrajs/core', 'free'],
-  [
-    'Blockquote, code block',
-    'Fenced blocks carry a language attribute.',
-    '@matrajs/core',
-    'free',
-  ],
-  ['Tables', 'Insert and delete, header rows, colspan kept.', '@matrajs/core', 'free'],
-  ['Image', 'data:image on an img, and nowhere else.', '@matrajs/core', 'free'],
-  ['Placeholder', 'Text for an empty document.', '@matrajs/core', 'free'],
-  [
-    'Character count',
-    'Characters and words, reduced per transaction.',
-    '@matrajs/core',
-    'free',
-  ],
-  ['Text align', 'Left, centre, right, justify.', '@matrajs/core', 'free'],
-  ['Typography', 'Smart quotes, dashes, arrows, ellipsis.', '@matrajs/core', 'free'],
-  ['Comments', 'Threaded comments anchored to ranges.', '@matrajs/core', 'free'],
-  ['Table of contents', 'Derived on demand, never stale.', '@matrajs/core', 'free'],
-  ['Unique block ids', 'Stable identity for anchoring things.', '@matrajs/core', 'free'],
-  ['Drag handle', 'Drag blocks, with a drop cursor.', '@matrajs/core', 'free'],
-  ['Markdown', 'In and out, with no DOM at all.', '@matrajs/core', 'free'],
-  ['History', 'Undo grouped by what you did.', '@matrajs/core', 'free'],
-  ['AI', 'Streaming edits that survive concurrent typing.', '@matrajs/ai', 'pro'],
-  ['Collaboration', 'Authority, step rebasing, remote cursors.', '@matrajs/collab', 'pro'],
+/**
+ * The directory, shown rather than listed.
+ *
+ * A table of twenty-two rows tells you the names of things you have never used.
+ * Each group here gets a live editor with those extensions in it and nothing
+ * else, so "task lists" is a checkbox you can tick rather than a line of prose
+ * claiming there is one.
+ *
+ * Every extension named ships. A directory advertising installs that 404 is
+ * worse than no directory.
+ */
+const groups = [
+  {
+    id: 'marks',
+    kicker: 'Marks',
+    title: 'The everyday six.',
+    blurb:
+      'Bold, italic, strike, code, underline, highlight. Each is a plain object with a command, a key and a tag — and yours would be the same shape.',
+    items: ['bold', 'italic', 'strike', 'code', 'underline', 'highlight', 'link'],
+    tools: [
+      { cmd: 'toggleBold', icon: TextBoldIcon, title: 'Bold', active: 'bold' },
+      { cmd: 'toggleItalic', icon: TextItalicIcon, title: 'Italic', active: 'italic' },
+      {
+        cmd: 'toggleStrike',
+        icon: TextStrikethroughIcon,
+        title: 'Strikethrough',
+        active: 'strike',
+      },
+      { cmd: 'toggleCode', icon: SourceCodeIcon, title: 'Inline code', active: 'code' },
+      {
+        cmd: 'toggleUnderline',
+        icon: TextUnderlineIcon,
+        title: 'Underline',
+        active: 'underline',
+      },
+      {
+        cmd: 'toggleHighlight',
+        icon: HighlighterIcon,
+        title: 'Highlight',
+        active: 'highlight',
+      },
+    ],
+  },
+  {
+    id: 'blocks',
+    kicker: 'Blocks',
+    title: 'Headings, quotes, fences.',
+    blurb:
+      'Every block type carries its own markdown shortcut. Start a line with # or > or ``` and the input rule does the rest — no menu required.',
+    items: ['heading', 'blockquote', 'codeBlock', 'horizontalRule', 'paragraph'],
+    tools: [
+      {
+        cmd: 'toggleHeading',
+        arg: 1,
+        icon: Heading01Icon,
+        title: 'Heading one',
+        active: 'heading',
+      },
+      {
+        cmd: 'toggleHeading',
+        arg: 2,
+        icon: Heading02Icon,
+        title: 'Heading two',
+        active: 'heading',
+      },
+      { cmd: 'toggleBlockquote', icon: QuoteDownIcon, title: 'Quote', active: 'blockquote' },
+      {
+        cmd: 'toggleCodeBlock',
+        icon: CodeSquareIcon,
+        title: 'Code block',
+        active: 'codeBlock',
+      },
+      { cmd: 'insertHorizontalRule', icon: MinusSignIcon, title: 'Divider' },
+    ],
+  },
+  {
+    id: 'lists',
+    kicker: 'Lists',
+    title: 'Including the one with boxes.',
+    blurb:
+      'Tab nests, Shift-Tab lifts back out, Enter on an empty item leaves the list. The checkbox is a real input the caret cannot get inside — tick one.',
+    items: ['bulletList', 'orderedList', 'listItem', 'taskList', 'taskItem'],
+    tools: [
+      {
+        cmd: 'toggleBulletList',
+        icon: LeftToRightListBulletIcon,
+        title: 'Bulleted list',
+        active: 'bulletList',
+      },
+      {
+        cmd: 'toggleOrderedList',
+        icon: LeftToRightListNumberIcon,
+        title: 'Numbered list',
+        active: 'orderedList',
+      },
+      {
+        cmd: 'toggleTaskList',
+        icon: CheckmarkSquare02Icon,
+        title: 'To-do list',
+        active: 'taskList',
+      },
+    ],
+  },
+  {
+    id: 'tables',
+    kicker: 'Tables',
+    title: 'Rows, columns, and a caret.',
+    blurb:
+      'Insert one and type into it. Header rows, colspan and column widths survive a round trip through JSON and back.',
+    items: ['table', 'tableRow', 'tableCell', 'tableHeader', 'image'],
+    tools: [
+      { cmd: 'insertTable', icon: Table01Icon, title: 'Insert a table' },
+      { cmd: 'toggleBold', icon: TextBoldIcon, title: 'Bold', active: 'bold' },
+      { cmd: 'undo', icon: Undo02Icon, title: 'Undo' },
+    ],
+  },
+  {
+    id: 'writing',
+    kicker: 'Writing aids',
+    title: 'The ones you never press.',
+    blurb:
+      'Type "quotes" and they curl the right way round. Two hyphens become an em dash, three dots an ellipsis, -> an arrow. Undo groups by word, not by keystroke.',
+    items: ['typography', 'placeholder', 'characterCount', 'history', 'textAlign'],
+    tools: [
+      { cmd: 'undo', icon: Undo02Icon, title: 'Undo' },
+      { cmd: 'redo', icon: Redo02Icon, title: 'Redo' },
+      { cmd: 'setTextAlign', arg: 0, icon: TextAlignLeftIcon, title: 'Align left' },
+      { cmd: 'setTextAlign', arg: 1, icon: TextAlignCenterIcon, title: 'Align centre' },
+    ],
+  },
 ]
-const free = rows.filter((r) => r[3] === 'free').length
+
+/** Not shown as an editor, because neither is a thing you can try alone. */
+const paid = [
+  {
+    name: 'AI',
+    pkg: '@matrajs/ai',
+    what: 'Streaming edits that survive concurrent typing. A stream that arrives while somebody is still typing lands where it was meant to, because the positions are mapped rather than remembered.',
+    items: ['streamingEdit', 'positionMarkers', 'diffPreview'],
+  },
+  {
+    name: 'Collaboration',
+    pkg: '@matrajs/collab',
+    what: 'An authority, step rebasing and remote cursors. Two people editing the same paragraph converge on the same document rather than on the last write.',
+    items: ['authority', 'rebasing', 'remoteCursors'],
+  },
+  {
+    name: 'Version history',
+    pkg: '@matrajs/versions',
+    what: 'Snapshots, a real diff between them, and restore as one undo step. Blocks are paired on their content, so a paragraph that moved is the same paragraph rather than a deletion and an insertion at two unrelated places.',
+    items: ['snapshots', 'blockDiff', 'wordDiff', 'restore'],
+  },
+]
+
+/**
+ * Every extension, one row each.
+ *
+ * The five editors above show what a group feels like; this is the reference
+ * you come back to. `use` is the line you would actually write, `key` is what
+ * it is bound to, and `typed` is the markdown shortcut that reaches it without
+ * a menu — read off the extensions rather than invented, so a shortcut printed
+ * here is one the editor really has.
+ */
+const directory: {
+  group: string
+  pkg: string
+  note: string
+  items: { name: string; what: string; use: string; key?: string; typed?: string }[]
+}[] = [
+  {
+    group: 'Marks',
+    pkg: '@matrajs/core',
+    note: 'Inline formatting. Each one is a command, a key and a tag.',
+    items: [
+      { name: 'bold', what: 'Bold', use: 'editor.commands.toggleBold()', key: 'Mod-B' },
+      { name: 'italic', what: 'Italic', use: 'editor.commands.toggleItalic()', key: 'Mod-I' },
+      {
+        name: 'strike',
+        what: 'Struck through',
+        use: 'editor.commands.toggleStrike()',
+        key: 'Mod-Shift-X',
+      },
+      { name: 'code', what: 'Inline code', use: 'editor.commands.toggleCode()', key: 'Mod-E' },
+      {
+        name: 'underline',
+        what: 'Underlined',
+        use: 'editor.commands.toggleUnderline()',
+        key: 'Mod-U',
+      },
+      {
+        name: 'highlight',
+        what: 'Highlighted, with a colour attribute',
+        use: "editor.commands.toggleHighlight({ color: 'yellow' })",
+        key: 'Mod-Shift-H',
+      },
+      {
+        name: 'link',
+        what: 'A link, with the scheme checked before it reaches the DOM',
+        use: "editor.commands.setLink('https://matrajs.com')",
+      },
+      {
+        name: 'subscript',
+        what: 'Subscript and superscript',
+        use: 'editor.commands.toggleSubscript()',
+      },
+    ],
+  },
+  {
+    group: 'Blocks',
+    pkg: '@matrajs/core',
+    note: 'Block types. Every one carries its own markdown shortcut.',
+    items: [
+      {
+        name: 'document',
+        what: 'The root node. Every schema needs one',
+        use: 'extensions: [document, paragraph, text]',
+      },
+      { name: 'paragraph', what: 'The default block', use: 'editor.commands.setParagraph()' },
+      { name: 'text', what: 'The text node itself', use: 'extensions: [text]' },
+      {
+        name: 'heading',
+        what: 'Levels one to six',
+        use: 'editor.commands.toggleHeading(2)',
+        key: 'Mod-Alt-1 … 6',
+        typed: '## ',
+      },
+      {
+        name: 'blockquote',
+        what: 'A quote, which holds blocks rather than text',
+        use: 'editor.commands.toggleBlockquote()',
+        key: 'Mod-Shift-B',
+        typed: '> ',
+      },
+      {
+        name: 'codeBlock',
+        what: 'A fenced block that takes no marks',
+        use: 'editor.commands.toggleCodeBlock()',
+        key: 'Mod-Alt-C',
+        typed: '``` ',
+      },
+      {
+        name: 'horizontalRule',
+        what: 'A divider · one position, no insides',
+        use: 'editor.commands.insertHorizontalRule()',
+        typed: '--- ',
+      },
+      {
+        name: 'hardBreak',
+        what: 'A line break inside a block',
+        use: 'editor.commands.insertHardBreak()',
+        key: 'Shift-Enter',
+      },
+      {
+        name: 'image',
+        what: 'An image, with the src checked like a link',
+        use: "editor.commands.insertImage({ src: '/cat.png' })",
+      },
+    ],
+  },
+  {
+    group: 'Lists',
+    pkg: '@matrajs/core',
+    note: 'Tab nests, Shift-Tab lifts, Enter on an empty item leaves the list.',
+    items: [
+      {
+        name: 'bulletList',
+        what: 'Bulleted',
+        use: 'editor.commands.toggleBulletList()',
+        key: 'Mod-Shift-8',
+        typed: '- ',
+      },
+      {
+        name: 'orderedList',
+        what: 'Numbered',
+        use: 'editor.commands.toggleOrderedList()',
+        key: 'Mod-Shift-9',
+        typed: '1. ',
+      },
+      { name: 'listItem', what: 'What a list holds', use: 'extensions: [listItem]' },
+      {
+        name: 'taskList',
+        what: 'Checkboxes',
+        use: 'editor.commands.toggleTaskList()',
+        key: 'Mod-Shift-7',
+        typed: '[] ',
+      },
+      {
+        name: 'taskItem',
+        what: 'One checkbox · a real input the caret cannot enter',
+        use: 'editor.commands.toggleTaskItem()',
+        key: 'Mod-Enter',
+      },
+    ],
+  },
+  {
+    group: 'Structure',
+    pkg: '@matrajs/core',
+    note: 'The four that other editors put behind a paywall, and tables.',
+    items: [
+      {
+        name: 'table',
+        what: 'Rows, columns, header cells and column widths',
+        use: 'editor.commands.insertTable({ rows: 3, cols: 3 })',
+      },
+      { name: 'tableRow', what: 'One row', use: 'editor.commands.addRowAfter()' },
+      {
+        name: 'tableCell',
+        what: 'One cell, which holds blocks',
+        use: 'editor.commands.mergeCells()',
+      },
+      { name: 'tableHeader', what: 'A header cell', use: 'editor.commands.toggleHeaderRow()' },
+      {
+        name: 'tableOfContents',
+        what: 'Headings, with their level and position',
+        use: "editor.extensionState('tableOfContents')",
+      },
+      {
+        name: 'uniqueId',
+        what: 'A stable id on every block, for comments and anchors',
+        use: "uniqueId({ types: ['paragraph', 'heading'] })",
+      },
+      {
+        name: 'dragHandle',
+        what: 'Drag a block to reorder it',
+        use: 'editor.commands.moveBlock(from, to)',
+      },
+      {
+        name: 'comments',
+        what: 'Threads anchored to ranges that survive edits',
+        use: "editor.commands.addComment('thread-1')",
+      },
+    ],
+  },
+  {
+    group: 'Writing',
+    pkg: '@matrajs/core',
+    note: 'The ones you never press. They work while you type.',
+    items: [
+      {
+        name: 'placeholder',
+        what: 'Text in an empty block',
+        use: "placeholder({ text: 'Write something…' })",
+      },
+      {
+        name: 'characterCount',
+        what: 'Characters and words, reduced on every change',
+        use: 'characterCount({ limit: 280 })',
+      },
+      {
+        name: 'textAlign',
+        what: 'Left, centre, right on a block',
+        use: "editor.commands.setTextAlign('center')",
+      },
+      {
+        name: 'typography',
+        what: 'Curled quotes, em dashes, ellipses, arrows',
+        use: 'extensions: [typography]',
+        typed: '-- ',
+      },
+      {
+        name: 'history',
+        what: 'Undo that groups by word, not by keystroke',
+        use: 'editor.commands.undo()',
+        key: 'Mod-Z',
+      },
+      {
+        name: 'markdown',
+        what: 'To and from markdown without touching a DOM',
+        use: 'toMarkdown(editor.getJSON())',
+      },
+    ],
+  },
+  {
+    group: 'Menus',
+    pkg: '@matrajs/core',
+    note: 'Something watching what you type, and offering.',
+    items: [
+      {
+        name: 'suggestion',
+        what: 'The machinery behind a slash menu or an @ mention',
+        use: "suggestion({ char: '/', name: 'slash' })",
+        typed: '/',
+      },
+      {
+        name: 'mention',
+        what: 'A mention node · one position, its own DOM',
+        use: "editor.commands.insertMention({ id: 'nahim' })",
+        typed: '@',
+      },
+    ],
+  },
+  {
+    group: 'AI',
+    pkg: '@matrajs/ai',
+    note: 'Paid. Streaming edits that survive concurrent typing.',
+    items: [
+      {
+        name: 'ai',
+        what: 'A streaming rewrite that lands where it was meant to',
+        use: "editor.commands.askAi('make this shorter')",
+      },
+    ],
+  },
+  {
+    group: 'Collaboration',
+    pkg: '@matrajs/collab',
+    note: 'Paid. An authority, step rebasing and remote cursors.',
+    items: [
+      {
+        name: 'collab',
+        what: 'Rebase local work over what arrived first',
+        use: "collab({ clientId: 'a1' })",
+      },
+      {
+        name: 'remoteCursors',
+        what: 'Other people’s carets, mapped through your edits',
+        use: 'remoteCursors({ presence })',
+      },
+    ],
+  },
+  {
+    group: 'Version history',
+    pkg: '@matrajs/versions',
+    note: 'Paid. Snapshots, a real diff between them, and restore.',
+    items: [
+      {
+        name: 'versions',
+        what: 'Snapshot, preview a diff, restore in one undo step',
+        use: 'editor.commands.snapshotVersion()',
+      },
+      {
+        name: 'diffDocs',
+        what: 'The diff on its own · works on any two documents',
+        use: 'diffDocs(before, after)',
+      },
+    ],
+  },
+]
+
+const directoryCount = directory.reduce((total, group) => total + group.items.length, 0)
+
+/**
+ * The import line for one extension, built here rather than in the markup.
+ *
+ * A template literal containing a literal `{` inside an Astro expression is
+ * where the compiler stops counting braces and starts guessing.
+ */
+const importLine = (name: string, pkg: string) => `import { ${name} } from '${pkg}'`
+
+const freeCount = groups.reduce((total, group) => total + group.items.length, 0)
+
+/** Small numbers read better as words, and the heading is prose. */
+const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six']
+const spell = (n: number) => WORDS[n] ?? String(n)
 ---
-<Base title="Extensions · Matra" description="Every extension that ships with Matra. Twenty are MIT, including the ones other editors charge for; two are paid.">
+<Base
+  title="Extensions · Matra"
+  description="Every extension that ships with Matra, each shown in a live editor rather than listed in a table."
+>
   <Nav />
   <Head
     kicker="In the box"
     title="Everything hanging<br />off the core."
-    lede="Every extension is a plain object with the same power as the built-ins. Twenty of the twenty-two below are MIT."
+    lede="Nodes, marks and behaviour are the same shape: a plain object with a name. Each group below is a real editor with those extensions in it and nothing else."
   />
 
   <section class="section">
     <div class="wrap">
-      <div class="counts">
-        <div><b>{free}</b><span>free, MIT</span></div>
-        <div><b>{rows.length - free}</b><span>paid</span></div>
-        <div><b>4</b><span>that others charge for, free here</span></div>
+      <div class="counts fills bleed" data-static>
+        <div><b>{freeCount}</b><span>extensions, MIT</span></div>
+        <div><b>{paid.length}</b><span>paid packages</span></div>
+        <div><b>4</b><span>that other editors charge for</span></div>
       </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Extension</th><th>What it does</th><th>Package</th><th></th></tr></thead>
-          <tbody>
-            {rows.map(([name, what, pkg, badge]) => (
-              <tr>
-                <td class="name">{name}</td>
-                <td class="what">{what}</td>
-                <td class="mono pkg">{pkg}</td>
-                <td><span class={`badge ${badge}`}>{badge}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p class="footnote">
-        Table of contents, unique block ids, the drag handle and comments are paid features in
-        Tiptap. They are MIT here · the things that take a week should bring people in, and the
-        two that took months are what pay for the work.
-      </p>
     </div>
   </section>
+
+  {groups.map((group) => (
+    <section class="section">
+      <div class="wrap ext-row">
+        <div class="ext-copy">
+          <p class="kicker">{group.kicker}</p>
+          <h3>{group.title}</h3>
+          <p>{group.blurb}</p>
+          <ul class="chips" data-static>
+            {group.items.map((item) => (
+              <li class="mono">{item}</li>
+            ))}
+          </ul>
+
+          <!--
+            How you actually get these. There is no per-extension install: they
+            all ship in the one package, and the honest answer to "how do I add
+            highlight" is the import line, not an npm command that does not
+            exist.
+          -->
+          <div class="grab" data-static>
+            <code class="mono">{`import { ${group.items.join(', ')} } from '@matrajs/core'`}</code>
+            <button
+              type="button"
+              class="grab-copy mono"
+              data-copy={`import { ${group.items.join(', ')} } from '@matrajs/core'`}
+              aria-label={`Copy the import for ${group.kicker.toLowerCase()}`}
+            >
+              <Icon icon={Copy01Icon} class="at-idle" size={13} />
+              <Icon icon={Tick02Icon} class="at-done" size={13} />
+              <span class="at-idle">copy</span>
+              <span class="at-done">copied</span>
+            </button>
+          </div>
+        </div>
+        <Window name={`${group.id}.md`} bleed="right">
+          <Toolbar slot="toolbar" for={group.id} tools={group.tools} />
+          <div id={`ed-${group.id}`} class="ext-editor"></div>
+        </Window>
+      </div>
+    </section>
+  ))}
 
   <section class="section">
     <div class="wrap">
-      <p class="kicker"><span class="dot"></span>Write your own</p>
-      <h2>An extension is an object.</h2>
-      <div class="code">
-        <pre class="mono"><code><span class="k">import</span> {'{'} type MarkDef {'}'} <span class="k">from</span> <span class="s">'@matrajs/core'</span>
+      <p class="kicker">Paid</p>
+      <!-- Counted, not typed · the heading has to follow the list under it. -->
+      <h2>{spell(paid.length)} packages, one subscription.</h2>
+      <p class="lede">
+        None of these is a button you can press on a page, so none of them is drawn as one. The
+        core stays MIT whatever happens to them.
+      </p>
 
-<span class="k">export const</span> spoiler: MarkDef&lt;{'{'} toggleSpoiler: Command {'}'}&gt; = {'{'}
-  kind: <span class="s">'mark'</span>,
-  name: <span class="s">'spoiler'</span>,
-  parseDOM: [{'{'} tag: <span class="s">'span[data-spoiler]'</span> {'}'}],
-  toDOM: () =&gt; [<span class="s">'span'</span>, {'{'} <span class="s">'data-spoiler'</span>: <span class="s">''</span> {'}'}, 0],
-  commands: {'{'} toggleSpoiler: (ctx) =&gt; ctx.toggleMark(<span class="s">'spoiler'</span>) {'}'},
-  keys: {'{'} <span class="s">'Mod-Shift-S'</span>: <span class="s">'toggleSpoiler'</span> {'}'},
-{'}'}</code></pre>
+      <div class="paid bleed">
+        {paid.map((item) => (
+          <div class="paid-card boxed filled">
+            <div class="paid-head">
+              <b>{item.name}</b>
+              <span class="mono">{item.pkg}</span>
+            </div>
+            <p>{item.what}</p>
+            <ul class="chips" data-static>
+              {item.items.map((thing) => (
+                <li class="mono">{thing}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-      <p class="footnote">
-        Pass it to <span class="mono">createEditor</span> and
-        <span class="mono">editor.commands.toggleSpoiler</span> exists, typed, with no
-        declaration merging.
+
+      <p class="foot-note">
+        Table of contents, unique block ids, drag handle and comments are the four that other
+        editors put behind a paywall. They are in the core here, and they stay there. What is
+        paid is the work that is genuinely hard: streaming into a document somebody else is
+        typing in, converging two of them, and answering what changed between two drafts.
       </p>
     </div>
   </section>
 
+  <!-- Every extension, with the line you would write and the keys it answers to. -->
+  <section class="section" id="directory">
+    <div class="wrap">
+      <p class="kicker">The whole directory</p>
+      <h2>{directoryCount} extensions,<br />every one of them here.</h2>
+      <p class="lede">
+        The command, the shortcut, and the line you would actually write. Copy an import and it
+        works — there is nothing else to install.
+      </p>
+    </div>
+  </section>
+
+  {directory.map((group) => (
+    <section class="section">
+      <div class="wrap">
+        <div class="dir-head">
+          <h3>{group.group}</h3>
+          <span class="dir-pkg mono">{group.pkg}</span>
+          <p>{group.note}</p>
+        </div>
+
+        <div class="dir fills bleed" data-static>
+          {group.items.map((item) => (
+            <div class="dir-row">
+              <div class="dir-what">
+                <b class="mono">{item.name}</b>
+                <span>{item.what}</span>
+              </div>
+              <code class="dir-use mono">{item.use}</code>
+              <div class="dir-keys">
+                {item.key && <span class="dir-key mono">{item.key}</span>}
+                {item.typed && <span class="dir-key typed mono">{item.typed}</span>}
+              </div>
+              <button
+                type="button"
+                class="dir-copy mono"
+                data-copy={importLine(item.name, group.pkg)}
+                aria-label={`Copy the import for ${item.name}`}
+              >
+                <Icon icon={Copy01Icon} class="at-idle" size={13} />
+                <Icon icon={Tick02Icon} class="at-done" size={13} />
+                <span class="at-idle">import</span>
+                <span class="at-done">copied</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  ))}
+
   <Footer />
 
+  <script>import '../scripts/extension-demos.ts'</script>
+
   <style>
-    .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
-    .counts { display: flex; gap: 0; border: 1px dashed var(--rule-strong); background: var(--surface); flex-wrap: wrap; }
-    .counts div { flex: 1 1 160px; padding: 18px 20px; border-right: 1px dashed var(--rule-strong); display: flex; flex-direction: column; gap: 4px; }
-    .counts div:last-child { border-right: none; }
-    .counts b { font-family: var(--font-display); font-size: 32px; font-weight: 400; line-height: 1; }
-    .counts span { font-size: 12px; color: var(--ink-faint); }
-    .table-wrap { overflow-x: auto; margin-top: 26px; }
-    td.name { font-weight: 500; white-space: nowrap; }
-    td.what { color: var(--ink-soft); }
-    td.pkg { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
-    .badge { font-size: 10px; font-family: var(--font-mono); border: 1px solid var(--rule-strong); padding: 2px 7px; color: var(--ink-faint); }
-    .badge.pro { border-color: var(--indigo); color: var(--indigo); }
-    .footnote { color: var(--ink-faint); font-size: 13px; max-width: 72ch; margin-top: 20px; }
-    .code { border: 1px dashed var(--rule-strong); background: var(--code-bg); margin-top: 26px; }
-    .code pre { margin: 0; padding: 18px; overflow-x: auto; font-size: 12.5px; line-height: 1.75; color: var(--code-fg); }
-    .code .k { color: var(--code-key); }
-    .code .s { color: var(--code-str); }
+    /* The frame is `.boxed`; this is the row inside it. */
+    .counts {
+      display: flex;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+    .counts div {
+      flex: 1 1 180px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-position: 100% 0;
+      background-repeat: no-repeat;
+    }
+    .counts div:last-child { background-image: none; }
+    .counts b {
+      font-family: var(--font-display);
+      font-size: 34px;
+      line-height: 1;
+      color: var(--indigo);
+    }
+    .counts span { font-size: 12.5px; color: var(--ink-faint); }
+
+    /* The window fills the section; the copy column carries the vertical
+       padding · see the note on .demo-row in index.astro. */
+    .ext-row {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: var(--s5);
+      align-items: stretch;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    .ext-copy {
+      align-self: start;
+      padding-block: var(--s6);
+    }
+    .ext-copy h3 { margin-bottom: var(--s2); }
+    /*
+     * The import line, framed like the install line in the hero: one box, a
+     * dashed divider, and the word that says what pressing it does.
+     */
+    .grab {
+      display: flex;
+      align-items: stretch;
+      margin-top: var(--s3);
+      background-color: var(--surface);
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
+    .grab code {
+      flex: 1;
+      min-width: 0;
+      font-size: 11.5px;
+      line-height: 1.5;
+      padding: 10px 12px;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+    }
+    .grab-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: none;
+      border: 0;
+      background: none;
+      padding: 0 12px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-faint);
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+    }
+    .grab-copy:hover { color: var(--ink); }
+    .grab-copy.done { color: var(--indigo); }
+    .ext-copy p { color: var(--ink-soft); font-size: 15.5px; margin: 0 0 var(--s3); }
+    .ext-editor { font-size: 15px; min-height: 150px; }
+
+    .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+    .chips li {
+      font-size: 11px;
+      color: var(--ink-faint);
+      padding: 4px 9px;
+      --dash: 5px;
+      --dash-gap: 4px;
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
+
+    /* --- the directory ---------------------------------------------------
+       One row per extension: what it is, the line you would write, the keys it
+       answers to, and its import. Four columns rather than a card each,
+       because this is a reference and a reference is read down a column. */
+    .dir-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 12px;
+      padding-bottom: var(--s3);
+    }
+    .dir-head h3 { font-size: 26px; }
+    .dir-pkg { font-size: 11px; color: var(--ink-faint); }
+    .dir-head p {
+      flex: 1 1 100%;
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+
+    .dir-row {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) 150px 96px;
+      align-items: center;
+      gap: var(--s2);
+      padding: 13px var(--inset);
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+    }
+    .dir-row:first-child { background-image: none; }
+
+    .dir-what { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .dir-what b { font-size: 13px; font-weight: 400; color: var(--ink); }
+    .dir-what span { font-size: 12.5px; color: var(--ink-faint); }
+
+    .dir-use {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+      padding: 6px 9px;
+      background-color: var(--code-bg);
+      --dash: 4px;
+      --dash-gap: 4px;
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
+
+    .dir-keys { display: flex; flex-wrap: wrap; gap: 5px; }
+    .dir-key {
+      font-size: 10.5px;
+      color: var(--ink-faint);
+      padding: 3px 7px;
+      --dash: 4px;
+      --dash-gap: 3px;
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat;
+    }
+    /* Typed, not pressed · the same distinction the shortcut panel makes. */
+    .dir-key.typed { color: var(--indigo); --rule-strong: var(--indigo); }
+
+    .dir-copy {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      border: 0;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--ink-faint);
+    }
+    .dir-copy:hover { color: var(--ink); }
+    .dir-copy.done { color: var(--indigo); }
+
+    .paid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-top: var(--s4); }
+    .paid-card { padding: 24px 26px; }
+    .paid-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .paid-head b { font-family: var(--font-display); font-size: 21px; font-weight: 400; }
+    .paid-head span { font-size: 11px; color: var(--ink-faint); }
+    .paid-card p { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 16px; line-height: 1.6; }
+
+    @media (max-width: 900px) {
+      .ext-row { grid-template-columns: 1fr; gap: var(--s3); }
+      /* Stacked: name and description, then the line, then keys and import. */
+      .dir-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 16px var(--inset);
+      }
+      .dir-what { grid-column: 1 / -1; }
+      .dir-use { grid-column: 1 / -1; }
+      .paid { grid-template-columns: 1fr; }
+      .paid-card { padding: 20px; }
+      .counts div { padding: 16px 18px; }
+    }
   </style>
 </Base>

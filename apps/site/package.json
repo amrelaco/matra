@@ -11,6 +11,7 @@
     "@fontsource/instrument-serif": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
+    "@hugeicons/core-free-icons": "^4.3.0",
     "@matrajs/core": "workspace:^",
     "astro": "^5.13.0"
   }

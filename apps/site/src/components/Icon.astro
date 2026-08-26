@@ -1,0 +1,46 @@
+---
+/**
+ * One hugeicon, inline.
+ *
+ * The package exports each icon as plain `[tag, attrs]` data, so importing one
+ * by name bundles that one and nothing else — no sprite sheet, no runtime, and
+ * no font. Attribute names arrive in the camelCase React expects and are
+ * converted here, because SVG in HTML wants them hyphenated.
+ */
+interface Props {
+  icon: [string, Record<string, string>][]
+  size?: number
+  class?: string
+  label?: string
+}
+const { icon, size = 16, class: className = '', label } = Astro.props
+
+const toAttribute = (name: string) => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+
+/** `key` is React's list bookkeeping, not something SVG should be told about. */
+const attributesOf = (attrs: Record<string, string>) => {
+  const out: Record<string, string> = {}
+  for (const [name, value] of Object.entries(attrs)) {
+    if (name === 'key') continue
+    out[toAttribute(name)] = value
+  }
+  return out
+}
+
+const parts = icon.map(([tag, attrs]) => ({ tag, attrs: attributesOf(attrs) }))
+---
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  aria-hidden={label ? undefined : 'true'}
+  aria-label={label}
+  role={label ? 'img' : undefined}
+>
+  {parts.map(({ tag, attrs }) => {
+    const Tag = tag as 'path'
+    return <Tag {...attrs} />
+  })}
+</svg>

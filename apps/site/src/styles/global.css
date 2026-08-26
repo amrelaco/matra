@@ -20,8 +20,12 @@
   --ink: #1a1917;
   --ink-soft: #5f5c53;
   --ink-faint: #918d80;
-  --rule: #e4dfd1;
-  --rule-strong: #d3ccb8;
+  --rule: #e8e3d6;
+  --rule-strong: #e0d9c8;
+  /* A shade up from the page rule, for edges that sit on a tinted fill. The
+     light one disappears against the window's title bar, and an edge you have
+     to look for is not an edge. */
+  --rule-firm: #d6cebb;
   --indigo: #3a3d92;
   --indigo-deep: #2a2c6b;
   --indigo-wash: #e9e7f3;
@@ -56,36 +60,30 @@
      edge — the hero used to be capped narrower than the sections under it, so
      the nav, the headline and the first section each started somewhere else. */
   --page: 1140px;
+  /* The docs are wider · three columns rather than one. */
+  --page-wide: 1366px;
+  /* Where the vertical rails sit. */
   --gutter: 40px;
+  /* And how far the text stands off them. A rule with a word against it is not
+     a margin, it is a collision · the headline used to start exactly on the
+     left rail. */
+  --inset: 34px;
+
+  /* One dash for the whole site.
+     `border-style: dashed` gives no say over the dash or the gap — the browser
+     picks both, and it picks them short. These draw the line as a repeating
+     gradient instead, so the rhythm is a number here rather than a guess in
+     each engine. Change these two and every rule on every page follows. */
+  --dash: 8px;
+  --dash-gap: 5px;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #111114;
-    --surface: #191920;
-    --surface-2: #22222b;
-    --ink: #edebe6;
-    --ink-soft: #a8a49b;
-    --ink-faint: #6e6a63;
-    --rule: #2a2a33;
-    --rule-strong: #3a3a46;
-    --indigo: #a2a7ff;
-    --indigo-deep: #7c82e8;
-    --indigo-wash: #1e1f3a;
-    --blood: #e9776b;
-    --invert-bg: #22222b;
-    --invert-fg: #edebe6;
-    --code-bg: #0c0c10;
-    --code-chrome: #17171e;
-    --code-fg: #edebe6;
-    --code-key: #a2a7ff;
-    --code-str: #8fd0a8;
-    --code-com: #6e6a63;
-    color-scheme: dark;
-  }
-}
+/* Light is the default, and the system preference does not override it.
 
+   A visitor whose machine is dark still gets the light page first: this site is
+   an argument about text, and the light one is the version that argument was
+   written for. The toggle is one press away, and the choice is remembered. */
 :root[data-theme="dark"] {
   --paper: #111114;
   --surface: #191920;
@@ -93,8 +91,9 @@
   --ink: #edebe6;
   --ink-soft: #a8a49b;
   --ink-faint: #6e6a63;
-  --rule: #2a2a33;
-  --rule-strong: #3a3a46;
+  --rule: #26262e;
+  --rule-strong: #303039;
+  --rule-firm: #3d3d49;
   --indigo: #a2a7ff;
   --indigo-deep: #7c82e8;
   --indigo-wash: #1e1f3a;
@@ -171,14 +170,53 @@ a {
 
 /* --- structure -------------------------------------------------------- */
 
+/*
+ * Every section is a box, and the boxes stack into a page.
+ *
+ * Two vertical rules at the column edges, running the full height of the
+ * section, so the whole site reads as one ruled sheet rather than a stack of
+ * unrelated bands. They sit on the section rather than the wrap because they
+ * have to reach the section's edges, and the wrap is where the padding is.
+ */
 .section {
-  border-top: 1px dashed var(--rule-strong);
+  position: relative;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+.page-head {
+  position: relative;
+}
+
+.section::before,
+.section::after,
+.page-head::before,
+.page-head::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-image: var(--dash-v);
+  pointer-events: none;
+}
+
+.section::before,
+.page-head::before {
+  left: max(var(--gutter), calc(50% - var(--page) / 2 + var(--gutter)));
+}
+
+.section::after,
+.page-head::after {
+  right: max(var(--gutter), calc(50% - var(--page) / 2 + var(--gutter)));
 }
 
 .wrap {
   max-width: var(--page);
   margin: 0 auto;
-  padding: var(--s6) var(--gutter);
+  padding: var(--s6) calc(var(--gutter) + var(--inset));
 }
 
 .kicker {
@@ -216,25 +254,33 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 13px 22px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
+  padding: 14px 23px;
+  border: 0;
+  background-color: var(--ink);
   color: var(--paper);
   font-size: 14.5px;
   text-decoration: none;
   white-space: nowrap;
-  transition: opacity 120ms ease;
 }
 
+/* The site's dash, not the browser's. `border-style: dashed` hands the rhythm
+   to the engine, which drew this one at half the beat of every rule near it. */
 .btn.ghost {
-  background: transparent;
   color: var(--ink);
-  border-style: dashed;
-  border-color: var(--rule-strong);
+  background-color: transparent;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
 }
 
 .btn:hover {
   opacity: 0.85;
+}
+
+.btn.ghost:hover {
+  opacity: 1;
+  background-color: var(--surface-2);
 }
 
 table {
@@ -247,7 +293,10 @@ th,
 td {
   text-align: left;
   padding: 14px 16px;
-  border-bottom: 1px dashed var(--rule);
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
 }
 
 th {
@@ -289,6 +338,131 @@ th {
   -webkit-user-modify: read-write;
 }
 
+/*
+ * What a document looks like inside any editor on this site.
+ *
+ * One place, because there are now sixteen of them across three pages and the
+ * alternative is each page re-describing what a blockquote is. Anything a page
+ * wants to say differently it says after this.
+ */
+.matra-editor :is(h1, h2, h3, h4) {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.matra-editor h1 {
+  font-size: 30px;
+}
+.matra-editor h2 {
+  font-size: 24px;
+}
+.matra-editor h3 {
+  font-size: 19px;
+}
+.matra-editor h4 {
+  font-size: 16px;
+}
+
+.matra-editor p {
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.matra-editor > :last-child {
+  margin-bottom: 0;
+}
+
+.matra-editor blockquote {
+  margin: 0 0 12px;
+  padding: 2px 0 2px 16px;
+  color: var(--ink-soft);
+  font-style: italic;
+  --dash: 5px;
+  --dash-gap: 4px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--indigo) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+  background-size: 2px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+.matra-editor blockquote p {
+  margin: 0;
+}
+
+.matra-editor :is(ul, ol) {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.matra-editor li p {
+  margin: 0;
+}
+
+.matra-editor pre {
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  background-color: var(--code-bg);
+  color: var(--code-fg);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  overflow-x: auto;
+}
+
+.matra-editor :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background-color: var(--surface-2);
+  padding: 1px 5px;
+}
+
+.matra-editor hr {
+  border: 0;
+  height: 1px;
+  margin: 16px 0;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+}
+
+.matra-editor mark {
+  background-color: color-mix(in srgb, var(--indigo) 18%, transparent);
+  color: inherit;
+  padding: 0 2px;
+}
+
+.matra-editor table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+  font-size: 13.5px;
+}
+
+.matra-editor :is(td, th) {
+  padding: 9px 12px;
+  vertical-align: top;
+  text-align: left;
+  font-weight: 400;
+  background-image: var(--dash-h), var(--dash-v);
+  background-size: 100% 1px, 1px 100%;
+  background-position: 0 100%, 100% 0;
+  background-repeat: no-repeat;
+}
+
+.matra-editor th {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
 /* Scaffolding for an empty block, not content — it must not take up a line. */
 [data-matra-filler] {
   user-select: none;
@@ -297,11 +471,47 @@ th {
 @media (max-width: 860px) {
   :root {
     --gutter: 22px;
-    --s6: 76px;
-    --s7: 100px;
+    --inset: 16px;
+    --s6: 64px;
+    --s7: 84px;
+    /* A shorter dash on a narrower page: the rhythm should read as a rule at
+       the width it is actually drawn, not just at the widest one. */
+    --dash: 7px;
+    --dash-gap: 4px;
   }
   body {
     font-size: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  :root {
+    --gutter: 16px;
+    /* The rails come off at this width, so there is nothing left to stand away
+       from — but a phone still wants more than sixteen pixels of margin. */
+    --inset: 6px;
+    --s6: 48px;
+    --s7: 64px;
+    --dash: 6px;
+    --dash-gap: 4px;
+  }
+  /* The rails would sit on top of the text at this width, so they come off and
+     the horizontal rules carry the structure on their own. */
+  .section::before,
+  .section::after,
+  .page-head::before,
+  .page-head::after {
+    display: none;
+  }
+  .keys-button {
+    right: 14px;
+    bottom: 14px;
+  }
+  .keys-panel {
+    right: 12px;
+    left: 12px;
+    bottom: 66px;
+    width: auto;
   }
 }
 
@@ -359,12 +569,15 @@ th {
   color: var(--ink);
 }
 .site-footer .bottom-wrap {
-  border-top: 1px dashed var(--rule);
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
 }
 .site-footer .bottom {
   max-width: var(--page);
   margin: 0 auto;
-  padding: 22px var(--gutter);
+  padding: 22px calc(var(--gutter) + var(--inset));
   display: flex;
   justify-content: space-between;
   font-size: 11.5px;
@@ -379,21 +592,36 @@ th {
 
 /* --- docs -------------------------------------------------------------- */
 
+/*
+ * The docs sit on the same sheet as everything else.
+ *
+ * Wider than the marketing column, because three tracks of navigation, prose
+ * and contents do not fit in the width one column of prose wants — so the
+ * rails move out with it rather than the grid moving in.
+ */
+.section.wide::before {
+  left: max(var(--gutter), calc(50% - var(--page-wide) / 2 + var(--gutter)));
+}
+.section.wide::after {
+  right: max(var(--gutter), calc(50% - var(--page-wide) / 2 + var(--gutter)));
+}
+
 .docs-shell {
-  /* Wider than the marketing column: three tracks of navigation, prose and
-     contents do not fit in the width one column of prose wants. */
-  max-width: 1366px;
+  max-width: var(--page-wide);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr) 200px;
   gap: var(--s5);
-  padding: var(--s4) var(--gutter) var(--s6);
+  padding: var(--s5) calc(var(--gutter) + var(--inset)) var(--s6);
 }
 .docs-side {
   position: sticky;
   top: 96px;
   align-self: start;
-  border-right: 1px dashed var(--rule);
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
   padding-right: var(--s3);
 }
 .docs-group {
@@ -411,16 +639,25 @@ th {
   font-size: 14px;
   color: var(--ink-soft);
   text-decoration: none;
-  padding: 6px 10px;
-  border-left: 1px solid transparent;
+  padding: 6px 10px 6px 11px;
 }
 .docs-side a:hover {
   color: var(--ink);
 }
 .docs-side a.on {
   color: var(--indigo);
-  border-left-color: var(--indigo);
-  background: color-mix(in srgb, var(--indigo) 7%, transparent);
+  /* The marker is the same dashed rule as everywhere else, just indigo. */
+  --dash: 4px;
+  --dash-gap: 3px;
+  background-color: color-mix(in srgb, var(--indigo) 7%, transparent);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--indigo) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+  background-size: 1px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
 }
 
 .docs-crumb {
@@ -471,8 +708,11 @@ th {
   padding: 2px 6px;
 }
 .docs-article pre {
-  border: 1px dashed var(--rule-strong);
-  background: var(--code-bg);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--code-bg);
   color: var(--code-fg);
   padding: var(--s3);
   overflow-x: auto;
@@ -488,8 +728,17 @@ th {
   font-size: inherit;
 }
 .docs-article .note {
-  border-left: 2px solid var(--indigo);
-  background: var(--indigo-wash);
+  --dash: 6px;
+  --dash-gap: 5px;
+  background-color: var(--indigo-wash);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--indigo) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+  background-size: 2px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
   padding: 16px 18px;
   font-size: 14.5px;
   color: var(--ink);
@@ -507,12 +756,14 @@ th {
   font-family: var(--font-mono);
   font-size: 10px;
   padding: 4px 9px;
-  border: 1px solid var(--rule-strong);
-  background: var(--paper);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--paper);
   color: var(--ink-faint);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 120ms;
 }
 .docs-article pre:hover .copy-code {
   opacity: 1;
@@ -525,6 +776,12 @@ th {
   position: sticky;
   top: 96px;
   align-self: start;
+  /* The mirror of the sidebar's rule · three tracks, two dividers. */
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  padding-left: var(--s3);
 }
 .docs-toc a {
   display: block;
@@ -532,12 +789,23 @@ th {
   color: var(--ink-soft);
   text-decoration: none;
   padding: 5px 0 5px 11px;
-  border-left: 1px solid var(--rule);
+  /* A short dash: one table-of-contents row is barely taller than the site
+     rhythm, so the full-length dash would draw one tick and call it a line. */
+  --dash: 4px;
+  --dash-gap: 3px;
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
   line-height: 1.45;
 }
 .docs-toc a:hover {
   color: var(--ink);
-  border-left-color: var(--indigo);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--indigo) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
 }
 
 .docs-pager {
@@ -546,23 +814,41 @@ th {
   gap: var(--s2);
   margin-top: var(--s5);
   padding-top: var(--s3);
-  border-top: 1px dashed var(--rule-strong);
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
 }
 .docs-pager-link {
   display: flex;
   flex-direction: column;
   gap: 5px;
   text-decoration: none;
-  border: 1px dashed var(--rule-strong);
+  background-color: var(--surface);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
   padding: 16px 20px;
   min-width: 190px;
 }
+/* The same tint the toolbar buttons take · nothing on this site moves. */
 .docs-pager-link:hover {
-  border-color: var(--indigo);
+  background-color: var(--surface-2);
 }
 .docs-pager-link span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 10.5px;
   color: var(--ink-faint);
+}
+/* Colour only. Nothing on this site moves under the pointer. */
+.docs-pager-link svg {
+  color: inherit;
+}
+.docs-pager-link:hover svg {
+  color: var(--indigo);
 }
 .docs-pager-link b {
   font-weight: 500;
@@ -597,7 +883,10 @@ th {
   .docs-side {
     position: static;
     border-right: none;
-    border-bottom: 1px dashed var(--rule);
+    background-image: var(--dash-h);
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
     padding: 0 0 var(--s3);
   }
   .docs-side nav {
@@ -612,6 +901,12 @@ th {
 
 /* --- page header ------------------------------------------------------- */
 
+/*
+ * The rails run through the header too.
+ *
+ * It draws no rule of its own: the nav already puts one directly above it, and
+ * two lines a pixel apart is not a border, it is a mistake.
+ */
 .page-head .wrap {
   padding-bottom: var(--s4);
 }
@@ -722,16 +1017,22 @@ ul[data-type="taskList"] > li::marker {
   width: 15px;
   height: 15px;
   margin: 0;
-  border: 1px dashed var(--rule-strong);
-  background: transparent;
+  /* A short dash · a fifteen-pixel box has room for four ticks of the site
+     rhythm, not one and a bit. The class is the same; only the beat changes. */
+  --dash: 3px;
+  --dash-gap: 2px;
+  background-color: transparent;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
   cursor: pointer;
   display: grid;
   place-content: center;
-  transition: border-color 120ms ease, background-color 120ms ease;
 }
 
 .matra-task-check input[type="checkbox"]:hover {
-  border-color: var(--indigo);
+  --rule-strong: var(--indigo);
 }
 
 .matra-task-check input[type="checkbox"]::before {
@@ -739,18 +1040,17 @@ ul[data-type="taskList"] > li::marker {
   width: 7px;
   height: 7px;
   background: var(--paper);
-  transform: scale(0);
-  transition: transform 120ms ease;
+  opacity: 0;
+  transition: opacity 120ms ease;
 }
 
 .matra-task-check input[type="checkbox"]:checked {
-  background: var(--indigo);
-  border-color: var(--indigo);
-  border-style: solid;
+  background-color: var(--indigo);
+  background-image: none;
 }
 
 .matra-task-check input[type="checkbox"]:checked::before {
-  transform: scale(1);
+  opacity: 1;
 }
 
 .matra-task-body {
@@ -799,26 +1099,521 @@ ul[data-type="taskList"] > li::marker {
   animation-delay: 150ms;
 }
 
-.btn,
-.copy,
-.docs-side a,
-.site-footer .cols a,
-.hang-items li {
-  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, opacity
-    140ms ease, transform 140ms ease;
-}
-
+/*
+ * Hover changes state, it does not animate into it.
+ *
+ * A button that fades over 140 ms is a button that is still arriving when the
+ * pointer has already moved on, and on a page where every line is dashed the
+ * drifting colour reads as a rendering artefact rather than as feedback.
+ */
 .hang-items li:hover {
   color: var(--ink);
   border-color: var(--indigo);
-}
-
-.btn:hover {
-  transform: translateY(-1px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .section > .wrap > * {
     animation: none;
   }
+}
+
+/* --- the theme mask --------------------------------------------------------
+
+   `startViewTransition` snapshots the old page and paints the new one over it.
+   The default cross-fade is turned off on both layers so the only thing moving
+   is the clip-path that theme.ts animates: the new theme uncovered from the top
+   down, in place. The old snapshot has to stay fully opaque underneath it — a
+   transparent layer would show the live page through both and the mask edge
+   would disappear. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* The group animates width, height and a transform by default. Both snapshots
+   are the viewport so it resolves to a no-op, but a no-op that is still an
+   animation is one resize away from putting movement back into a transition
+   whose whole point is that nothing moves. */
+::view-transition-group(root) {
+  animation: none;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Astro's page transitions use the same pseudo-elements. Naming the root only
+   while a theme change is in flight keeps navigation looking as it did. */
+html[data-theme-changing] {
+  view-transition-name: root;
+}
+
+/* A word and a glyph, like the link next to it — not a boxed square. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--ink);
+}
+
+.theme-toggle svg {
+  display: block;
+}
+
+/* Only one of the two glyphs is ever drawn, so the button says what pressing
+   it will do rather than what the page currently is. */
+.theme-toggle .at-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .at-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .at-dark {
+  display: block;
+}
+
+/* One glyph at a time on a copy button, so it reports the result rather than
+   describing it: the tick is the confirmation.
+
+   Keyed on the state classes rather than on each button's own class, because
+   there are now three kinds of copy button and the fourth would have shown
+   both words. These live here rather than in a page's scoped styles because
+   the glyph is rendered by Icon.astro and carries that component's scope, not
+   the page's — a scoped `.copy .at-done` silently matches nothing. */
+.at-done {
+  display: none;
+}
+
+.done .at-idle {
+  display: none;
+}
+
+.done .at-done {
+  display: block;
+}
+
+/* A tick or a cross in front of a table cell, so a column can be read at a
+   glance instead of word by word. The mark comes from the value, so every
+   column earns the same ones — see toneOf in index.astro. Styled here because
+   the glyph is rendered by Icon.astro and carries that component's scope, not
+   the page's. */
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mark.good {
+  color: var(--indigo);
+}
+
+.mark.bad {
+  color: var(--ink-faint);
+}
+
+.mark svg {
+  flex: none;
+  opacity: 0.85;
+}
+
+/* --- one border, everywhere ------------------------------------------------
+ *
+ * `.boxed` is the only border on this site. It draws all four edges as dashed
+ * gradients, which is the one way to control the dash length, and it keeps the
+ * corners square: a rounded corner on a gradient border is a straight dash
+ * cutting across the arc.
+ *
+ * `.boxed-x` and `.boxed-y` draw a pair of edges for the places that want a
+ * rule rather than a box.
+ */
+:root {
+  --dash-h: repeating-linear-gradient(
+    to right,
+    var(--rule-strong) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+  --dash-v: repeating-linear-gradient(
+    to bottom,
+    var(--rule-strong) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+}
+
+/*
+ * Cards reach the rails; text stands off them.
+ *
+ * The inset exists so a headline does not start on a vertical rule. A bordered
+ * card has an edge of its own and wants to land on one — stopping it short
+ * leaves its top and bottom rules ending in mid-air, and the page stops reading
+ * as one ruled sheet and starts reading as boxes dropped onto it. Every
+ * horizontal line on the page should finish on a vertical one.
+ *
+ * The pull is exactly the inset, so a card's edge and the rail are the same
+ * line rather than two lines a few pixels apart.
+ */
+/*
+ * A card at the edge of a section is the edge of the section.
+ *
+ * The rails run the section's full height and each section's rule crosses
+ * them, so a card's outer edge, that rule and the two rails draw an empty box
+ * beside every card — and on a page where every box is something you can type
+ * in, an empty one reads as an invitation that does nothing. Dropping the
+ * padding on that side puts the card's own edge on the section line, and a
+ * card that is a section's only child fills it.
+ */
+.section > .wrap:has(> :first-child:is(.boxed, .boxed-y, .boxed-top, .fills)) {
+  padding-top: 0;
+}
+
+.section > .wrap:has(> :last-child:is(.boxed, .boxed-y, .boxed-top, .boxed-bottom, .fills)) {
+  padding-bottom: 0;
+}
+
+/*
+ * A card that fills its section borrows the section's own edges.
+ *
+ * `.boxed` would draw its top and bottom a pixel from the rules the section
+ * already puts there — two lines where the design has one. `.fills` says the
+ * same thing about the padding and draws nothing.
+ */
+.fills {
+  background-color: var(--surface);
+}
+
+.bleed {
+  margin-left: calc(var(--inset) * -1);
+  margin-right: calc(var(--inset) * -1);
+}
+.bleed-r {
+  margin-right: calc(var(--inset) * -1);
+}
+.bleed-l {
+  margin-left: calc(var(--inset) * -1);
+}
+
+.boxed {
+  border: 0;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+}
+
+.boxed-y {
+  border: 0;
+  background-image: var(--dash-h), var(--dash-h);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat;
+}
+
+.boxed-top {
+  border: 0;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+.boxed-bottom {
+  border: 0;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+
+/* A box that also has a fill keeps both: the gradient is the border layer, the
+   colour is underneath it. */
+.boxed.filled,
+.boxed-y.filled {
+  background-color: var(--surface);
+}
+
+/* --- the keyboard panel ---------------------------------------------------- */
+
+.keys-button {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 55;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.keys-button:hover,
+.keys-button[aria-expanded="true"] {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.keys-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 76px;
+  z-index: 56;
+  width: min(560px, calc(100vw - 44px));
+  max-height: min(70vh, 620px);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--paper);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  animation: keys-in 0.14s ease-out;
+}
+
+.keys-panel[hidden] {
+  display: none;
+}
+
+@keyframes keys-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.keys-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+
+.keys-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.keys-hint {
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  margin-right: auto;
+}
+
+.keys-close {
+  display: flex;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.keys-close:hover {
+  color: var(--ink);
+}
+
+.keys-body {
+  overflow-y: auto;
+  padding: 4px 15px 15px;
+  column-count: 2;
+  column-gap: 26px;
+}
+
+.keys-group {
+  break-inside: avoid;
+  margin-top: 14px;
+}
+
+.keys-group-name {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 6px;
+}
+
+.keys-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.keys-row kbd {
+  flex: none;
+  min-width: 92px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 3px 6px;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--surface-2);
+  white-space: nowrap;
+}
+
+.keys-row span {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  .keys-body {
+    column-count: 1;
+  }
+}
+
+/* Chat bubbles.
+ *
+ * Global, not scoped to the page. A sent message is built by demos.ts at the
+ * moment you press send, so it never carries the build-time scope attribute
+ * Astro stamps on the markup — every message you sent came out unstyled and
+ * left-aligned while the two that shipped with the page looked right. */
+.bubble {
+  padding: 9px 13px;
+  font-size: 14px;
+  max-width: 78%;
+}
+
+.bubble.them {
+  background: var(--surface-2);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.bubble.me {
+  background: var(--indigo);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+/* --- the slash menu -------------------------------------------------------- */
+
+.slash-menu {
+  position: fixed;
+  z-index: 60;
+  width: 280px;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--paper);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  animation: slash-in 0.12s ease-out;
+}
+
+.slash-menu[hidden] {
+  display: none;
+}
+
+@keyframes slash-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slash-head {
+  padding: 10px 12px 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.slash-list {
+  overflow-y: auto;
+  padding: 0 6px 6px;
+}
+
+.slash-item {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.slash-item.on {
+  background: var(--surface-2);
+}
+
+.slash-glyph {
+  display: flex;
+  color: var(--ink-soft);
+}
+
+.slash-item.on .slash-glyph {
+  color: var(--indigo);
+}
+
+/* The name never wraps; the hint gives way instead. A two-line row breaks the
+   rhythm of the list and makes the arrow keys feel like they are skipping. */
+.slash-name {
+  white-space: nowrap;
+}
+
+.slash-hint {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.slash-empty {
+  padding: 10px 8px 14px;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* The range the menu will replace, marked by the extension itself. */
+.matra-suggestion {
+  background: var(--indigo-wash);
 }

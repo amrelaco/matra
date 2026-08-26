@@ -1,4 +1,6 @@
 ---
+import { GithubIcon, Moon02Icon, Sun03Icon } from '@hugeicons/core-free-icons'
+import Icon from './Icon.astro'
 import Logo from './Logo.astro'
 const links = [
   ['Docs', '/docs'],
@@ -19,24 +21,48 @@ const links = [
     </div>
 
     <div class="right">
-      <a class="gh" href="https://github.com/amrelaco/matra">GitHub</a>
+      <a class="gh" href="https://github.com/amrelaco/matra">
+        <Icon icon={GithubIcon} size={15} />
+        <span>GitHub</span>
+      </a>
+      <!--
+        Both glyphs are rendered and CSS shows one, so the button is correct in
+        the markup the server sent. Swapping it in JavaScript would mean a sun
+        briefly showing on a dark page on every single load.
+
+        Drawn as a peer of the GitHub link beside it rather than as a bordered
+        square: two items in a row, one boxed and one not, reads as a stray box
+        rather than as a pair.
+      -->
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Use the dark theme" aria-pressed="false">
+        <Icon icon={Moon02Icon} class="at-light" size={15} />
+        <Icon icon={Sun03Icon} class="at-dark" size={15} />
+        <span class="at-light">Dark</span>
+        <span class="at-dark">Light</span>
+      </button>
     </div>
   </div>
 </nav>
 
 <style>
   nav {
-    border-bottom: 1px dashed var(--rule-strong);
     position: sticky;
     top: 0;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(8px);
     z-index: 40;
+    /* background-color, never the shorthand: `background` resets
+       background-image, and the rule under the bar is a background image. It
+       took the dashed line off the whole nav and left no trace of doing it. */
+    background-color: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(8px);
+    background-image: var(--dash-h);
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
   }
   .bar {
     max-width: var(--page);
     margin: 0 auto;
-    padding: 16px var(--gutter);
+    padding: 16px calc(var(--gutter) + var(--inset));
     display: flex;
     align-items: center;
     gap: var(--s4);
@@ -54,7 +80,7 @@ const links = [
   .links a { text-decoration: none; color: var(--ink-soft); }
   .links a:hover { color: var(--ink); }
   .right { display: flex; align-items: center; gap: var(--s2); flex: none; }
-  .gh { font-size: 14.5px; text-decoration: none; color: var(--ink-soft); }
+  .gh { display: inline-flex; align-items: center; gap: 7px; font-size: 14.5px; text-decoration: none; color: var(--ink-soft); }
   .gh:hover { color: var(--ink); }
 
   @media (max-width: 860px) {

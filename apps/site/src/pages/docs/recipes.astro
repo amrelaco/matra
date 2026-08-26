@@ -39,6 +39,61 @@ entries.forEach((entry) =&gt; &#123;
     a cached outline ends up pointing at a heading that was renamed.
   </p>
 
+  <h2>A slash menu, like the one on this site</h2>
+  <p>
+    The extension finds the trigger and marks the range. What it deliberately does not do is
+    draw a list, so this is the whole of the missing half — and the same code runs on every
+    editable paragraph of this site.
+  </p>
+  <pre><code>import &#123; activeSuggestion, suggestion &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123;
+  extensions: [...starterKit, suggestion(&#123; char: '/', name: 'slash' &#125;)],
+&#125;)
+
+const ITEMS = [
+  &#123; name: 'Heading 1', command: 'toggleHeading', arg: 1 &#125;,
+  &#123; name: 'Bulleted list', command: 'toggleBulletList' &#125;,
+  &#123; name: 'Quote', command: 'toggleBlockquote' &#125;,
+]
+
+let matches = [], index = 0
+
+const sync = () =&gt; &#123;
+  const active = activeSuggestion(editor, 'slash')
+  if (!active) return hide()
+  // Offer only what this editor can do: a row for a command that is not
+  // installed is a row that does nothing when it is pressed.
+  matches = ITEMS
+    .filter((item) =&gt; typeof editor.commands[item.command] === 'function')
+    .filter((item) =&gt; item.name.toLowerCase().startsWith(active.query.toLowerCase()))
+  index = 0
+  show(matches, document.querySelector('.matra-suggestion').getBoundingClientRect())
+&#125;
+
+editor.on('change', sync)
+editor.on('selectionChange', sync)
+
+// Captured, so the menu gets Enter before the editor splits the block with it.
+document.addEventListener('keydown', (event) =&gt; &#123;
+  if (!open) return
+  if (event.key === 'ArrowDown') &#123; event.preventDefault(); index = (index + 1) % matches.length &#125;
+  if (event.key === 'ArrowUp') &#123; event.preventDefault(); index = (index - 1 + matches.length) % matches.length &#125;
+  if (event.key !== 'Enter') return
+  event.preventDefault()
+  event.stopPropagation()
+  const item = matches[index]
+  const active = activeSuggestion(editor, 'slash')
+  hide()
+  // Take the "/query" out first: the other order turns the slash into a heading.
+  editor.commands.remove(active.range)
+  editor.commands[item.command](item.arg)
+&#125;, true)</code></pre>
+  <p>
+    <code>Escape</code> is already bound by the extension and stays closed afterwards, so the
+    next arrow key does not reopen what was just dismissed.
+  </p>
+
   <h2>Search highlighting</h2>
   <pre><code>const search = (query) =&gt; (&#123;
   kind: 'extension',

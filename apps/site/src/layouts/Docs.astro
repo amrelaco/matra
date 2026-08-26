@@ -1,5 +1,7 @@
 ---
+import { ArrowLeft02Icon, ArrowRight02Icon } from '@hugeicons/core-free-icons'
 import Footer from '../components/Footer.astro'
+import Icon from '../components/Icon.astro'
 import Nav from '../components/Nav.astro'
 import Base from '../layouts/Base.astro'
 
@@ -48,6 +50,7 @@ const nav = [
       ['API', '/docs/api'],
       ['Keyboard shortcuts', '/docs/shortcuts'],
       ['Recipes', '/docs/recipes'],
+      ['Benchmarks', '/docs/benchmarks'],
     ],
   ],
 ] as const
@@ -63,7 +66,13 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
 ---
 <Base title={title} description={description}>
   <Nav />
-  <div class="docs-shell">
+  <!--
+    The same ruled sheet as every other page: a section, with the rails running
+    its full height. Docs used to be a free-floating grid with a different
+    width and no rails, which made the documentation look like a different
+    product from the page that sent you to it.
+  -->
+  <div class="section wide docs-shell">
     <aside class="docs-side">
       <nav aria-label="Documentation">
         {nav.map(([group, items]) => (
@@ -87,13 +96,13 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
       <nav class="docs-pager" aria-label="More documentation">
         {previous ? (
           <a href={previous[1]} class="docs-pager-link">
-            <span class="mono">← previous</span>
+            <span class="mono"><Icon icon={ArrowLeft02Icon} size={13} />previous</span>
             <b>{previous[0]}</b>
           </a>
         ) : <span />}
         {next && (
           <a href={next[1]} class="docs-pager-link next">
-            <span class="mono">next →</span>
+            <span class="mono">next<Icon icon={ArrowRight02Icon} size={13} /></span>
             <b>{next[0]}</b>
           </a>
         )}

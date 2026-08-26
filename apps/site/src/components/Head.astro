@@ -6,16 +6,16 @@ interface Props {
 }
 const { kicker, title, lede } = Astro.props
 ---
+<!--
+  The attribute goes on the heading, not on a div around it.
+  Wrapped, the upgrade parsed the heading's text into a paragraph and rendered
+  it inside a plain div — so the title of every page but the home one came out
+  at body size, and the lede ran straight into it.
+-->
 <header class="page-head">
   <div class="wrap">
     <p class="kicker">{kicker}</p>
-    <div data-editable="typography">
-      <h1 set:html={title} />
-    </div>
-    {lede && (
-      <div data-editable="typography">
-        <p class="lede">{lede}</p>
-      </div>
-    )}
+    <h1 data-editable="line" set:html={title} />
+    {lede && <p class="lede" data-editable="prose">{lede}</p>}
   </div>
 </header>

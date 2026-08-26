@@ -31,6 +31,7 @@ import {
   orderedList,
   paragraph,
   strike,
+  suggestion,
   tableCell,
   tableHeader,
   table as tableNode,
@@ -41,13 +42,22 @@ import {
   typography,
   underline,
 } from '@matrajs/core'
+import { watchSlash } from './slash'
 
 type Kit = readonly unknown[]
 
 const MARKS = [bold, italic, strike, code, underline, highlight] as const
 
+/**
+ * The slash menu, on every editor the page makes.
+ *
+ * Named `slash` rather than left as the default, so an editor that also wants
+ * an `@` menu later is not fighting this one for the same state key.
+ */
+const SLASH = suggestion({ char: '/', name: 'slash' })
+
 /** One line, marks only — a label, a caption, a heading, a table cell. */
-const LINE: Kit = [doc, paragraph, text, ...MARKS, hardBreak, history, typography]
+const LINE: Kit = [doc, paragraph, text, ...MARKS, hardBreak, history, typography, SLASH]
 
 /** Prose: marks plus the blocks a paragraph can legitimately become. */
 const PROSE: Kit = [
@@ -64,6 +74,7 @@ const PROSE: Kit = [
   hardBreak,
   history,
   typography,
+  SLASH,
 ]
 
 /** A whole table, so cells are editable and the structure survives. */
@@ -78,6 +89,7 @@ const TABLE: Kit = [
   ...MARKS,
   hardBreak,
   history,
+  SLASH,
 ]
 
 /** Everything, for the region that is meant to show everything. */
@@ -99,6 +111,7 @@ const FULL: Kit = [
   link,
   history,
   typography,
+  SLASH,
 ]
 
 const KITS: Record<string, Kit> = { line: LINE, prose: PROSE, table: TABLE, full: FULL }
@@ -139,9 +152,14 @@ const SKIP = [
   'pre',
   'code',
   '.btn',
+  // Inside an editor that already exists. The demos mount their own instances,
+  // and their content is ordinary `h1`/`p`/`li` markup — so this sweep would
+  // find that markup and mount a second editor over the top of it, tearing out
+  // the node views as it went. That is how the task list lost its checkboxes.
+  '.matra-editor',
   // Its <b> and <span> are stacked by CSS and carry meaning as separate
   // elements; one editor over the whole item flattens them onto one line and
-  // "22.3 kB" runs straight into its own caption.
+  // "24.5 kB" runs straight into its own caption.
   '.proof li',
   '[data-static]',
   '[data-editable]',
@@ -155,6 +173,12 @@ const isInteractive = (element: Element) =>
 function kitFor(element: HTMLElement): Kit {
   const named = element.dataset.editable
   if (named && KITS[named]) return KITS[named] as Kit
+  // A kit name nobody defined is a typo, and it used to fail silently by
+  // falling through to the single-line kit — which flattened every heading it
+  // was asked to upgrade into body text.
+  if (named && named !== 'true') {
+    console.warn(`Matra site: no editable kit named "${named}" · using the default`)
+  }
   if (/^(H[1-4]|LI|TD|TH|FIGCAPTION|DT|DD)$/.test(element.tagName)) return LINE
   if (element.classList.contains('kicker')) return LINE
   return element.tagName === 'P' ? PROSE : LINE
@@ -169,6 +193,7 @@ function upgrade(element: HTMLElement): void {
   try {
     const editor = createEditor({ extensions: kitFor(element) as never, content: seed })
     editor.mount(element)
+    watchSlash(editor as never)
 
     // Put it back if the upgrade emptied it. A schema that cannot represent
     // some markup drops it, and a section of the page silently disappearing is
@@ -205,7 +230,14 @@ function wrapTable(table: HTMLTableElement): HTMLElement | null {
   return holder
 }
 
-function regions(): HTMLElement[] {
+/**
+ * Every element on the page that should become an editor.
+ *
+ * Exported so the exclusions can be tested directly: the interesting cases are
+ * all about what this does *not* return, and a rule that stops matching fails
+ * silently — the page still renders, it just quietly destroys something.
+ */
+export function regions(): HTMLElement[] {
   const tables = Array.from(document.querySelectorAll<HTMLTableElement>('table'))
     .map(wrapTable)
     .filter((element): element is HTMLElement => element !== null)

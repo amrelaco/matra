@@ -1,0 +1,173 @@
+---
+/**
+ * A window, with a title bar and one thing inside it.
+ *
+ * Every demo on the site is an application someone types into, so it is drawn
+ * as one. There is deliberately no second card inside: a bordered box inside a
+ * bordered box reads as a screenshot of a screenshot, and the window already
+ * says "this is the surface".
+ *
+ * The `toolbar` slot sits under the title bar and the `foot` slot under the
+ * body, both flush to the window's edges, because a toolbar floating inside a
+ * padded box is the nested card again wearing a different hat.
+ */
+interface Props {
+  name: string
+  /** Turn off the body padding for content that manages its own, like a split. */
+  flush?: boolean
+  /**
+   * Which edges reach the page's vertical rails.
+   *
+   * A window in the right-hand column of a two-column row wants its right edge
+   * on the right rail · anything else leaves its own horizontal rules stopping
+   * a few pixels short of the line they should meet.
+   */
+  bleed?: 'both' | 'left' | 'right'
+}
+const { name, flush = false, bleed } = Astro.props
+const bleedClass =
+  bleed === 'both' ? 'bleed' : bleed === 'left' ? 'bleed-l' : bleed === 'right' ? 'bleed-r' : ''
+---
+<div class:list={['window boxed filled', bleedClass]}>
+  <div class="window-bar boxed" data-static>
+    <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="window-name mono">{name}</span>
+  </div>
+
+  {Astro.slots.has('toolbar') && (
+    <div class="window-tools boxed-bottom" data-static>
+      <slot name="toolbar" />
+    </div>
+  )}
+
+  <div class:list={['window-body', { flush }]}>
+    <slot />
+  </div>
+
+  {Astro.slots.has('foot') && (
+    <div class="window-foot boxed-top" data-static>
+      <slot name="foot" />
+    </div>
+  )}
+</div>
+
+<style>
+  .window {
+    /* Chrome sits on a fill, so its edges take the firmer rule · the page's
+       lighter one is for rules on paper. */
+    --rule-strong: var(--rule-firm);
+    background-color: var(--surface);
+    overflow: hidden;
+    /* A column, so the body takes whatever height is left when the window is
+       stretched to fill its row. A short document in a tall window should give
+       you the whole window to type in, not a short box with a gap under it. */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /*
+   * The title bar carries all four of its own edges.
+   *
+   * The window's frame is drawn as a background image, and this bar has a fill
+   * of its own — a child's background paints over the parent's, so the top,
+   * left and right of the window disappeared for exactly the height of the
+   * bar. It read as a tinted band floating above an open-topped box.
+   */
+  .window-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background-color: var(--surface-2);
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+    flex: none;
+  }
+
+  /* The traffic lights, in the order every one of these windows has them. The
+     only round thing left on the site, and round for a reason. */
+  .window-dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .window-dots i:nth-child(1) { background: #ec6a5f; }
+  .window-dots i:nth-child(2) { background: #f4bf50; }
+  .window-dots i:nth-child(3) { background: #61c554; }
+
+  .window-name {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin: 0 auto;
+    /* Offset the dots so the name sits over the middle of the bar, not the
+       middle of what is left of it. */
+    padding-right: 42px;
+  }
+
+  /*
+   * One row, scrolled — never wrapped.
+   *
+   * Nineteen commands do not fit on one line at every width, and wrapping put
+   * a single lonely button on a second row that read as a mistake. A toolbar
+   * that scrolls is a toolbar; a toolbar in three ragged rows is a paragraph
+   * of buttons.
+   */
+  .window-tools {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 2px;
+    padding: 8px 10px;
+  }
+
+  .window-tools::-webkit-scrollbar {
+    display: none;
+  }
+
+  .window-body {
+    flex: 1;
+    padding: 22px 24px;
+  }
+
+  /*
+   * A flush body still has to fill the window.
+   *
+   * The window stretches to its row, so the body has the height; a split panel
+   * inside it did not, and its own divider stopped where its content did —
+   * a rule ending in mid-air two thirds of the way down the card.
+   */
+  .window-body.flush {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* `:global`, because what is in the body arrived through a slot and carries
+     the page's scope rather than this component's · a scoped `> *` here
+     matches nothing at all. */
+  .window-body.flush > :global(*) {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .window-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  @media (max-width: 900px) {
+    .window-body { padding: 18px 18px; }
+    .window-bar { padding: 9px 12px; }
+    .window-tools { padding: 7px 8px; }
+    .window-foot { padding: 9px 12px; }
+    /* At this width the name collides with the dots long before it is useful. */
+    .window-name { display: none; }
+  }
+</style>

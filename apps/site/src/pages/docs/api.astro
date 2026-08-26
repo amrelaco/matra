@@ -136,7 +136,10 @@ assignIds(doc, options)  // DocNode  -> DocNode with stable block ids</code></pr
   <style>
     .api { overflow-x: auto; margin: 0 0 18px; }
     .api table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-    .api td, .api th { text-align: left; padding: 9px 12px; border-bottom: 1px dashed var(--rule); vertical-align: top; }
+    .api td, .api th { text-align: left; padding: 9px 12px; background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat; vertical-align: top; }
     .api th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
     .api td.n { white-space: nowrap; color: var(--ink); }
     .api td.t { white-space: nowrap; color: var(--indigo); font-size: 12px; }

@@ -54,7 +54,10 @@ const routes = [
   <Footer />
   <style>
     .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .route { border: 1px dashed var(--rule-strong); background: var(--surface); padding: 24px; text-decoration: none; display: block; }
+    .route { background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-repeat: no-repeat; background-color: var(--surface); padding: 24px; text-decoration: none; display: block; }
     .route:hover { border-color: var(--indigo); }
     .route h3 { font-size: 20px; margin: 0 0 8px; }
     .route p { font-size: 14px; color: var(--ink-soft); margin: 0 0 16px; }
