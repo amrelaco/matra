@@ -162,6 +162,49 @@ The core package grew because the engine is now inside it. What matters to a
 user is the last row: an app ships 18.4 kB instead of 66.4 kB, because nothing
 is pulled in that the editor does not use.
 
+## What typing costs
+
+A keystroke is the operation everything else is measured against, and it took
+three rounds of profiling to stop it costing the length of the document. The
+current shape, and why each piece is that shape:
+
+- **The document is rebuilt around one child, not by cutting.** An edit inside a
+  paragraph rebuilds every ancestor between it and the root. Doing that by
+  cutting the ancestor's children in two and appending the replacement back into
+  the middle walks the whole run three times and re-adds every child's size to
+  reach a total that differs from the old one by exactly one child.
+  `Fragment.replaceChild` copies the array once and does the size arithmetic in
+  a subtraction. Text is the exception — text nodes merge with their neighbours,
+  so the canonical form still has to be rebuilt when either side is text.
+- **The diff asks before it touches the DOM.** `childNodes` is a live list, and
+  the patch loop used to index it for every child before deciding whether that
+  child was inside the edit at all. On two thousand blocks, 1999 of those reads
+  were thrown away.
+- **The position map reuses its entries.** Re-recording is what a patch does to
+  every node whose subtree it kept, and a fresh entry object per node per edit is
+  garbage generated to say what the old object already said.
+- **A full position-map backlog drops the backlog, not the document.** The map
+  absorbs each edit's mapping rather than rewriting every entry, and replays the
+  backlog when a cold entry is read. Past sixty-four pending edits the replay
+  costs more than saying where everything is again — which used to mean
+  rebuilding the whole document's DOM, at the cost of a rebuild every
+  sixty-fourth keystroke and the silent loss of every mounted node view's state.
+  The re-record happens after the patch, because before it the positions are
+  still in the coordinates the edit moved away from.
+
+Measured in Node against happy-dom, that takes a keystroke on a
+2000-paragraph document from 0.464 ms to 0.062 ms, and stops it tracking the
+document's length: 0.045 ms at 20 blocks against 0.062 ms at 2000. In a browser
+it is what put Matra ahead of Lexical on the row it used to lose.
+
+The first render is a different problem with a different answer. It is within
+about 15% of the floor — the cost of the browser creating the same elements with
+no editor involved — so there is very little of it that is ours to remove. What
+was ours: building into a document fragment and attaching it once rather than
+appending block by block into a live tree, skipping the mark stack for children
+that have no marks, and taking a direct path for the `[tag, 0]` shape most nodes
+render as. Together, 0.77 ms to 0.59 ms for two hundred blocks in Node.
+
 ## What is deliberately not built yet
 
 Honesty about the gaps, since "no dependencies" can read as "complete":
