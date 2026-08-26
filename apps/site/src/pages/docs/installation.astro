@@ -2,8 +2,12 @@
 import Docs from '../../layouts/Docs.astro'
 ---
 <Docs title="Installation · Matra docs" description="Which packages exist, which are MIT, and which need a subscription." section="Getting started" heading="Installation">
-  <p>The core is all most projects need.</p>
+  <p>The core is all most projects need · every extension is in it.</p>
   <pre><code>npm i @matrajs/core</code></pre>
+  <p>
+    It ships no appearance. <a href="/docs/styling">Styling</a> is a page of its own, and worth
+    reading before the first afternoon rather than after it.
+  </p>
 
   <h2>Framework bindings</h2>
   <pre><code>npm i @matrajs/react   # useEditor, useEditorState, EditorContent
@@ -14,8 +18,9 @@ npm i @matrajs/vue     # useEditor, EditorContent</code></pre>
   </p>
 
   <h2>The paid packages</h2>
-  <pre><code>npm i @matrajs/ai      # streaming edits
-npm i @matrajs/collab  # authority, rebasing, remote cursors</code></pre>
+  <pre><code>npm i @matrajs/ai        # streaming edits
+npm i @matrajs/collab    # authority, rebasing, remote cursors
+npm i @matrajs/versions  # snapshots, diff, restore</code></pre>
   <p>
     Installed the same way as everything else. These two are source-available under a
     commercial licence rather than MIT · free for evaluation, development, testing, teaching,

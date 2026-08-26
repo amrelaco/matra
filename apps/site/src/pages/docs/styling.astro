@@ -1,0 +1,126 @@
+---
+import Docs from '../../layouts/Docs.astro'
+
+/**
+ * The page nobody wrote until somebody asked.
+ *
+ * Headless means the editor ships no appearance, which is the point and also
+ * the thing that surprises people on their first afternoon: they install it,
+ * mount it, type into it, and get unstyled text. Nothing in the docs said what
+ * to do about that, and five of the extensions quietly export a stylesheet
+ * nobody mentioned.
+ */
+const sheets: [string, string, string][] = [
+  ['placeholderCSS', '@matrajs/core', 'The hint in an empty block'],
+  ['taskListCSS', '@matrajs/core', 'Checkboxes, and the line through a done item'],
+  ['suggestionCSS', '@matrajs/core', 'The highlight on a live query, and mention chips'],
+  ['dragHandleCSS', '@matrajs/core', 'The handle that appears beside a block'],
+  ['commentCSS', '@matrajs/core', 'The tint under a commented range'],
+  ['remoteCursorCSS', '@matrajs/collab', 'Other people’s carets and their labels'],
+  ['versionDiffCSS', '@matrajs/versions', 'What a preview marks as added or changed'],
+]
+---
+<Docs
+  title="Styling · Matra docs"
+  description="Matra ships no appearance. What you have to style, what comes with a stylesheet you can paste, and what is state rather than UI."
+  section="Getting started"
+  heading="Styling"
+>
+  <p>
+    Matra ships <strong>no appearance at all</strong>. Mount an editor and you get a
+    <code>contenteditable</code> element holding plain, unstyled HTML — a heading looks like a
+    heading only because your stylesheet says so. That is what headless means, and it is the
+    reason the same package makes a comment box and a document editor.
+  </p>
+
+  <p>There are three separate things to know, and they are easy to conflate.</p>
+
+  <h2>1 · The document is yours to style</h2>
+  <p>
+    The editor renders ordinary tags — <code>&lt;p&gt;</code>, <code>&lt;h2&gt;</code>,
+    <code>&lt;ul&gt;</code>, <code>&lt;blockquote&gt;</code>, <code>&lt;table&gt;</code>. Style
+    them the way you style any prose on your site. Scope it to the editor and you are done:
+  </p>
+
+  <pre><code>{`.matra-editor { outline: none; white-space: pre-wrap; }
+.matra-editor h2 { font-size: 1.5rem; margin: 1.5rem 0 .5rem; }
+.matra-editor p { margin: 0 0 .75rem; line-height: 1.6; }
+.matra-editor blockquote { border-left: 2px solid #ccc; padding-left: 1rem; }
+.matra-editor pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; }`}</code></pre>
+
+  <div class="note">
+    <p>
+      <code>white-space: pre-wrap</code> is not optional. HTML collapses runs of whitespace and
+      drops a trailing one, so without it pressing space at the end of a line does nothing
+      visible until the next character arrives — which reads as a dropped keystroke.
+    </p>
+  </div>
+
+  <h2>2 · Some extensions bring a stylesheet</h2>
+  <p>
+    An extension that renders something the document does not contain — a checkbox, a drag
+    handle, a remote caret — cannot leave its appearance entirely to you, because there is no
+    tag for you to target. Each of those exports the CSS it needs as a string. Paste it,
+    inject it, or copy the rules out and rewrite them; nothing is minified and nothing is
+    obfuscated.
+  </p>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Export</th><th>From</th><th>What it draws</th></tr></thead>
+      <tbody>
+        {sheets.map(([name, pkg, what]) => (
+          <tr>
+            <td><code>{name}</code></td>
+            <td><code>{pkg}</code></td>
+            <td>{what}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>{`import { placeholderCSS, taskListCSS, suggestionCSS } from '@matrajs/core'
+
+const sheet = new CSSStyleSheet()
+sheet.replaceSync(placeholderCSS + taskListCSS + suggestionCSS)
+document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]`}</code></pre>
+
+  <p>
+    Or, if you would rather own them, open the file and copy the rules into your own
+    stylesheet. They are a starting point, not a dependency — every one of them is a handful of
+    lines and none of them is imported by the extension itself.
+  </p>
+
+  <h2>3 · A slash menu is state, not a menu</h2>
+  <p>
+    This is the one that catches people. <code>suggestion()</code> does not draw a menu. It
+    watches for the trigger character, tracks the query as you type, exposes the range it
+    covers, and gives you <code>acceptSuggestion</code> and <code>cancelSuggestion</code>. What
+    it hands you is a piece of state:
+  </p>
+
+  <pre><code>{`const state = editor.extensionState('slash')
+// { active: true, query: 'head', range: { from: 12, to: 17 } }`}</code></pre>
+
+  <p>
+    The list, its position, its keyboard behaviour and its appearance are yours. That is
+    deliberate: a menu is the most opinionated thing in an editor and the thing every product
+    wants to look like its own. The menu on this site is about three hundred lines of ordinary
+    DOM code with no framework, and
+    <a href="https://github.com/amrelaco/matra/blob/main/apps/site/src/scripts/slash.ts">it is
+    in the repository</a> — copy it and change it rather than starting from nothing.
+  </p>
+
+  <p>The same is true of a toolbar, a bubble menu and a comment sidebar. The editor gives you
+    the state and the commands; the interface is the part you were going to design anyway.</p>
+
+  <h2>What this costs you</h2>
+  <p>
+    An afternoon at the start, and no fighting later. The alternative — an editor that arrives
+    with a theme — is a week saved on day one and then a month spent overriding selectors when
+    the design changes. If you want a running start, every editor on
+    <a href="/">the home page</a> and <a href="/extensions">the extensions page</a> is a real
+    one, and the CSS behind them is in the same repository.
+  </p>
+</Docs>
