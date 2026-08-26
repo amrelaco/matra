@@ -28,6 +28,7 @@ import Icon from '../components/Icon.astro'
 import Nav from '../components/Nav.astro'
 import Toolbar from '../components/Toolbar.astro'
 import Window from '../components/Window.astro'
+import sizes from '../data/sizes.json'
 import Base from '../layouts/Base.astro'
 
 /**
@@ -197,6 +198,8 @@ const directory: {
   group: string
   pkg: string
   note: string
+  /** Functions rather than extensions · listed here, not counted as one. */
+  helpers?: boolean
   items: { name: string; what: string; use: string; key?: string; typed?: string }[]
 }[] = [
   {
@@ -230,10 +233,16 @@ const directory: {
         what: 'A link, with the scheme checked before it reaches the DOM',
         use: "editor.commands.setLink('https://matrajs.com')",
       },
+      { name: 'subscript', what: 'Subscript', use: 'editor.commands.toggleSubscript()' },
       {
-        name: 'subscript',
-        what: 'Subscript and superscript',
-        use: 'editor.commands.toggleSubscript()',
+        name: 'superscript',
+        what: 'Superscript',
+        use: 'editor.commands.toggleSuperscript()',
+      },
+      {
+        name: 'comment',
+        what: 'A thread anchored to a range, which survives edits around it',
+        use: "editor.commands.toggleComment({ id: 'thread-1' })",
       },
     ],
   },
@@ -356,11 +365,6 @@ const directory: {
         what: 'Drag a block to reorder it',
         use: 'editor.commands.moveBlock(from, to)',
       },
-      {
-        name: 'comments',
-        what: 'Threads anchored to ranges that survive edits',
-        use: "editor.commands.addComment('thread-1')",
-      },
     ],
   },
   {
@@ -395,11 +399,6 @@ const directory: {
         use: 'editor.commands.undo()',
         key: 'Mod-Z',
       },
-      {
-        name: 'markdown',
-        what: 'To and from markdown without touching a DOM',
-        use: 'toMarkdown(editor.getJSON())',
-      },
     ],
   },
   {
@@ -418,6 +417,34 @@ const directory: {
         what: 'A mention node · one position, its own DOM',
         use: "editor.commands.insertMention({ id: 'nahim' })",
         typed: '@',
+      },
+    ],
+  },
+  {
+    group: 'Helpers',
+    pkg: '@matrajs/core',
+    helpers: true,
+    note: 'Functions rather than extensions · nothing to add to the array.',
+    items: [
+      {
+        name: 'toMarkdown',
+        what: 'A document to markdown, without touching a DOM',
+        use: 'toMarkdown(editor.getJSON())',
+      },
+      {
+        name: 'fromMarkdown',
+        what: 'And back again',
+        use: "editor.setContent(fromMarkdown('# Hello'))",
+      },
+      {
+        name: 'commentRanges',
+        what: 'Every thread in a document, with the range it still covers',
+        use: 'commentRanges(editor.getJSON())',
+      },
+      {
+        name: 'createEditor',
+        what: 'The editor itself',
+        use: 'createEditor({ extensions: [...] })',
       },
     ],
   },
@@ -469,7 +496,26 @@ const directory: {
   },
 ]
 
-const directoryCount = directory.reduce((total, group) => total + group.items.length, 0)
+/**
+ * One count, from one place.
+ *
+ * The strip at the top of the page used to sum the five demo groups while the
+ * directory summed itself, so the same page said 27 and 39 about the same
+ * thing. The directory is the complete list, so every number on this page is
+ * read off it.
+ */
+const inPackage = (pkg: string) =>
+  directory
+    .filter((group) => group.pkg === pkg && !group.helpers)
+    .reduce((total, group) => total + group.items.length, 0)
+
+const directoryCount = directory
+  .filter((group) => !group.helpers)
+  .reduce((total, group) => total + group.items.length, 0)
+const freeCount = inPackage('@matrajs/core')
+const paidPackages = [...new Set(directory.map((group) => group.pkg))].filter(
+  (pkg) => pkg !== '@matrajs/core',
+)
 
 /**
  * The import line for one extension, built here rather than in the markup.
@@ -479,7 +525,19 @@ const directoryCount = directory.reduce((total, group) => total + group.items.le
  */
 const importLine = (name: string, pkg: string) => `import { ${name} } from '${pkg}'`
 
-const freeCount = groups.reduce((total, group) => total + group.items.length, 0)
+/**
+ * The size ladder, and the arithmetic the prose beside it quotes.
+ *
+ * Every one of these is derived. A sentence with a number typed into it is a
+ * sentence that stops being true the next time the bundle moves.
+ */
+const widest = Math.max(sizes.tiptap.minimum, ...sizes.rungs.map((rung) => rung.gz))
+const engineGz = sizes.rungs.find((rung) => rung.id === 'engine')?.gz ?? 0
+const twoMarksGz = sizes.rungs.find((rung) => rung.id === 'two-marks')?.gz ?? 0
+const starterGz = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
+/** Nine extensions between the two-mark editor and the starter kit. */
+const perExtension = ((starterGz - twoMarksGz) / 9).toFixed(2)
+const tiptapRatio = (sizes.tiptap.minimum / starterGz).toFixed(1)
 
 /** Small numbers read better as words, and the heading is prose. */
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six']
@@ -500,7 +558,7 @@ const spell = (n: number) => WORDS[n] ?? String(n)
     <div class="wrap">
       <div class="counts fills bleed" data-static>
         <div><b>{freeCount}</b><span>extensions, MIT</span></div>
-        <div><b>{paid.length}</b><span>paid packages</span></div>
+        <div><b>{paidPackages.length}</b><span>paid packages</span></div>
         <div><b>4</b><span>that other editors charge for</span></div>
       </div>
     </div>
@@ -552,7 +610,7 @@ const spell = (n: number) => WORDS[n] ?? String(n)
     <div class="wrap">
       <p class="kicker">Paid</p>
       <!-- Counted, not typed · the heading has to follow the list under it. -->
-      <h2>{spell(paid.length)} packages, one subscription.</h2>
+      <h2>{spell(paidPackages.length)} packages, one subscription.</h2>
       <p class="lede">
         None of these is a button you can press on a page, so none of them is drawn as one. The
         core stays MIT whatever happens to them.
@@ -580,6 +638,61 @@ const spell = (n: number) => WORDS[n] ?? String(n)
         editors put behind a paywall. They are in the core here, and they stay there. What is
         paid is the work that is genuinely hard: streaming into a document somebody else is
         typing in, converging two of them, and answering what changed between two drafts.
+      </p>
+    </div>
+  </section>
+
+  <!--
+    What a smaller array actually costs.
+    Generated by `pnpm size` into sizes.json, so the ladder on the page is the
+    ladder esbuild produced rather than one somebody typed once.
+  -->
+  <section class="section" id="size">
+    <div class="wrap">
+      <p class="kicker">What you ship</p>
+      <h2>Take five, take everything.</h2>
+      <p class="lede">
+        Every extension you leave out really does leave the bundle. It is also worth knowing
+        how little that saves: the engine is the floor and the extensions are rounding.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="ladder fills bleed" data-static>
+        {sizes.rungs.map((rung) => (
+          <div class="rung">
+            <div class="rung-what">
+              <b>{rung.label}</b>
+              <span class="mono">{rung.note}</span>
+            </div>
+            <div class="rung-track">
+              <div class="rung-bar" style={`--w: ${(rung.gz / widest) * 100}%`}></div>
+            </div>
+            <span class="rung-kb mono">{rung.gz.toFixed(1)} kB</span>
+          </div>
+        ))}
+        <div class="rung rival">
+          <div class="rung-what">
+            <b>Tiptap, bold and underline only</b>
+            <span class="mono">their per-package way, same bundler</span>
+          </div>
+          <div class="rung-track">
+            <div class="rung-bar" style={`--w: ${(sizes.tiptap.minimum / widest) * 100}%`}></div>
+          </div>
+          <span class="rung-kb mono">{sizes.tiptap.minimum.toFixed(1)} kB</span>
+        </div>
+      </div>
+
+      <p class="foot-note">
+        Gzipped, bundled with esbuild, measured by <code>pnpm size</code>. Dropping from the
+        starter kit to two marks saves
+        {' '}{(starterGz - twoMarksGz).toFixed(1)} kB — because an extension costs about
+        {' '}{perExtension} kB and the engine underneath is {engineGz.toFixed(1)} kB. Tiptap
+        splitting into a package per extension gets their minimum to
+        {' '}{sizes.tiptap.minimum} kB, which is still {tiptapRatio}× Matra carrying
+        everything, because ProseMirror is underneath it and is not optional.
       </p>
     </div>
   </section>
@@ -739,6 +852,32 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       background-repeat: no-repeat;
     }
 
+    /* --- the size ladder ---------------------------------------------------
+       The same bar language as the speed chart on the home page, so a reader
+       who has seen one recognises the other. */
+    .ladder { display: flex; flex-direction: column; }
+    .rung {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr) 80px;
+      align-items: center;
+      gap: var(--s2);
+      padding: 14px var(--inset);
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+    }
+    .rung:first-child { background-image: none; }
+    .rung-what { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .rung-what b { font-size: 14px; font-weight: 400; }
+    .rung-what span { font-size: 11px; color: var(--ink-faint); }
+    .rung-track { height: 11px; background-color: var(--surface-2); }
+    .rung-bar { height: 100%; width: var(--w); background-color: var(--indigo); }
+    /* Not us · drawn quieter, the way the floor row is on the speed chart. */
+    .rung.rival .rung-bar { background-color: var(--rule-firm); }
+    .rung.rival .rung-what b { color: var(--ink-soft); }
+    .rung-kb { font-size: 12px; text-align: right; color: var(--ink-soft); }
+
     /* --- the directory ---------------------------------------------------
        One row per extension: what it is, the line you would write, the keys it
        answers to, and its import. Four columns rather than a card each,
@@ -829,6 +968,8 @@ const spell = (n: number) => WORDS[n] ?? String(n)
 
     @media (max-width: 900px) {
       .ext-row { grid-template-columns: 1fr; gap: var(--s3); }
+      .rung { grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; }
+      .rung-track { grid-column: 1 / -1; }
       /* Stacked: name and description, then the line, then keys and import. */
       .dir-row {
         grid-template-columns: minmax(0, 1fr) auto;
