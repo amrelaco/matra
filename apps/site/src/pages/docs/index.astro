@@ -1,7 +1,16 @@
 ---
+import sizes from '../../data/sizes.json'
 import Docs from '../../layouts/Docs.astro'
+
+/** Read off the same file the extensions page draws its chart from. */
+const starter = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
 ---
-<Docs title="Introduction · Matra docs" description="Matra is a headless rich text editor framework. It gives you a document model, an extension API and a command system, and stays out of your interface." section="Getting started" heading="Introduction">
+<Docs
+  title="Introduction · Matra docs"
+  description="Matra is a headless rich text editor framework. It gives you a document model, an extension API and a command system, and stays out of your interface."
+  section="Getting started"
+  heading="Introduction"
+>
   <p>
     Matra is a headless rich text editor framework. It gives you a document model, an extension
     API and a command system · and stays out of the way of your interface.
@@ -17,22 +26,105 @@ import Docs from '../../layouts/Docs.astro'
   <p>
     It also has no runtime dependencies. The document model, transforms, position mapping,
     editor state and the editable view are written from scratch, which is why an app bundles
-    24.5 kB gzipped instead of 117.
+    {starter} kB gzipped instead of 117.
   </p>
+
+  <h2>The three ideas</h2>
+  <p>Everything else follows from these, and there is not a fourth.</p>
+  <ul>
+    <li>
+      <strong>The document is data.</strong> Plain JSON — log it, store it, diff it, read it on
+      a server that has never loaded an editor.
+      <a href="/docs/document-model">Document model →</a>
+    </li>
+    <li>
+      <strong>The extension array is the feature list.</strong> What you pass in decides what
+      the editor can do, what it accepts on paste, and what
+      <code>editor.commands</code> is typed as. An editor with no heading extension has no
+      heading command, and TypeScript knows.
+      <a href="/docs/extensions">Writing an extension →</a>
+    </li>
+    <li>
+      <strong>Positions are mapped, not remembered.</strong> A position held across an
+      <code>await</code> is wrong by the time you come back, so the async path never hands you a
+      raw number. <a href="/docs/position-mapping">Position mapping →</a>
+    </li>
+  </ul>
 
   <h2>Install</h2>
   <pre><code>npm i @matrajs/core</code></pre>
+  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+
+const editor = createEditor({ extensions: starterKit, content: '<p>Hello.</p>' })
+editor.mount(document.querySelector('#editor'))`}</code></pre>
+  <p>
+    That is a working editor. It will look like unstyled text until you write some CSS, which is
+    what headless means — <a href="/docs/styling">Styling</a> covers it in a page.
+  </p>
+
+  <h2>What is in the box</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Package</th><th>Licence</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>@matrajs/core</code></td><td>MIT</td>
+          <td>The engine and 38 extensions</td>
+        </tr>
+        <tr>
+          <td><code>@matrajs/react</code>, <code>/vue</code>, <code>/svelte</code>, <code>/solid</code></td>
+          <td>MIT</td><td>Framework bindings · thin, and optional</td>
+        </tr>
+        <tr>
+          <td><code>@matrajs/ai</code></td><td>Paid</td>
+          <td>Streaming edits that survive concurrent typing</td>
+        </tr>
+        <tr>
+          <td><code>@matrajs/collab</code></td><td>Paid</td>
+          <td>An authority, step rebasing, remote cursors</td>
+        </tr>
+        <tr>
+          <td><code>@matrajs/versions</code></td><td>Paid</td>
+          <td>Snapshots, a real diff, restore</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Table of contents, unique block ids, drag handle and comments are in the core and stay
+    there. They are paid features elsewhere.
+  </p>
+
+  <h2>Where to go next</h2>
+  <p>Depending on what you came here to do:</p>
+  <ul>
+    <li>
+      <strong>Get something working.</strong>
+      <a href="/docs/first-editor">Your first editor</a>, then
+      <a href="/docs/styling">Styling</a>.
+    </li>
+    <li>
+      <strong>Fit it into your app.</strong>
+      <a href="/docs/frameworks">Frameworks</a> — React, Vue, Svelte, Solid, Angular and plain
+      JavaScript.
+    </li>
+    <li>
+      <strong>Understand it.</strong>
+      <a href="/docs/document-model">Document model</a> and
+      <a href="/docs/commands">Commands</a>.
+    </li>
+    <li>
+      <strong>Decide whether to trust it.</strong>
+      <a href="/docs/benchmarks">Benchmarks</a>, including the row where the harness was wrong
+      and what it was measuring instead.
+    </li>
+  </ul>
 
   <div class="note">
-    Matra is pre-1.0. The API may still change, and the view has not yet met real IME users on
-    iOS and Android at scale · if your users type Bangla, Chinese or Japanese, test before you
-    commit.
+    <p>
+      Matra is pre-1.0. The API may still change, and the view has not yet met real IME users on
+      iOS and Android at scale · if your users type Bangla, Chinese or Japanese, test before you
+      commit.
+    </p>
   </div>
-
-  <h2>Next</h2>
-  <ul>
-    <li><a href="/docs/installation">Installation</a> · packages and framework bindings</li>
-    <li><a href="/docs/first-editor">Your first editor</a> · a working editor in ten lines</li>
-    <li><a href="/docs/position-mapping">Position mapping</a> · why async edits stay correct</li>
-  </ul>
 </Docs>

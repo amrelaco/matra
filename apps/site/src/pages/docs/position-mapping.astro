@@ -1,40 +1,188 @@
 ---
 import Docs from '../../layouts/Docs.astro'
+
+/**
+ * The page the product is sold on, so every number in it was run.
+ *
+ * The table of cases below is output, not illustration: a marker taken over
+ * "world" in "hello world", then each edit applied, then mapped.
+ */
+const cases: [string, string, string, string][] = [
+  ['Five characters typed before it', '"XXXXXhello world"', '12–17', 'still "world"'],
+  ['"hello " deleted before it', '"world"', '1–6', 'still "world"'],
+  ['The whole line deleted', '""', '1–1', 'collapsed · it is gone'],
+  ['Typed, then undone', '"hello world"', '7–12', 'back where it started'],
+]
 ---
-<Docs title="Position mapping · Matra docs" description="A position is an integer into the document. The moment anything changes, that integer points somewhere else." section="Concepts" heading="Position mapping">
+<Docs
+  title="Position mapping · Matra docs"
+  description="A position is an integer into the document. The moment anything changes, that integer points somewhere else. Mapping is how a position survives an edit it did not expect."
+  section="Concepts"
+  heading="Position mapping"
+>
   <p>
     A position is an integer into the document. The moment anything changes, that integer points
-    somewhere else. Mapping is how a position survives an edit it did not expect.
+    somewhere else. Mapping is how a position survives an edit it did not expect — and it is the
+    single thing this editor is built around.
   </p>
 
   <h2>Why positions move</h2>
   <p>
-    Insert five characters at the start and everything after them is five further along. That is
-    fine when you act immediately. It is not fine when you asked a model for a completion two
-    seconds ago and the person kept typing while you waited.
+    Insert five characters at the start and everything after them is five further along. The
+    number you were holding is still a valid position; it just points at different text.
+  </p>
+
+  <pre><code>{`hello world        XXXXXhello world
+      ↑                       ↑
+      7 · "world"             7 · "ello world"`}</code></pre>
+
+  <p>
+    That is fine when you act immediately — nothing happened in between. It stops being fine the
+    moment there is a gap: you asked a model for a rewrite two seconds ago, or a colleague's
+    edit arrived over the wire, and the person kept typing while you waited.
   </p>
 
   <h2>Markers</h2>
-  <pre><code>const at = ctx.mark()
-
-await stream((chunk) =&gt; &#123;
-  ctx.insert(chunk, at.map(caret))
-&#125;)</code></pre>
   <p>
-    Between one chunk and the next the person may have typed, pasted or hit undo. A marker
-    replays every change made since it was taken, so the position still points at the same place
-    in the text · rather than at the same number, which is no longer the same place.
+    <code>ctx.mark()</code> takes a marker. It records where the document was at that instant,
+    and <code>map</code> replays every change made since — so the position comes back pointing
+    at the same <em>text</em> rather than at the same number.
   </p>
 
-  <div class="note">
-    Never hold a raw position across an await. A number that was correct when you asked for it
-    is not correct when you come back.
+  <pre><code>{`const at = ctx.mark()
+const { from, to } = ctx.selection
+
+for await (const chunk of stream) {
+  // Not from and to · they are two seconds old.
+  ctx.replace(at.mapRange({ from, to }), chunk)
+}`}</code></pre>
+
+  <p>
+    Between one chunk and the next the person may have typed, pasted, or pressed undo. The
+    marker does not care which: it maps through whatever happened.
+  </p>
+
+  <h2>What it does in each case</h2>
+  <p>
+    A marker taken over <code>"world"</code> in <code>"hello world"</code>, then each of these
+    happens, then the range is mapped:
+  </p>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>What happened</th><th>Document</th><th>7–12 becomes</th><th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        {cases.map(([what, doc, moved, result]) => (
+          <tr>
+            <td>{what}</td>
+            <td><code>{doc}</code></td>
+            <td><code>{moved}</code></td>
+            <td>{result}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
+
+  <div class="note">
+    <p>
+      The third row is the one to write code for. When the text a marker pointed at has been
+      deleted, the range <strong>collapses</strong> — <code>from</code> and <code>to</code> come
+      back equal. Check for it, because inserting into a collapsed range is not "the rewrite
+      landed", it is a model's answer appearing where the user just deleted a sentence.
+    </p>
+  </div>
+
+  <pre><code>{`const target = at.mapRange({ from, to })
+
+if (target.from === target.to) {
+  // What we were rewriting is gone. Drop the answer rather than paste it
+  // somewhere nobody asked for.
+  return false
+}`}</code></pre>
+
+  <h2>A complete example</h2>
+  <p>
+    An AI rewrite that survives whatever the user does while it streams. This is
+    <code>@matrajs/ai</code> in miniature:
+  </p>
+
+  <pre><code>{`const rewrite: Command<[instruction: string]> = (ctx, instruction) => {
+  const { from, to } = ctx.selection
+  if (from === to) return false          // nothing selected
+
+  const at = ctx.mark()                  // taken now, used later
+  const original = ctx.doc               // for the request, not for positions
+
+  void (async () => {
+    let received = ''
+    for await (const chunk of ask(instruction, original)) {
+      received += chunk
+      const target = at.mapRange({ from, to })
+      if (target.from === target.to) return   // the text went away
+      editor.commands.replace(target, received)
+    }
+  })()
+
+  return true                            // the request started
+}`}</code></pre>
+
+  <p>
+    Note what is <em>not</em> here: no locking the editor, no disabling input, no "please wait".
+    The user keeps typing and the answer still lands on the words they chose.
+  </p>
 
   <h2>Where else it matters</h2>
   <ul>
-    <li><strong>Collaboration</strong> · a remote caret arrives in the sender's coordinates and has to be mapped into yours.</li>
-    <li><strong>Comments</strong> · anchored as marks, so mapping keeps them on the right words for free.</li>
-    <li><strong>Decorations</strong> · search highlights move with the text they highlight.</li>
+    <li>
+      <strong>Collaboration</strong> · a remote step arrives in the sender's coordinates, and
+      your unsent work has to be rebased over it. That is mapping, run in both directions.
+    </li>
+    <li>
+      <strong>Comments</strong> · anchored as marks rather than as numbers, so mapping keeps
+      them on the right words for free — and a thread does not slide up the page when somebody
+      deletes a paragraph above it.
+    </li>
+    <li>
+      <strong>Decorations</strong> · a search highlight, a remote caret, a spell-check squiggle.
+      All positions, all mapped on every change.
+    </li>
+    <li>
+      <strong>Version history</strong> · a diff between two documents is only meaningful because
+      an old document stays exactly what it was.
+    </li>
+  </ul>
+
+  <h2>Is this new?</h2>
+  <p>
+    No, and it is worth being straight about that. ProseMirror has had step maps for a decade
+    and every serious editor has some version of the idea. The difference is the default: there,
+    mapping is something you must remember to do, and forgetting it produces a bug that appears
+    only when somebody types during a slow request — which is to say, in production and not in
+    your tests.
+  </p>
+  <p>
+    Here the async path does not offer you a raw number to hold. <code>ctx.mark()</code> is how
+    you carry a position across an <code>await</code>, and there is no shorter way to do it
+    wrong.
+  </p>
+
+  <div class="note">
+    <p>
+      Never hold a raw position across an <code>await</code>. A number that was correct when you
+      asked for it is not correct when you come back, and nothing will tell you — the insert
+      will succeed, in the wrong place.
+    </p>
+  </div>
+
+  <h2>Next</h2>
+  <ul>
+    <li><a href="/docs/document-model">Document model</a> · what the integers count.</li>
+    <li><a href="/docs/commands">Commands</a> · where <code>ctx.mark()</code> lives.</li>
+    <li><a href="/docs/recipes">Recipes</a> · autosave, and other things with a gap in them.</li>
   </ul>
 </Docs>

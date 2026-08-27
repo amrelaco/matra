@@ -1,44 +1,168 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Your first editor · Matra docs" description="A working editor in ten lines, with a toolbar wired to real commands." section="Getting started" heading="Your first editor">
+<Docs
+  title="Your first editor · Matra docs"
+  description="A working editor in ten lines, a toolbar wired to real commands, and the four mistakes everybody makes on the first afternoon."
+  section="Getting started"
+  heading="Your first editor"
+>
   <p>Ten lines, and the result is the editor on the front page.</p>
-  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
+  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
 
-const editor = createEditor(&#123;
+const editor = createEditor({
   extensions: starterKit,
-  content: '&lt;p&gt;Hello.&lt;/p&gt;',
-&#125;)
+  content: '<p>Hello.</p>',
+})
 
-editor.mount(document.querySelector('#editor'))</code></pre>
+editor.mount(document.querySelector('#editor'))`}</code></pre>
+
+  <div class="note">
+    <p>
+      It will look like unstyled text, and that is correct. Matra ships no appearance at all —
+      a heading looks like a heading because your stylesheet says so.
+      <a href="/docs/styling">Styling</a> is fifteen lines and worth reading now rather than
+      after you have decided something is broken.
+    </p>
+  </div>
+
+  <h2>What is in the starter kit</h2>
+  <p>
+    Seventeen extensions: document, paragraph, text, heading, blockquote, codeBlock,
+    bulletList, orderedList, listItem, horizontalRule, hardBreak, bold, italic, strike, code,
+    link and history. Enough to write with, and nothing that needs configuring.
+  </p>
+  <p>
+    Not in it, on purpose: <code>typography</code> (curling quotes is a decision),
+    <code>taskList</code>, tables, and everything that needs options. Add what you want.
+  </p>
+  <pre><code>{`// Everything:
+createEditor({ extensions: starterKit })
+
+// Or exactly what you want, and nothing else:
+createEditor({ extensions: [document, paragraph, text, bold, underline] })
+
+// Or the kit plus something:
+createEditor({ extensions: [...starterKit, taskList, taskItem, ...tableKit] })`}</code></pre>
+  <p>
+    The array is the feature list. An editor built from the second line has no way to make a
+    heading — no command, no shortcut, and pasting one flattens it to a paragraph. That is how
+    you build a comment box that stays a comment box.
+  </p>
 
   <h2>A toolbar</h2>
   <p>
     Every button is a command call. <code>editor.commands</code> is typed from the array you
-    passed in, so <code>toggleBold</code> exists because <code>bold</code> is in the starter kit
-    — not because of a declaration merge somewhere.
+    passed, so <code>toggleBold</code> exists because <code>bold</code> is in the kit — not
+    because of a declaration merge somewhere.
   </p>
-  <pre><code>document.querySelector('#bold').addEventListener('mousedown', (event) =&gt; &#123;
-  event.preventDefault()      // keep the caret in the editor
+  <pre><code>{`const bold = document.querySelector('#bold')
+
+bold.addEventListener('mousedown', (event) => {
+  event.preventDefault()          // keep the caret in the editor
   editor.commands.toggleBold()
-&#125;)</code></pre>
+})`}</code></pre>
+
+  <div class="note">
+    <p>
+      <code>mousedown</code> with <code>preventDefault</code>, not <code>click</code>. A click
+      moves focus to the button first, which collapses the selection — so the command runs on a
+      caret rather than on the words the user chose, and bold appears to do nothing.
+    </p>
+  </div>
+
+  <h2>A toolbar that tells the truth</h2>
+  <p>
+    A button that looks the same whether or not the thing it does is already done is a button
+    you have to check your text to use. Ask the document:
+  </p>
+  <pre><code>{`const paint = () => {
+  bold.setAttribute('aria-pressed', String(editor.isActive('bold')))
+  h2.setAttribute('aria-pressed', String(editor.isActive('heading', { level: 2 })))
+}
+
+editor.on('change', paint)
+editor.on('selectionChange', paint)
+paint()`}</code></pre>
+  <p>
+    <code>selectionChange</code> matters as much as <code>change</code>: moving the caret into
+    bold text does not change the document, and the button still has to light up.
+  </p>
 
   <h2>Reading the document</h2>
-  <pre><code>editor.getJSON()   // plain JSON, no engine types
+  <pre><code>{`editor.getJSON()   // plain JSON, no engine types
 editor.getHTML()   // a string
-editor.getText()   // block-separated text</code></pre>
+editor.getText()   // block-separated text`}</code></pre>
   <p>
     Store the JSON. It is ordinary data: you can diff two revisions with any library, log it,
-    and read it in a language that has never heard of this editor.
+    and read it in a language that has never heard of this editor. HTML is for display and for
+    pasting somewhere else — round-tripping through it loses anything your schema expresses that
+    HTML does not.
   </p>
 
   <h2>Reacting to changes</h2>
-  <pre><code>const off = editor.on('change', () =&gt; save(editor.getJSON()))
-// later
-off()</code></pre>
+  <pre><code>{`const off = editor.on('change', () => save(editor.getJSON()))
 
+// later
+off()`}</code></pre>
+  <p>
+    <code>on</code> returns its own unsubscribe, so there is nothing to name and nothing to
+    match up. The events are <code>change</code>, <code>selectionChange</code>,
+    <code>focus</code> and <code>blur</code>.
+  </p>
+  <p>
+    Do not save on every keystroke. <a href="/docs/recipes">Recipes</a> has an autosave that
+    waits for a pause and does not lose the last edit when the tab closes.
+  </p>
+
+  <h2>Setting content later</h2>
+  <pre><code>{`editor.setContent(await load(id))   // JSON or an HTML string`}</code></pre>
   <div class="note">
-    Call <code>editor.destroy()</code> when the component unmounts. The React and Vue bindings
-    do it for you.
+    <p>
+      <code>setContent</code> replaces the document and <strong>clears the undo history</strong>
+      — which is right when you are loading a different document, and wrong if you meant to
+      change the one in front of the user. For that, use a command:
+      <code>editor.commands.replace(range, content)</code>.
+    </p>
   </div>
+
+  <h2>Cleaning up</h2>
+  <pre><code>{`editor.destroy()`}</code></pre>
+  <p>
+    Removes the listeners and the <code>contenteditable</code> attribute, so the element is safe
+    to reuse. Every framework binding does it for you on unmount; if you are mounting by hand,
+    a route change or a hot reload is where forgetting shows up.
+  </p>
+
+  <h2>Where people get stuck</h2>
+  <ul>
+    <li>
+      <strong>"It looks like plain text."</strong> It does. See
+      <a href="/docs/styling">styling</a>.
+    </li>
+    <li>
+      <strong>"My toolbar button does nothing."</strong> Almost always <code>click</code>
+      instead of <code>mousedown</code> with <code>preventDefault</code>.
+    </li>
+    <li>
+      <strong>"The command does not exist."</strong> Its extension is not in your array. That is
+      the design, and TypeScript is telling you before the browser would.
+    </li>
+    <li>
+      <strong>"Two carets appeared."</strong> The element was mounted twice. Guard with
+      <code>if (!editor.unsafe.view) editor.mount(element)</code> — see
+      <a href="/docs/frameworks">frameworks</a>.
+    </li>
+    <li>
+      <strong>"Pasting loses my formatting."</strong> The schema has no node or mark for it. Add
+      the extension, or accept it — a comment box refusing headings is doing its job.
+    </li>
+  </ul>
+
+  <h2>Next</h2>
+  <ul>
+    <li><a href="/docs/styling">Styling</a> · because it will look wrong until you read it.</li>
+    <li><a href="/docs/frameworks">Frameworks</a> · React, Vue, Svelte, Solid and everything else.</li>
+    <li><a href="/docs/commands">Commands</a> · what else the editor can be told to do.</li>
+  </ul>
 </Docs>
