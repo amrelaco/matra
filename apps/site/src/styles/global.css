@@ -261,6 +261,11 @@ a {
   gap: 9px;
   padding: 14px 23px;
   border: 0;
+  /* Every .btn on the site was an <a>, which inherits the page's face. The
+     first <button> to take this class rendered its label in the browser's own
+     Arial, because a button does not inherit font-family and nothing here set
+     one. */
+  font-family: inherit;
   background-color: var(--ink);
   color: var(--paper);
   font-size: 14.5px;
