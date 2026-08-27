@@ -270,11 +270,23 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
     getText: () => state.doc.textBetween(0, state.doc.content.size, '\n'),
 
+    /**
+     * Replace the document, and start its history here.
+     *
+     * The history is cleared deliberately. Loading document B into an editor
+     * that held document A left one press of undo standing between the user
+     * and A's content — in an editor that would then save it under B's id.
+     * That is silent data loss, and it looked like a working undo.
+     *
+     * To change the document somebody is editing, use a command:
+     * `replace(range, content)` is an edit and belongs in the history.
+     */
     setContent(content) {
       const tr = state.tr
       const parsed = parseContent(schema, parser, content)
       tr.replaceWith(0, state.doc.content.size, parsed.content)
       apply(tr)
+      history.clear()
     },
 
     get selection(): Selection {
