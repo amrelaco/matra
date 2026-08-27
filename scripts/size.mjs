@@ -11,7 +11,9 @@
  * `--check` fails instead of writing, which is what CI wants: a number nobody
  * regenerated is a number nobody can trust.
  */
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, stat, writeFile } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
@@ -20,6 +22,46 @@ const OUT = 'apps/site/src/data/sizes.json'
 const CHECK = process.argv.includes('--check')
 
 const FROM = "'./packages/core/dist/index.js'"
+
+/*
+ * Refuse to measure a bundle older than the source it came from.
+ *
+ * This reads dist, not src, so running it after an edit and before a build
+ * measures the previous version and reports it as current. That is not a
+ * near-miss: it happened, `--check` said the budget was met, and the figure
+ * on the landing page was wrong by the size of a feature that had just been
+ * added. A stale answer that looks like a fresh one is the worst thing this
+ * script can do, so it stops instead.
+ */
+async function newestUnder(dir) {
+  let newest = 0
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name)
+    newest = Math.max(
+      newest,
+      entry.isDirectory() ? await newestUnder(path) : (await stat(path)).mtimeMs,
+    )
+  }
+  return newest
+}
+
+async function assertFresh() {
+  let built
+  try {
+    built = (await stat('packages/core/dist/index.js')).mtimeMs
+  } catch {
+    console.error('No packages/core/dist. Run `pnpm build` first.')
+    process.exit(1)
+  }
+  const edited = await newestUnder('packages/core/src')
+  if (edited > built) {
+    console.error('packages/core/dist is older than packages/core/src.')
+    console.error('Run `pnpm build` first — measuring the last build reports the last version.')
+    process.exit(1)
+  }
+}
+
+await assertFresh()
 
 /**
  * Each rung of the ladder, smallest first.
