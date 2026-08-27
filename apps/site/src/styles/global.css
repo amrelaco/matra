@@ -410,6 +410,19 @@ th {
   margin: 0;
 }
 
+/*
+ * A code block wraps. It does not scroll sideways, here or anywhere.
+ *
+ * `pre` defaults to `white-space: pre`, and the UA rule beats the `pre-wrap`
+ * the editor sets on its root — so a long line inside a code block grew a
+ * horizontal scrollbar of its own, inside a document that was already
+ * scrolling vertically. Two axes and a nested bar, to read a line that was
+ * merely long.
+ *
+ * `pre-wrap` keeps every space and newline and wraps on width; `break-word`
+ * catches the one token with no break in it — a URL, a base64 blob — that
+ * would otherwise force the box wider than its column and bring the bar back.
+ */
 .matra-editor pre {
   margin: 0 0 12px;
   padding: 14px 16px;
@@ -417,7 +430,9 @@ th {
   color: var(--code-fg);
   font-family: var(--font-mono);
   font-size: 12.5px;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
 }
 
 .matra-editor :not(pre) > code {
@@ -790,7 +805,12 @@ th {
   background-color: var(--code-bg);
   color: var(--code-fg);
   padding: var(--s3);
-  overflow-x: auto;
+  /* Wraps rather than scrolls · see `.matra-editor pre`. Samples on these
+     pages are written to fit the column, so this is the backstop for a long
+     import line and not the plan. */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.8;
