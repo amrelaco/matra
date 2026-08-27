@@ -526,6 +526,55 @@ th {
   }
 }
 
+/* --- scrollbars -------------------------------------------------------- */
+
+/*
+ * The one piece of chrome the browser was still drawing.
+ *
+ * Every rule, every edge and every button on this page is a 1px dashed line in
+ * one of four weights, and then a rounded grey capsule slid in from the
+ * operating system whenever a table was wider than its column. It is square,
+ * it is a rule weight, and it sits in a track that is part of the page.
+ *
+ * Firefox gets the two properties it supports; WebKit and Blink get the
+ * pseudo-elements. Declaring either of them turns off macOS overlay
+ * scrollbars, so the bar is always there rather than fading in on scroll —
+ * which is the trade, and the right way round for a page that would otherwise
+ * hide the fact that a table continues.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-firm) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/*
+ * The thumb is inset by a transparent border rather than by being narrow, so
+ * the hit area stays the full 10px while the mark reads as 4.
+ */
+::-webkit-scrollbar-thumb {
+  background-color: var(--rule-firm);
+  background-clip: content-box;
+  border: 3px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink-faint);
+}
+
+/* Where two bars meet. Left to itself it is a raised grey square. */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* --- site chrome ------------------------------------------------------- */
 
 /*
