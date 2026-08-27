@@ -1,4 +1,5 @@
 ---
+import measured from '../../data/sizes.json'
 import Docs from '../../layouts/Docs.astro'
 
 /**
@@ -24,7 +25,12 @@ const keystroke = [
 ]
 
 const sizes = [
-  ['Matra', '24.5 kB', 'core and starter kit'],
+  // Generated · `pnpm size --check` fails the build if this drifts.
+  [
+    'Matra',
+    `${measured.rungs.find((rung) => rung.id === 'starter')?.gz} kB`,
+    'core and starter kit',
+  ],
   ['Tiptap', '119.8 kB', 'with ProseMirror'],
   ['Lexical', '94.0 kB', 'with @lexical/rich-text'],
   ['Slate', '63.0 kB', 'mostly React · 29.0 kB without it'],

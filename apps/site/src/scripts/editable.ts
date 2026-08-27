@@ -159,7 +159,7 @@ const SKIP = [
   '.matra-editor',
   // Its <b> and <span> are stacked by CSS and carry meaning as separate
   // elements; one editor over the whole item flattens them onto one line and
-  // "24.5 kB" runs straight into its own caption.
+  // "24.6 kB" runs straight into its own caption.
   '.proof li',
   '[data-static]',
   '[data-editable]',

@@ -30,6 +30,7 @@ import Logo from '../components/Logo.astro'
 import Nav from '../components/Nav.astro'
 import Toolbar from '../components/Toolbar.astro'
 import Window from '../components/Window.astro'
+import sizes from '../data/sizes.json'
 import Base from '../layouts/Base.astro'
 
 /**
@@ -262,8 +263,15 @@ const chart = speed.map((row) => {
  * What you ship, measured the same way for all four: one app importing that
  * editor and its rich-text kit, bundled and minified with esbuild, then gzipped.
  */
+/**
+ * Our own number comes from `pnpm size`; the rivals are measured by hand the
+ * same way, in `bench/browser`. Typing ours in was three rounds of updating
+ * four places and missing one.
+ */
+const ourSize = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
+
 const bundles = [
-  { name: 'Matra', kb: 24.5, note: 'core and starter kit' },
+  { name: 'Matra', kb: ourSize, note: 'core and starter kit' },
   { name: 'Tiptap', kb: 119.8, note: 'with ProseMirror' },
   { name: 'Lexical', kb: 94.0, note: 'with rich-text' },
   { name: 'Slate', kb: 63.0, note: '29.0 kB without React' },
@@ -367,7 +375,7 @@ const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
       </div>
 
       <ul class="proof boxed-top bleed">
-        <li><b>24.5 kB</b><span>gzipped, with the starter kit</span></li>
+        <li><b>{ourSize} kB</b><span>gzipped, with the starter kit</span></li>
         <li><b>0</b><span>runtime dependencies</span></li>
         <li><b>439</b><span>tests, 68 adversarial</span></li>
         <li><b>MIT</b><span>core, permanently</span></li>
@@ -747,7 +755,7 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
             <a class="btn" href="/docs">Get started</a>
             <a class="btn ghost" href="/pricing">Pricing</a>
           </div>
-          <p class="close-foot mono">npm i @matrajs/core · 24.5 kB · zero dependencies</p>
+          <p class="close-foot mono">npm i @matrajs/core · {ourSize} kB · zero dependencies</p>
         </div>
       </div>
     </div>

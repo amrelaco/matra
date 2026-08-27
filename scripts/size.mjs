@@ -2,7 +2,7 @@
 /**
  * Guard the numbers on the site, and write the ones the site prints.
  *
- * "24.5 kB against Tiptap's 117" is a claim made in public, which means it is a
+ * "24.6 kB against Tiptap's 117" is a claim made in public, which means it is a
  * thing that can quietly stop being true. This bundles the editor the way an
  * application would, fails if it has outgrown its budget, and writes the whole
  * ladder to `apps/site/src/data/sizes.json` so the page showing what a smaller
