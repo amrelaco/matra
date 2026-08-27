@@ -20,12 +20,9 @@ export interface CommentRange {
  * Because the anchor is a mark, position mapping keeps it correct for free:
  * edit the paragraph around a comment and the highlight follows the words.
  */
-export const comment: MarkDef<{
-  addComment: Command<[threadId: string]>
-  removeComment: Command<[threadId: string]>
-}> = {
+export const comment = {
   kind: 'mark',
-  name: 'comment',
+  name: 'comment' as const,
   // Comments overlap: two people may comment on overlapping spans, and a span
   // may carry several threads. An empty excludes rule allows that.
   excludes: '',
@@ -69,7 +66,10 @@ export const comment: MarkDef<{
       return removed
     },
   },
-}
+} satisfies MarkDef<{
+  addComment: Command<[threadId: string]>
+  removeComment: Command<[threadId: string]>
+}>
 
 /**
  * Where every comment currently sits.

@@ -3,12 +3,9 @@ import type { Command, MarkDef } from '../types'
 /** Only named colours and hex are allowed — a style attribute is an injection surface. */
 const SAFE_COLOUR = /^(#[0-9a-f]{3,8}|[a-z]+)$/i
 
-export const highlight: MarkDef<{
-  toggleHighlight: Command<[color?: string]>
-  unsetHighlight: Command
-}> = {
+export const highlight = {
   kind: 'mark',
-  name: 'highlight',
+  name: 'highlight' as const,
   attrs: { color: { default: null } },
   parseDOM: [
     {
@@ -30,4 +27,7 @@ export const highlight: MarkDef<{
     unsetHighlight: (ctx) => ctx.removeMark('highlight'),
   },
   keys: { 'Mod-Shift-h': 'toggleHighlight' },
-}
+} satisfies MarkDef<{
+  toggleHighlight: Command<[color?: string]>
+  unsetHighlight: Command
+}>

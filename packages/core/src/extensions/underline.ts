@@ -1,8 +1,8 @@
 import type { Command, MarkDef } from '../types'
 
-export const underline: MarkDef<{ toggleUnderline: Command }> = {
+export const underline = {
   kind: 'mark',
-  name: 'underline',
+  name: 'underline' as const,
   parseDOM: [
     { tag: 'u' },
     {
@@ -13,4 +13,4 @@ export const underline: MarkDef<{ toggleUnderline: Command }> = {
   toDOM: () => ['u', 0],
   commands: { toggleUnderline: (ctx) => ctx.toggleMark('underline') },
   keys: { 'Mod-u': 'toggleUnderline' },
-}
+} satisfies MarkDef<{ toggleUnderline: Command }>

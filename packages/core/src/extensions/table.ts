@@ -9,12 +9,9 @@ import type { Command, DocNode, NodeDef } from '../types'
  * colgroup, so a cell always carries everything needed to render it.
  */
 
-export const table: NodeDef<{
-  insertTable: Command<[rows?: number, cols?: number]>
-  deleteTable: Command
-}> = {
+export const table = {
   kind: 'node',
-  name: 'table',
+  name: 'table' as const,
   content: 'tableRow+',
   group: 'block',
   parseDOM: [{ tag: 'table' }],
@@ -42,15 +39,18 @@ export const table: NodeDef<{
       return false
     },
   },
-}
+} satisfies NodeDef<{
+  insertTable: Command<[rows?: number, cols?: number]>
+  deleteTable: Command
+}>
 
-export const tableRow: NodeDef = {
+export const tableRow = {
   kind: 'node',
-  name: 'tableRow',
+  name: 'tableRow' as const,
   content: '(tableCell | tableHeader)+',
   parseDOM: [{ tag: 'tr' }],
   toDOM: () => ['tr', 0],
-}
+} satisfies NodeDef
 
 const cellAttrs = {
   colspan: { default: 1 },
@@ -80,23 +80,23 @@ function cellDOM(tag: string, attrs: Record<string, unknown> | undefined) {
   return [tag, out, 0] as [string, Record<string, unknown>, number]
 }
 
-export const tableCell: NodeDef = {
+export const tableCell = {
   kind: 'node',
-  name: 'tableCell',
+  name: 'tableCell' as const,
   content: 'block+',
   attrs: cellAttrs,
   parseDOM: [{ tag: 'td', getAttrs: (dom) => cellAttrsFrom(dom as Element) }],
   toDOM: (node) => cellDOM('td', node.attrs),
-}
+} satisfies NodeDef
 
-export const tableHeader: NodeDef = {
+export const tableHeader = {
   kind: 'node',
-  name: 'tableHeader',
+  name: 'tableHeader' as const,
   content: 'block+',
   attrs: cellAttrs,
   parseDOM: [{ tag: 'th', getAttrs: (dom) => cellAttrsFrom(dom as Element) }],
   toDOM: (node) => cellDOM('th', node.attrs),
-}
+} satisfies NodeDef
 
 /** A table with a header row, which is what people mean by "insert table". */
 function buildTable(rows: number, cols: number): DocNode {

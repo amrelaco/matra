@@ -21,12 +21,9 @@ function isSafeHref(href: unknown): href is string {
   }
 }
 
-export const link: MarkDef<{
-  setLink: Command<[LinkAttrs]>
-  unsetLink: Command
-}> = {
+export const link = {
   kind: 'mark',
-  name: 'link',
+  name: 'link' as const,
   inclusive: false,
   attrs: {
     href: { required: true },
@@ -53,4 +50,7 @@ export const link: MarkDef<{
       isSafeHref(attrs.href) ? ctx.addMark('link', { ...attrs }) : false,
     unsetLink: (ctx) => ctx.removeMark('link'),
   },
-}
+} satisfies MarkDef<{
+  setLink: Command<[LinkAttrs]>
+  unsetLink: Command
+}>

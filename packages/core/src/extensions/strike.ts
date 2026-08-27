@@ -1,8 +1,8 @@
 import type { Command, MarkDef } from '../types'
 
-export const strike: MarkDef<{ toggleStrike: Command }> = {
+export const strike = {
   kind: 'mark',
-  name: 'strike',
+  name: 'strike' as const,
   parseDOM: [
     { tag: 's' },
     { tag: 'del' },
@@ -14,4 +14,4 @@ export const strike: MarkDef<{ toggleStrike: Command }> = {
   toDOM: () => ['s', 0],
   commands: { toggleStrike: (ctx) => ctx.toggleMark('strike') },
   keys: { 'Mod-Shift-x': 'toggleStrike' },
-}
+} satisfies MarkDef<{ toggleStrike: Command }>

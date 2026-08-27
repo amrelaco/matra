@@ -1,7 +1,7 @@
 import type { NodeDef } from '../types'
 
-export const document: NodeDef = {
+export const document = {
   kind: 'node',
-  name: 'doc',
+  name: 'doc' as const,
   content: 'block+',
-}
+} satisfies NodeDef

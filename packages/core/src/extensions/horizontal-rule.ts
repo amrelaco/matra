@@ -1,8 +1,8 @@
 import type { Command, NodeDef } from '../types'
 
-export const horizontalRule: NodeDef<{ insertHorizontalRule: Command }> = {
+export const horizontalRule = {
   kind: 'node',
-  name: 'horizontalRule',
+  name: 'horizontalRule' as const,
   group: 'block',
   atom: true,
   parseDOM: [{ tag: 'hr' }],
@@ -16,4 +16,4 @@ export const horizontalRule: NodeDef<{ insertHorizontalRule: Command }> = {
       handler: (ctx, _match, range) => ctx.replace(range, { type: 'horizontalRule' }),
     },
   ],
-}
+} satisfies NodeDef<{ insertHorizontalRule: Command }>

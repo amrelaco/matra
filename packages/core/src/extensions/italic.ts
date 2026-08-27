@@ -1,8 +1,8 @@
 import type { Command, MarkDef } from '../types'
 
-export const italic: MarkDef<{ toggleItalic: Command }> = {
+export const italic = {
   kind: 'mark',
-  name: 'italic',
+  name: 'italic' as const,
   parseDOM: [
     { tag: 'em' },
     { tag: 'i' },
@@ -11,4 +11,4 @@ export const italic: MarkDef<{ toggleItalic: Command }> = {
   toDOM: () => ['em', 0],
   commands: { toggleItalic: (ctx) => ctx.toggleMark('italic') },
   keys: { 'Mod-i': 'toggleItalic' },
-}
+} satisfies MarkDef<{ toggleItalic: Command }>

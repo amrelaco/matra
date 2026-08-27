@@ -1,10 +1,8 @@
 import type { Command, NodeDef } from '../types'
 
-export const blockquote: NodeDef<{
-  toggleBlockquote: Command
-}> = {
+export const blockquote = {
   kind: 'node',
-  name: 'blockquote',
+  name: 'blockquote' as const,
   content: 'block+',
   group: 'block',
   parseDOM: [{ tag: 'blockquote' }],
@@ -20,4 +18,6 @@ export const blockquote: NodeDef<{
       handler: (ctx, _match, range) => ctx.delete(range) && ctx.wrapIn('blockquote'),
     },
   ],
-}
+} satisfies NodeDef<{
+  toggleBlockquote: Command
+}>

@@ -4,12 +4,9 @@ export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
 const LEVELS: HeadingLevel[] = [1, 2, 3, 4, 5, 6]
 
-export const heading: NodeDef<{
-  setHeading: Command<[HeadingLevel]>
-  toggleHeading: Command<[HeadingLevel]>
-}> = {
+export const heading = {
   kind: 'node',
-  name: 'heading',
+  name: 'heading' as const,
   content: 'inline*',
   group: 'block',
   attrs: { level: { default: 1 } },
@@ -38,4 +35,7 @@ export const heading: NodeDef<{
       },
     },
   ],
-}
+} satisfies NodeDef<{
+  setHeading: Command<[HeadingLevel]>
+  toggleHeading: Command<[HeadingLevel]>
+}>

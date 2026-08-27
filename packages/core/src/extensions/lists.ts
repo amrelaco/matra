@@ -14,13 +14,9 @@ const runList =
     return apply(state, tr, itemType)
   }
 
-export const listItem: NodeDef<{
-  splitListItem: Command
-  liftListItem: Command
-  sinkListItem: Command
-}> = {
+export const listItem = {
   kind: 'node',
-  name: 'listItem',
+  name: 'listItem' as const,
   listItem: true,
   content: 'paragraph block*',
   parseDOM: [{ tag: 'li' }],
@@ -35,11 +31,15 @@ export const listItem: NodeDef<{
     Tab: 'sinkListItem',
     'Shift-Tab': 'liftListItem',
   },
-}
+} satisfies NodeDef<{
+  splitListItem: Command
+  liftListItem: Command
+  sinkListItem: Command
+}>
 
-export const bulletList: NodeDef<{ toggleBulletList: Command }> = {
+export const bulletList = {
   kind: 'node',
-  name: 'bulletList',
+  name: 'bulletList' as const,
   content: 'listItem+',
   group: 'block',
   parseDOM: [{ tag: 'ul' }],
@@ -55,11 +55,11 @@ export const bulletList: NodeDef<{ toggleBulletList: Command }> = {
       handler: (ctx, _match, range) => ctx.delete(range) && ctx.wrapIn('bulletList'),
     },
   ],
-}
+} satisfies NodeDef<{ toggleBulletList: Command }>
 
-export const orderedList: NodeDef<{ toggleOrderedList: Command }> = {
+export const orderedList = {
   kind: 'node',
-  name: 'orderedList',
+  name: 'orderedList' as const,
   content: 'listItem+',
   group: 'block',
   attrs: { start: { default: 1 } },
@@ -85,4 +85,4 @@ export const orderedList: NodeDef<{ toggleOrderedList: Command }> = {
         ctx.delete(range) && ctx.wrapIn('orderedList', { start: Number(match[1]) || 1 }),
     },
   ],
-}
+} satisfies NodeDef<{ toggleOrderedList: Command }>

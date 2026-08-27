@@ -20,9 +20,9 @@ function isSafeSrc(src: unknown): src is string {
   }
 }
 
-export const image: NodeDef<{ insertImage: Command<[ImageAttrs]> }> = {
+export const image = {
   kind: 'node',
-  name: 'image',
+  name: 'image' as const,
   group: 'inline',
   inline: true,
   atom: true,
@@ -51,4 +51,4 @@ export const image: NodeDef<{ insertImage: Command<[ImageAttrs]> }> = {
     insertImage: (ctx, attrs) =>
       isSafeSrc(attrs.src) ? ctx.insert({ type: 'image', attrs: { ...attrs } }) : false,
   },
-}
+} satisfies NodeDef<{ insertImage: Command<[ImageAttrs]> }>

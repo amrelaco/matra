@@ -28,7 +28,9 @@ describe('starter kit', () => {
       'undo',
       'redo',
     ]) {
-      expect(typeof (editor.commands as Record<string, unknown>)[name]).toBe('function')
+      expect(typeof (editor.commands as unknown as Record<string, unknown>)[name]).toBe(
+        'function',
+      )
     }
   })
 

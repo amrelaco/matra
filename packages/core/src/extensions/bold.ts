@@ -4,13 +4,9 @@ const toggleBold: Command = (ctx) => ctx.toggleMark('bold')
 const setBold: Command = (ctx) => ctx.addMark('bold')
 const unsetBold: Command = (ctx) => ctx.removeMark('bold')
 
-export const bold: MarkDef<{
-  toggleBold: Command
-  setBold: Command
-  unsetBold: Command
-}> = {
+export const bold = {
   kind: 'mark',
-  name: 'bold',
+  name: 'bold' as const,
   parseDOM: [
     { tag: 'strong' },
     { tag: 'b' },
@@ -22,4 +18,8 @@ export const bold: MarkDef<{
   toDOM: () => ['strong', 0],
   commands: { toggleBold, setBold, unsetBold },
   keys: { 'Mod-b': 'toggleBold' },
-}
+} satisfies MarkDef<{
+  toggleBold: Command
+  setBold: Command
+  unsetBold: Command
+}>

@@ -300,6 +300,23 @@ type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) exten
   ? I
   : never
 
+/**
+ * Every node and mark name in an extension array, as a union of literals.
+ *
+ * The same idea as `CommandsOf`, applied to the other half of the API. An
+ * editor built without `heading` has no `toggleHeading` and TypeScript already
+ * knew; it also has no node called "heading", and until this it did not —
+ * `isActive('heading')` compiled fine and returned false forever, which is the
+ * same bug wearing a quieter coat.
+ *
+ * Falls back to `string` for a plain `Editor`, so nothing that takes an editor
+ * without its extension list gets stricter.
+ */
+export type NamesOf<T extends readonly AnyDef[]> = Extract<
+  T[number],
+  { kind: 'node' | 'mark' }
+>['name']
+
 export interface EditorOptions<T extends readonly AnyDef[]> {
   extensions: T
   content?: DocNode | string
@@ -348,7 +365,7 @@ export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
    * Marks are looked up first, then nodes, so `isActive('bold')` and
    * `isActive('heading', { level: 2 })` both read naturally.
    */
-  isActive(name: string, attrs?: Record<string, unknown>): boolean
+  isActive(name: NamesOf<T>, attrs?: Record<string, unknown>): boolean
   getJSON(): DocNode
   getHTML(): string
   getText(): string

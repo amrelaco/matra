@@ -9,9 +9,9 @@ import type { Command, NodeDef, Pos } from '../types'
  * cannot tick with the mouse is a bulleted list with extra steps. It carries
  * `contenteditable="false"` so the caret never lands inside it.
  */
-export const taskList: NodeDef<{ toggleTaskList: Command }> = {
+export const taskList = {
   kind: 'node',
-  name: 'taskList',
+  name: 'taskList' as const,
   content: 'taskItem+',
   group: 'block',
   // A task list is a <ul>, so the bullet-list rule matches it too. Higher
@@ -40,7 +40,7 @@ export const taskList: NodeDef<{ toggleTaskList: Command }> = {
       },
     },
   ],
-}
+} satisfies NodeDef<{ toggleTaskList: Command }>
 
 const name = 'taskItem'
 
@@ -56,12 +56,7 @@ const runItem =
     return apply(state, tr, itemType)
   }
 
-export const taskItem: NodeDef<{
-  toggleTaskItem: Command<[at?: Pos]>
-  splitTaskItem: Command
-  liftTaskItem: Command
-  sinkTaskItem: Command
-}> = {
+export const taskItem = {
   kind: 'node',
   name,
   listItem: true,
@@ -184,7 +179,12 @@ export const taskItem: NodeDef<{
     Tab: 'sinkTaskItem',
     'Shift-Tab': 'liftTaskItem',
   },
-}
+} satisfies NodeDef<{
+  toggleTaskItem: Command<[at?: Pos]>
+  splitTaskItem: Command
+  liftTaskItem: Command
+  sinkTaskItem: Command
+}>
 
 /** Enough styling to make a checklist look like one. */
 export const taskListCSS = `
