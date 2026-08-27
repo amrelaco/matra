@@ -8,6 +8,7 @@ interface Props {
 }
 const { title, description, editable = true } = Astro.props
 ---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -38,9 +39,7 @@ const { title, description, editable = true } = Astro.props
       try {
         if (localStorage.getItem('matra-theme') === 'dark') {
           document.documentElement.dataset.theme = 'dark'
-          document
-            .querySelector('meta[name="theme-color"]')
-            .setAttribute('content', '#111114')
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#111114')
         }
       } catch {
         /* Private mode blocks localStorage. Light is the default anyway. */
@@ -77,13 +76,14 @@ const { title, description, editable = true } = Astro.props
       class="btn ghost keys-button"
       data-keys-toggle
       aria-expanded="false"
-      aria-label="Keyboard shortcuts"
-    ></button>
+      aria-label="Keyboard shortcuts"></button>
 
-    <script>import '../scripts/theme.ts'</script>
-    <script>import '../scripts/shortcuts.ts'</script>
+    <script>
+      import '../scripts/theme.ts'
+    </script>
+    <script>
+      import '../scripts/shortcuts.ts'
+    </script>
     {editable && <script>import '../scripts/editable.ts'</script>}
-
-
   </body>
 </html>

@@ -29,6 +29,7 @@ const columns = [
   ],
 ] as const
 ---
+
 <footer class="section site-footer">
   <div class="wrap foot">
     <div class="brand-col">
@@ -36,12 +37,16 @@ const columns = [
       <p>A headless rich text editor framework.<br />Built by Amrela in Dhaka.</p>
     </div>
     <div class="cols">
-      {columns.map(([heading, links]) => (
-        <div>
-          <h4 class="mono">{heading}</h4>
-          {links.map(([label, href]) => <a href={href}>{label}</a>)}
-        </div>
-      ))}
+      {
+        columns.map(([heading, links]) => (
+          <div>
+            <h4 class="mono">{heading}</h4>
+            {links.map(([label, href]) => (
+              <a href={href}>{label}</a>
+            ))}
+          </div>
+        ))
+      }
     </div>
   </div>
   <div class="bottom-wrap">

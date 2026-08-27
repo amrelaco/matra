@@ -1,6 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
+
 <Docs
   title="Solid · Matra docs"
   description="createMatra: the editor, a ref, and a signal that re-runs only what reads it."
@@ -23,16 +24,16 @@ export function Editor() {
 }`}</code></pre>
 
   <p>
-    <code>createMatra()</code> gives you the <code>editor</code>, a <code>mount</code> ref, and
-    a <code>state</code> accessor. It registers its own <code>onCleanup</code>, so disposing
-    the owner destroys the editor and leaves the element safe to reuse.
+    <code>createMatra()</code> gives you the <code>editor</code>, a <code>mount</code> ref, and a
+    <code>state</code> accessor. It registers its own <code>onCleanup</code>, so disposing the
+    owner destroys the editor and leaves the element safe to reuse.
   </p>
 
   <div class="note">
     <p>
       The editor is created immediately, not in <code>onMount</code>. Commands,
-      <code>getJSON()</code> and <code>getText()</code> all work before anything is on screen —
-      which is what SSR needs, and what a test needs in order not to render at all.
+      <code>getJSON()</code> and <code>getText()</code> all work before anything is on screen — which
+      is what SSR needs, and what a test needs in order not to render at all.
     </p>
   </div>
 
@@ -65,21 +66,21 @@ export function Editor() {
 }`}</code></pre>
 
   <p>
-    Only the expressions that call <code>state()</code> re-run. Solid's reactivity is not a
-    render loop, so a document change does not re-render the component — it updates the two
-    attributes and the one text node that asked.
+    Only the expressions that call <code>state()</code> re-run. Solid's reactivity is not a render
+    loop, so a document change does not re-render the component — it updates the two attributes and
+    the one text node that asked.
   </p>
 
   <h2>Why the accessor returns the editor</h2>
   <p>
     <code>state()</code> hands back the editor itself rather than a snapshot. A toolbar asks
-    <code>isActive</code> at render time, and cloning a document to answer that would be the
-    expensive way to do nothing.
+    <code>isActive</code> at render time, and cloning a document to answer that would be the expensive
+    way to do nothing.
   </p>
   <p>
-    What changes behind it is a version counter, because the editor is one object whose
-    identity never changes — a signal holding it directly would never notify. That is the whole
-    of the binding, and it is the piece worth not writing twice.
+    What changes behind it is a version counter, because the editor is one object whose identity
+    never changes — a signal holding it directly would never notify. That is the whole of the
+    binding, and it is the piece worth not writing twice.
   </p>
 
   <h2>Reaching the editor from elsewhere</h2>
@@ -93,8 +94,7 @@ const editor = useContext(EditorContext)`}</code></pre>
 
   <h2>Styling</h2>
   <p>
-    Matra ships no appearance. <a href="/docs/styling">Styling</a> covers what you style
-    yourself, which extensions bring a stylesheet, and why a slash menu is state rather than a
-    menu.
+    Matra ships no appearance. <a href="/docs/styling">Styling</a> covers what you style yourself,
+    which extensions bring a stylesheet, and why a slash menu is state rather than a menu.
   </p>
 </Docs>

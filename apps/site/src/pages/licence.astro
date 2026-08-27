@@ -4,7 +4,11 @@ import Legal from '../components/Legal.astro'
 import Nav from '../components/Nav.astro'
 import Base from '../layouts/Base.astro'
 ---
-<Base title="Licence · Matra" description="The core is MIT with no open-core asterisk. AI and collaboration are source-available under a commercial licence that never checks anything at runtime.">
+
+<Base
+  title="Licence · Matra"
+  description="The core is MIT with no open-core asterisk. AI and collaboration are source-available under a commercial licence that never checks anything at runtime."
+>
   <Nav />
   <Legal
     kicker="Licence"
@@ -25,22 +29,22 @@ import Base from '../layouts/Base.astro'
 
     <h2>Commercial: ai, collab</h2>
     <p>
-      <code>@matrajs/ai</code> and <code>@matrajs/collab</code> are source-available under the
-      Matra Commercial License. Free for evaluation, development, testing, teaching, personal
-      projects, registered charities, students, and internal tools at organisations with fewer
-      than three developers on the codebase. Paid otherwise.
+      <code>@matrajs/ai</code> and <code>@matrajs/collab</code> are source-available under the Matra
+      Commercial License. Free for evaluation, development, testing, teaching, personal projects,
+      registered charities, students, and internal tools at organisations with fewer than three developers
+      on the codebase. Paid otherwise.
     </p>
     <p>
-      <strong>No licence key and nothing phones home.</strong> The licence is an agreement, not
-      a mechanism. You keep running the version you licensed forever, even if the subscription
-      lapses · what lapses is access to new versions and to support.
+      <strong>No licence key and nothing phones home.</strong> The licence is an agreement, not a
+      mechanism. You keep running the version you licensed forever, even if the subscription lapses
+      · what lapses is access to new versions and to support.
     </p>
 
     <h2>Versions before 0.6.0</h2>
     <p>
       Every package was MIT up to and including 0.5.0, <code>ai</code> and <code>collab</code>
-      included, and that grant cannot be withdrawn. If you are on 0.5.0 you may stay there under
-      MIT indefinitely.
+      included, and that grant cannot be withdrawn. If you are on 0.5.0 you may stay there under MIT
+      indefinitely.
     </p>
 
     <h2>No runtime check, deliberately</h2>
@@ -54,14 +58,16 @@ import Base from '../layouts/Base.astro'
       Nor is access controlled at download. The source is in a public repository and these
       packages install from public npm like any other. What you buy is the right to run them in
       production, plus updates and support · the same arrangement as the Business Source
-      Licence. A lock that a <code>git clone</code> opens is not a lock, and pretending
-      otherwise would cost you an account to manage and buy nobody anything.
+      Licence. A lock that a <code>git clone</code> opens is not a lock, and pretending otherwise
+      would cost you an account to manage and buy nobody anything.
     </p>
 
     <h2>The full text</h2>
     <p>
       <a href="https://github.com/amrelaco/matra/blob/main/LICENSE">MIT licence</a> ·
-      <a href="https://github.com/amrelaco/matra/blob/main/packages/ai/LICENSE">Commercial licence</a> ·
+      <a href="https://github.com/amrelaco/matra/blob/main/packages/ai/LICENSE"
+        >Commercial licence</a
+      > ·
       <a href="https://github.com/amrelaco/matra/blob/main/SECURITY.md">Security model</a>
     </p>
   </Legal>

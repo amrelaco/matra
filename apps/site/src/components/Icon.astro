@@ -29,6 +29,7 @@ const attributesOf = (attrs: Record<string, string>) => {
 
 const parts = icon.map(([tag, attrs]) => ({ tag, attrs: attributesOf(attrs) }))
 ---
+
 <svg
   class={className}
   width={size}
@@ -39,8 +40,10 @@ const parts = icon.map(([tag, attrs]) => ({ tag, attrs: attributesOf(attrs) }))
   aria-label={label}
   role={label ? 'img' : undefined}
 >
-  {parts.map(({ tag, attrs }) => {
-    const Tag = tag as 'path'
-    return <Tag {...attrs} />
-  })}
+  {
+    parts.map(({ tag, attrs }) => {
+      const Tag = tag as 'path'
+      return <Tag {...attrs} />
+    })
+  }
 </svg>

@@ -28,27 +28,32 @@ const { name, flush = false, bleed } = Astro.props
 const bleedClass =
   bleed === 'both' ? 'bleed' : bleed === 'left' ? 'bleed-l' : bleed === 'right' ? 'bleed-r' : ''
 ---
+
 <div class:list={['window boxed filled', bleedClass]}>
   <div class="window-bar boxed" data-static>
     <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
     <span class="window-name mono">{name}</span>
   </div>
 
-  {Astro.slots.has('toolbar') && (
-    <div class="window-tools boxed-bottom" data-static>
-      <slot name="toolbar" />
-    </div>
-  )}
+  {
+    Astro.slots.has('toolbar') && (
+      <div class="window-tools boxed-bottom" data-static>
+        <slot name="toolbar" />
+      </div>
+    )
+  }
 
   <div class:list={['window-body', { flush }]}>
     <slot />
   </div>
 
-  {Astro.slots.has('foot') && (
-    <div class="window-foot boxed-top" data-static>
-      <slot name="foot" />
-    </div>
-  )}
+  {
+    Astro.slots.has('foot') && (
+      <div class="window-foot boxed-top" data-static>
+        <slot name="foot" />
+      </div>
+    )
+  }
 </div>
 
 <style>
@@ -94,9 +99,15 @@ const bleedClass =
     height: 10px;
     border-radius: 50%;
   }
-  .window-dots i:nth-child(1) { background: #ec6a5f; }
-  .window-dots i:nth-child(2) { background: #f4bf50; }
-  .window-dots i:nth-child(3) { background: #61c554; }
+  .window-dots i:nth-child(1) {
+    background: #ec6a5f;
+  }
+  .window-dots i:nth-child(2) {
+    background: #f4bf50;
+  }
+  .window-dots i:nth-child(3) {
+    background: #61c554;
+  }
 
   .window-name {
     font-size: 11px;
@@ -163,11 +174,21 @@ const bleedClass =
   }
 
   @media (max-width: 900px) {
-    .window-body { padding: 18px 18px; }
-    .window-bar { padding: 9px 12px; }
-    .window-tools { padding: 7px 8px; }
-    .window-foot { padding: 9px 12px; }
+    .window-body {
+      padding: 18px 18px;
+    }
+    .window-bar {
+      padding: 9px 12px;
+    }
+    .window-tools {
+      padding: 7px 8px;
+    }
+    .window-foot {
+      padding: 9px 12px;
+    }
     /* At this width the name collides with the dots long before it is useful. */
-    .window-name { display: none; }
+    .window-name {
+      display: none;
+    }
   }
 </style>

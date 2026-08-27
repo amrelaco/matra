@@ -84,7 +84,11 @@ const questions = [
   ],
 ]
 ---
-<Base title="Pricing · Matra" description="The core is MIT and free forever. AI, collaboration and version history are $99 a month for up to five developers, flat rather than per seat.">
+
+<Base
+  title="Pricing · Matra"
+  description="The core is MIT and free forever. AI, collaboration and version history are $99 a month for up to five developers, flat rather than per seat."
+>
   <Nav />
   <Head
     kicker="Pricing"
@@ -95,18 +99,31 @@ const questions = [
   <section class="section">
     <div class="wrap">
       <div class="tiers">
-        {tiers.map((tier) => (
-          <div class={`tier ${tier.featured ? 'featured' : ''}`}>
-            <div class="tier-head">
-              <span class="mono tier-name">{tier.name}</span>
-              {tier.featured && <span class="badge mono">Most teams</span>}
+        {
+          tiers.map((tier) => (
+            <div class={`tier ${tier.featured ? 'featured' : ''}`}>
+              <div class="tier-head">
+                <span class="mono tier-name">{tier.name}</span>
+                {tier.featured && <span class="badge mono">Most teams</span>}
+              </div>
+              <div class="price">
+                <>
+                  <b>{tier.price}</b>
+                  <span>{tier.unit}</span>
+                </>
+              </div>
+              <p class="tier-tag">{tier.tag}</p>
+              <a class={`btn ${tier.featured ? '' : 'ghost'}`} href={tier.href}>
+                {tier.cta}
+              </a>
+              <ul>
+                {tier.features.map((f) => (
+                  <li>{f}</li>
+                ))}
+              </ul>
             </div>
-            <div class="price"><b>{tier.price}</b><span>{tier.unit}</span></div>
-            <p class="tier-tag">{tier.tag}</p>
-            <a class={`btn ${tier.featured ? '' : 'ghost'}`} href={tier.href}>{tier.cta}</a>
-            <ul>{tier.features.map((f) => <li>{f}</li>)}</ul>
-          </div>
-        ))}
+          ))
+        }
       </div>
       <p class="footnote">
         Prices in US dollars, invoiced by Amrela in Dhaka and paid by bank transfer. Tell us how
@@ -134,7 +151,9 @@ const questions = [
             Your editor never talks to us. We could not switch your app off if we wanted to.
           </p>
           <p class="claim-proof mono">
-            grep -r "matrajs.com" node_modules/@matrajs<span class="claim-out">→ no matches</span>
+            grep -r "matrajs.com" node_modules/@matrajs<span class="claim-out"
+              >→ no matches</span
+            >
           </p>
         </div>
         <div class="claim">
@@ -143,8 +162,8 @@ const questions = [
           <p>
             The source is public and the packages install from public npm. What you buy is the
             right to run them in production, plus updates and support. A lock a
-            <span class="mono">git clone</span> opens is not a lock, and building one would
-            have cost you an account to administer.
+            <span class="mono">git clone</span> opens is not a lock, and building one would have cost
+            you an account to administer.
           </p>
           <p class="claim-proof mono">
             npm i @matrajs/ai<span class="claim-out">→ installs, no key</span>
@@ -159,9 +178,16 @@ const questions = [
       <p class="kicker"><span class="dot"></span>Questions</p>
       <h2>Answered plainly.</h2>
       <div class="faq">
-        {questions.map(([q, a]) => (
-          <details><summary>{q}</summary><p>{a}</p></details>
-        ))}
+        {
+          questions.map(([q, a]) => (
+            <details>
+              <>
+                <summary>{q}</summary>
+                <p>{a}</p>
+              </>
+            </details>
+          ))
+        }
       </div>
     </div>
   </section>
@@ -169,17 +195,59 @@ const questions = [
   <Footer />
 
   <style>
-    .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
-    .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .tier { background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
-      background-repeat: no-repeat; padding: 24px; display: flex; flex-direction: column; }
-    .tier.featured { background: var(--invert-bg); color: var(--invert-fg); border-style: solid; border-color: var(--invert-bg); }
-    .tier.featured .tier-tag, .tier.featured li { color: var(--invert-soft); }
-    .tier.featured .btn { background: var(--invert-fg); color: var(--invert-bg); border-color: var(--invert-fg); }
-    .tier-head { display: flex; align-items: center; justify-content: space-between; }
-    .tier-name { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .dot {
+      width: 5px;
+      height: 5px;
+      background: var(--indigo);
+      display: inline-block;
+    }
+    .tiers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .tier {
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .tier.featured {
+      background: var(--invert-bg);
+      color: var(--invert-fg);
+      border-style: solid;
+      border-color: var(--invert-bg);
+    }
+    .tier.featured .tier-tag,
+    .tier.featured li {
+      color: var(--invert-soft);
+    }
+    .tier.featured .btn {
+      background: var(--invert-fg);
+      color: var(--invert-bg);
+      border-color: var(--invert-fg);
+    }
+    .tier-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tier-name {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
     .badge {
       font-size: 10px;
       padding: 3px 7px;
@@ -187,30 +255,105 @@ const questions = [
       --dash: 5px;
       --dash-gap: 4px;
       background-image:
-        repeating-linear-gradient(to right, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap))),
-        repeating-linear-gradient(to right, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap))),
-        repeating-linear-gradient(to bottom, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap))),
-        repeating-linear-gradient(to bottom, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap)));
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+        repeating-linear-gradient(
+          to right,
+          currentColor 0 var(--dash),
+          transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+        ),
+        repeating-linear-gradient(
+          to right,
+          currentColor 0 var(--dash),
+          transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          currentColor 0 var(--dash),
+          transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          currentColor 0 var(--dash),
+          transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+        );
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
-    .price { margin: 16px 0 10px; display: flex; flex-direction: column; }
-    .price b { font-family: var(--font-display); font-size: 42px; font-weight: 400; line-height: 1; }
-    .price span { font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
-    .tier.featured .price span { color: var(--invert-soft); }
-    .tier-tag { font-size: 13.5px; color: var(--ink-soft); min-height: 42px; }
-    .tier ul { list-style: none; margin: 20px 0 0; padding: 18px 0 0; background-image: repeating-linear-gradient(to right, currentColor 0 var(--dash), transparent var(--dash) calc(var(--dash) + var(--dash-gap)));
+    .price {
+      margin: 16px 0 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .price b {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 400;
+      line-height: 1;
+    }
+    .price span {
+      font-size: 12px;
+      color: var(--ink-faint);
+      margin-top: 6px;
+    }
+    .tier.featured .price span {
+      color: var(--invert-soft);
+    }
+    .tier-tag {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      min-height: 42px;
+    }
+    .tier ul {
+      list-style: none;
+      margin: 20px 0 0;
+      padding: 18px 0 0;
+      background-image: repeating-linear-gradient(
+        to right,
+        currentColor 0 var(--dash),
+        transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+      );
       background-size: 100% 1px;
       background-position: 0 0;
-      background-repeat: no-repeat; font-size: 13.5px; color: var(--ink-soft); }
-    .tier li { padding: 5px 0 5px 18px; position: relative; }
-    .tier li::before { content: '·'; position: absolute; left: 4px; color: var(--indigo); font-weight: 700; }
-    .tier .btn { justify-content: center; margin-top: 4px; }
-    .footnote { color: var(--ink-faint); font-size: 13px; margin-top: 22px; }
+      background-repeat: no-repeat;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+    .tier li {
+      padding: 5px 0 5px 18px;
+      position: relative;
+    }
+    .tier li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: var(--indigo);
+      font-weight: 700;
+    }
+    .tier .btn {
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .footnote {
+      color: var(--ink-faint);
+      font-size: 13px;
+      margin-top: 22px;
+    }
     /* Two cells of the page's own grid rather than two floating cards · the
        divider between them is the same rule as everything else on the sheet. */
-    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: var(--s4); }
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin-top: var(--s4);
+    }
     .claim {
       padding: var(--s4) calc(var(--inset) + 22px);
       background-image: var(--dash-v);
@@ -218,10 +361,24 @@ const questions = [
       background-position: 100% 0;
       background-repeat: no-repeat;
     }
-    .claim:last-child { background-image: none; }
-    .claim-no { font-size: 11px; color: var(--indigo); letter-spacing: 0.1em; }
-    .two h3 { font-size: 21px; margin: 12px 0 10px; }
-    .two p { font-size: 14.5px; color: var(--ink-soft); margin: 0; line-height: 1.65; }
+    .claim:last-child {
+      background-image: none;
+    }
+    .claim-no {
+      font-size: 11px;
+      color: var(--indigo);
+      letter-spacing: 0.1em;
+    }
+    .two h3 {
+      font-size: 21px;
+      margin: 12px 0 10px;
+    }
+    .two p {
+      font-size: 14.5px;
+      color: var(--ink-soft);
+      margin: 0;
+      line-height: 1.65;
+    }
     /* The receipt for the claim above it. */
     .claim-proof {
       display: flex;
@@ -236,33 +393,74 @@ const questions = [
       --dash: 5px;
       --dash-gap: 4px;
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
-    .claim-out { color: var(--indigo); }
-    .faq { margin-top: 26px; background-image: var(--dash-h);
+    .claim-out {
+      color: var(--indigo);
+    }
+    .faq {
+      margin-top: 26px;
+      background-image: var(--dash-h);
       background-size: 100% 1px;
       background-position: 0 0;
-      background-repeat: no-repeat; }
-    details { background-image: var(--dash-h);
+      background-repeat: no-repeat;
+    }
+    details {
+      background-image: var(--dash-h);
       background-size: 100% 1px;
       background-position: 0 100%;
-      background-repeat: no-repeat; padding: 16px 0; }
-    summary { cursor: pointer; font-size: 16px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
-    summary::-webkit-details-marker { display: none; }
-    summary::after { content: '+'; color: var(--ink-faint); font-family: var(--font-mono); }
-    details[open] summary::after { content: '−'; }
-    details p { color: var(--ink-soft); font-size: 14.5px; max-width: 72ch; margin: 12px 0 0; }
+      background-repeat: no-repeat;
+      padding: 16px 0;
+    }
+    summary {
+      cursor: pointer;
+      font-size: 16px;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+    summary::after {
+      content: '+';
+      color: var(--ink-faint);
+      font-family: var(--font-mono);
+    }
+    details[open] summary::after {
+      content: '−';
+    }
+    details p {
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      max-width: 72ch;
+      margin: 12px 0 0;
+    }
     @media (max-width: 940px) {
-      .tiers, .two { grid-template-columns: 1fr; }
+      .tiers,
+      .two {
+        grid-template-columns: 1fr;
+      }
       .claim {
         padding: var(--s3) calc(var(--inset) + 18px);
         background-image: var(--dash-h);
         background-size: 100% 1px;
         background-position: 0 100%;
       }
-      .claim:last-child { background-image: none; }
+      .claim:last-child {
+        background-image: none;
+      }
     }
   </style>
 </Base>

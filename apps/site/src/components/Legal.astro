@@ -7,6 +7,7 @@ interface Props {
 }
 const { kicker, title, lede, updated } = Astro.props
 ---
+
 <section class="section">
   <div class="wrap legal">
     <div class="legal-side">
@@ -19,23 +20,77 @@ const { kicker, title, lede, updated } = Astro.props
   </div>
 </section>
 <style>
-  .dot { width: 5px; height: 5px; background: var(--indigo); display: inline-block; }
-  .legal { display: grid; grid-template-columns: 360px 1fr; gap: 56px; align-items: start; padding-top: 64px; }
-  .legal h1 { font-size: clamp(34px, 4vw, 46px); margin: 16px 0 16px; }
-  .updated { font-size: 11px; color: var(--ink-faint); margin-top: 22px; padding-top: 16px; background-image: var(--dash-h);
-      background-size: 100% 1px;
-      background-position: 0 0;
-      background-repeat: no-repeat; }
-  .legal-side { position: sticky; top: 96px; }
-  .legal-body :global(h2) { font-family: var(--font-display); font-size: 22px; margin: 34px 0 10px; }
-  .legal-body :global(h2:first-child) { margin-top: 0; }
-  .legal-body :global(p) { color: var(--ink-soft); font-size: 15px; max-width: 70ch; margin: 0 0 12px; }
-  .legal-body :global(ul) { color: var(--ink-soft); font-size: 15px; max-width: 70ch; padding-left: 20px; margin: 0 0 12px; }
-  .legal-body :global(li) { margin-bottom: 6px; }
-  .legal-body :global(strong) { color: var(--ink); }
-  .legal-body :global(code) { font-family: var(--font-mono); font-size: 13px; background: var(--surface-2); padding: 1px 5px; }
+  .dot {
+    width: 5px;
+    height: 5px;
+    background: var(--indigo);
+    display: inline-block;
+  }
+  .legal {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 56px;
+    align-items: start;
+    padding-top: 64px;
+  }
+  .legal h1 {
+    font-size: clamp(34px, 4vw, 46px);
+    margin: 16px 0 16px;
+  }
+  .updated {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 22px;
+    padding-top: 16px;
+    background-image: var(--dash-h);
+    background-size: 100% 1px;
+    background-position: 0 0;
+    background-repeat: no-repeat;
+  }
+  .legal-side {
+    position: sticky;
+    top: 96px;
+  }
+  .legal-body :global(h2) {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 34px 0 10px;
+  }
+  .legal-body :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .legal-body :global(p) {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 70ch;
+    margin: 0 0 12px;
+  }
+  .legal-body :global(ul) {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 70ch;
+    padding-left: 20px;
+    margin: 0 0 12px;
+  }
+  .legal-body :global(li) {
+    margin-bottom: 6px;
+  }
+  .legal-body :global(strong) {
+    color: var(--ink);
+  }
+  .legal-body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--surface-2);
+    padding: 1px 5px;
+  }
   @media (max-width: 900px) {
-    .legal { grid-template-columns: 1fr; gap: 32px; }
-    .legal-side { position: static; }
+    .legal {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .legal-side {
+      position: static;
+    }
   }
 </style>

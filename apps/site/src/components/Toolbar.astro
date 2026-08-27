@@ -38,25 +38,28 @@ interface Props {
 }
 const { for: target, tools } = Astro.props
 ---
-{tools.map((tool) =>
-  tool === '|' ? (
-    <span class="tool-split" aria-hidden="true"></span>
-  ) : (
-    <button
-      type="button"
-      class="tool"
-      title={tool.title}
-      aria-label={tool.title}
-      data-cmd={tool.cmd}
-      data-for={target}
-      data-arg={tool.arg}
-      data-active={tool.active ?? undefined}
-      data-active-arg={tool.activeArg ?? tool.arg}
-    >
-      <Icon icon={tool.icon} size={16} />
-    </button>
-  ),
-)}
+
+{
+  tools.map((tool) =>
+    tool === '|' ? (
+      <span class="tool-split" aria-hidden="true" />
+    ) : (
+      <button
+        type="button"
+        class="tool"
+        title={tool.title}
+        aria-label={tool.title}
+        data-cmd={tool.cmd}
+        data-for={target}
+        data-arg={tool.arg}
+        data-active={tool.active ?? undefined}
+        data-active-arg={tool.activeArg ?? tool.arg}
+      >
+        <Icon icon={tool.icon} size={16} />
+      </button>
+    ),
+  )
+}
 
 <style>
   .tool {
@@ -87,7 +90,7 @@ const { for: target, tools } = Astro.props
   }
 
   /* On, because the document says so · not because you last pressed it. */
-  .tool[aria-pressed="true"] {
+  .tool[aria-pressed='true'] {
     color: var(--indigo);
     background-color: var(--indigo-wash);
   }

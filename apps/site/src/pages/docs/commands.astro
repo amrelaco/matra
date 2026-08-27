@@ -1,6 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
+
 <Docs
   title="Commands · Matra docs"
   description="Commands are functions that either change the document and return true, or change nothing and return false. How they compose, how they are typed, and why the boolean matters."
@@ -9,16 +10,16 @@ import Docs from '../../layouts/Docs.astro'
 >
   <p>
     A command is a function that takes a context and returns a boolean:
-    <strong>true if it did something, false if it declined.</strong> It never throws · one that
-    does is caught, logged, and its half-built transaction discarded rather than applied.
+    <strong>true if it did something, false if it declined.</strong> It never throws · one that does
+    is caught, logged, and its half-built transaction discarded rather than applied.
   </p>
   <pre><code>{`const toggleBold: Command = (ctx) => ctx.toggleMark('bold')`}</code></pre>
 
   <h2>The boolean is the interesting part</h2>
   <p>
-    A command returning <code>false</code> is not an error. It is the answer to "can this happen
-    here?", and it is how the schema, the selection and the document shape all get a say without
-    anybody writing a check.
+    A command returning <code>false</code> is not an error. It is the answer to "can this happen here?",
+    and it is how the schema, the selection and the document shape all get a say without anybody writing
+    a check.
   </p>
   <pre><code>{`// In a comment box with no heading in its schema:
 editor.commands.toggleHeading(2)   // undefined · not a command at all
@@ -29,16 +30,15 @@ editor.commands.toggleBold()       // false · code blocks accept no marks
 // With nothing selected:
 editor.commands.askAi('shorten')   // false · there is nothing to shorten`}</code></pre>
   <p>
-    A keyboard shortcut that returns <code>false</code> falls through to the browser's own
-    handling rather than swallowing the key.
+    A keyboard shortcut that returns <code>false</code> falls through to the browser's own handling
+    rather than swallowing the key.
   </p>
 
   <h2>Asking without doing</h2>
   <p>
     The boolean above only arrives after the change has happened, which is no use to a button
-    that wants to be disabled <em>before</em> it is pressed. <code>editor.can</code> is the same
-    command surface, with the same names and the same arguments, that returns the answer and
-    changes nothing.
+    that wants to be disabled <em>before</em> it is pressed. <code>editor.can</code> is the same command
+    surface, with the same names and the same arguments, that returns the answer and changes nothing.
   </p>
   <pre><code>{`bold.disabled = !editor.can.toggleBold()
 undo.disabled = !editor.can.undo()`}</code></pre>
@@ -57,9 +57,9 @@ undo.disabled = !editor.can.undo()`}</code></pre>
 
   <h2>Types are inferred, not declared</h2>
   <p>
-    <code>editor.commands</code> is built from the extensions array you passed. Add an extension
-    and its commands appear, typed, with their argument types intact. Leave it out and calling
-    them is a compile error rather than a runtime surprise.
+    <code>editor.commands</code> is built from the extensions array you passed. Add an extension and
+    its commands appear, typed, with their argument types intact. Leave it out and calling them is
+    a compile error rather than a runtime surprise.
   </p>
   <pre><code>{`const editor = createEditor({ extensions: [document, paragraph, text, bold] })
 
@@ -68,8 +68,8 @@ editor.commands.toggleItalic()   // Property 'toggleItalic' does not exist`}</co
   <p>
     There is no module augmentation and nothing to declare. This is the one thing here that
     other editors cannot copy without changing their architecture: Tiptap's commands live in a
-    global interface, so every installed extension's commands appear on every editor whether
-    you passed them or not.
+    global interface, so every installed extension's commands appear on every editor whether you
+    passed them or not.
   </p>
 
   <h2>Running several as one</h2>
@@ -78,9 +78,9 @@ editor.commands.toggleItalic()   // Property 'toggleItalic' does not exist`}</co
   commands.insert(' and this')
 })`}</code></pre>
   <p>
-    One undo step, and all or nothing · if any command returns <code>false</code> the whole
-    batch rolls back and <code>batch</code> itself returns <code>false</code>. Nothing
-    half-applied reaches the document.
+    One undo step, and all or nothing · if any command returns <code>false</code> the whole batch
+    rolls back and <code>batch</code> itself returns <code>false</code>. Nothing half-applied
+    reaches the document.
   </p>
 
   <h2>Making a change its own undo step</h2>
@@ -104,9 +104,19 @@ editor.commands.toggleItalic()   // Property 'toggleItalic' does not exist`}</co
     <table>
       <thead><tr><th>Command</th><th>What it does</th></tr></thead>
       <tbody>
-        <tr><td><code>select(range)</code></td><td>Move the selection · a position or a range</td></tr>
-        <tr><td><code>insert(content, at?)</code></td><td>JSON, an array of nodes, or an HTML string</td></tr>
-        <tr><td><code>replace(range, content)</code></td><td>Swap a span for something else</td></tr>
+        <tr
+          ><td><code>select(range)</code></td><td>Move the selection · a position or a range</td
+          ></tr
+        >
+        <tr
+          ><td><code>insert(content, at?)</code></td><td
+            >JSON, an array of nodes, or an HTML string</td
+          ></tr
+        >
+        <tr
+          ><td><code>replace(range, content)</code></td><td>Swap a span for something else</td
+          ></tr
+        >
         <tr><td><code>remove(range?)</code></td><td>Delete a span, or the selection</td></tr>
         <tr><td><code>moveBlock(from, to)</code></td><td>What a drag handle does</td></tr>
         <tr><td><code>focus()</code></td><td>Put the caret back in the editor</td></tr>
@@ -116,8 +126,8 @@ editor.commands.toggleItalic()   // Property 'toggleItalic' does not exist`}</co
 
   <h2>What the context gives you</h2>
   <p>
-    Inside a command, <code>ctx</code> is the whole surface. The document as JSON, the
-    selection, and the operations that change them:
+    Inside a command, <code>ctx</code> is the whole surface. The document as JSON, the selection,
+    and the operations that change them:
   </p>
   <pre><code>{`ctx.doc                              // the document, as plain JSON
 ctx.selection                        // { from, to, anchor, head, empty }
@@ -133,10 +143,10 @@ ctx.isolateUndo()`}</code></pre>
 
   <div class="note">
     <p>
-      <code>setBlockType</code> only applies to textblocks — nodes that hold text. For a node
-      that holds <em>blocks</em>, like a checklist item or a table cell, use
-      <code>setNodeAttrs</code>. Ticking a checkbox with <code>setBlockType</code> silently does
-      nothing, which is a mistake worth making only once.
+      <code>setBlockType</code> only applies to textblocks — nodes that hold text. For a node that
+      holds <em>blocks</em>, like a checklist item or a table cell, use
+      <code>setNodeAttrs</code>. Ticking a checkbox with <code>setBlockType</code> silently does nothing,
+      which is a mistake worth making only once.
     </p>
   </div>
 
@@ -144,8 +154,8 @@ ctx.isolateUndo()`}</code></pre>
   <p>
     <code>Pos</code> is branded, so arithmetic on one does not typecheck: <code>from + 5</code>
     is a plain <code>number</code>, and a plain <code>number</code> is not accepted back. That is
-    deliberate · a position computed from a stale one is the bug this editor exists to prevent,
-    and it is invisible at runtime.
+    deliberate · a position computed from a stale one is the bug this editor exists to prevent, and
+    it is invisible at runtime.
   </p>
   <p>
     It does mean a literal position needs saying out loud. <code>pos</code> and
@@ -181,16 +191,15 @@ export const emphasis: ExtensionDef<{ shout: Command<[times?: number]> }> = {
   keys: { 'Mod-Alt-!': 'shout' },
 }`}</code></pre>
   <p>
-    <code>editor.commands.shout(3)</code> now exists and is typed, because the array it came
-    from says so. See <a href="/docs/extensions">writing an extension</a> for the rest of the
-    shape.
+    <code>editor.commands.shout(3)</code> now exists and is typed, because the array it came from
+    says so. See <a href="/docs/extensions">writing an extension</a> for the rest of the shape.
   </p>
 
   <div class="note">
     <p>
       Positions that are not finite integers inside the document return <code>false</code>
-      rather than throwing — <code>NaN</code> included. It slips past a naive range check,
-      because both <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
+      rather than throwing — <code>NaN</code> included. It slips past a naive range check, because
+      both <code>NaN &lt; 0</code> and <code>NaN &gt; size</code> are false.
     </p>
   </div>
 </Docs>

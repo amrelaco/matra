@@ -36,6 +36,7 @@ const sizes = [
   ['Slate', '63.0 kB', 'mostly React · 29.0 kB without it'],
 ]
 ---
+
 <Docs
   title="Benchmarks · Matra docs"
   description="How the numbers on the landing page were measured, what they leave out, and how to run the harness yourself."
@@ -43,9 +44,9 @@ const sizes = [
   heading="Benchmarks"
 >
   <p>
-    Every figure on the landing page comes from one run of one harness with all four
-    editors mounted in the same page. Numbers gathered from different browsers do not
-    belong in the same table, so they are not gathered that way.
+    Every figure on the landing page comes from one run of one harness with all four editors
+    mounted in the same page. Numbers gathered from different browsers do not belong in the same
+    table, so they are not gathered that way.
   </p>
 
   <h2>Method</h2>
@@ -56,9 +57,9 @@ const sizes = [
     <li>Each published figure is the median of three such runs.</li>
   </ul>
   <p>
-    That is not ceremony. A single sample moved one metric by 6× between runs on a change
-    that could not affect it, and the keystroke row swings by about 30% between runs for
-    every editor here. One sample is a story, not a measurement.
+    That is not ceremony. A single sample moved one metric by 6× between runs on a change that
+    could not affect it, and the keystroke row swings by about 30% between runs for every editor
+    here. One sample is a story, not a measurement.
   </p>
 
   <h2>Milliseconds, lower is better</h2>
@@ -71,78 +72,94 @@ const sizes = [
         </tr>
       </thead>
       <tbody>
-        {rows.map(([op, floor, a, b, c, d]) => (
-          <tr>
-            <td>{op}</td><td>{floor}</td><td>{a}</td><td>{b}</td><td>{c}</td><td>{d}</td>
-          </tr>
-        ))}
+        {
+          rows.map(([op, floor, a, b, c, d]) => (
+            <tr>
+              <>
+                <td>{op}</td>
+                <td>{floor}</td>
+                <td>{a}</td>
+                <td>{b}</td>
+                <td>{c}</td>
+                <td>{d}</td>
+              </>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
 
   <h2>These numbers are slower than the ones that were here before</h2>
   <p>
-    The machine is why. Same harness, same browser, a different day: Lexical parsed the
-    same document in 34.7 ms one week and 76.9 ms the next, without a line of it changing.
-    Only the comparison inside a single run means anything, which is exactly why all four
-    editors are mounted in one page and measured in one pass. Milliseconds from two
-    different runs are two different measurements wearing the same unit.
+    The machine is why. Same harness, same browser, a different day: Lexical parsed the same
+    document in 34.7 ms one week and 76.9 ms the next, without a line of it changing. Only the
+    comparison inside a single run means anything, which is exactly why all four editors are
+    mounted in one page and measured in one pass. Milliseconds from two different runs are two
+    different measurements wearing the same unit.
   </p>
 
   <h2>The keystroke row changed hands</h2>
   <p>
-    It used to be the row Matra lost, and losing it was fair: Lexical was ahead in every
-    run. Measured back to back against the same rivals in the same session, before and
-    after:
+    It used to be the row Matra lost, and losing it was fair: Lexical was ahead in every run.
+    Measured back to back against the same rivals in the same session, before and after:
   </p>
   <div class="scroll">
     <table>
       <thead><tr><th>One keystroke</th><th>Before</th><th>After</th></tr></thead>
       <tbody>
-        {keystroke.map(([size, before, after]) => (
-          <tr><td>{size}</td><td>{before}</td><td><b>{after}</b></td></tr>
-        ))}
+        {
+          keystroke.map(([size, before, after]) => (
+            <tr>
+              <>
+                <td>{size}</td>
+                <td>{before}</td>
+                <td>
+                  <b>{after}</b>
+                </td>
+              </>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
   <p>Three things were costing it, all three found by profiling rather than by reading:</p>
   <ul>
     <li>
-      <b>Every ancestor of an edit was rebuilt by cutting.</b> A paragraph changes, and each
-      ancestor up to the document was rebuilt around it — cut the run of children in two,
-      append the replacement, append the rest, then add up every child's size to arrive at a
-      total that differed from the old one by exactly one child. On two thousand blocks that
-      is four walks of two thousand children per character. Swapping the one child that
-      moved makes it one array copy and one subtraction.
+      <b>Every ancestor of an edit was rebuilt by cutting.</b> A paragraph changes, and each ancestor
+      up to the document was rebuilt around it — cut the run of children in two, append the replacement,
+      append the rest, then add up every child's size to arrive at a total that differed from the
+      old one by exactly one child. On two thousand blocks that is four walks of two thousand children
+      per character. Swapping the one child that moved makes it one array copy and one subtraction.
     </li>
     <li>
       <b>The diff reached into the DOM for blocks it had already decided to skip.</b> It read
-      <code>childNodes[i]</code> before asking whether block <code>i</code> was inside the
-      edit at all, and for 1999 of 2000 blocks threw the answer away. Ask first, index
-      second.
+      <code>childNodes[i]</code> before asking whether block <code>i</code> was inside the edit at
+      all, and for 1999 of 2000 blocks threw the answer away. Ask first, index second.
     </li>
     <li>
-      <b>Every sixty-fourth keystroke threw the rendered document away.</b> The position map
-      absorbs each edit rather than rewriting itself, and capped its backlog at sixty-four —
-      past which the whole document was rebuilt from scratch. It was the backlog that had
-      gone stale, not the DOM. That one was a correctness bug in a performance bug's
-      clothing: a rebuild also dropped the state of every mounted node view.
+      <b>Every sixty-fourth keystroke threw the rendered document away.</b> The position map absorbs
+      each edit rather than rewriting itself, and capped its backlog at sixty-four — past which the
+      whole document was rebuilt from scratch. It was the backlog that had gone stale, not the DOM.
+      That one was a correctness bug in a performance bug's clothing: a rebuild also dropped the state
+      of every mounted node view.
     </li>
   </ul>
   <p>
-    Away from the browser's layout cost, in Node against happy-dom, the same three changes
-    take a keystroke on two thousand paragraphs from 0.464 ms to 0.077 ms — and the cost
-    stops tracking the length of the document: 0.052 ms at twenty blocks against 0.077 ms at
-    two thousand.
+    Away from the browser's layout cost, in Node against happy-dom, the same three changes take
+    a keystroke on two thousand paragraphs from 0.464 ms to 0.077 ms — and the cost stops
+    tracking the length of the document: 0.052 ms at twenty blocks against 0.077 ms at two
+    thousand.
   </p>
 
   <h2>The "No editor" column</h2>
   <p>
-    The same paragraphs, built by hand into a <code>contenteditable</code> div, with no editor
-    in the page at all. Putting a document on screen is mostly the browser making elements and
-    laying them out, and nothing can go faster than that. Two thirds of the 200-paragraph mount
-    row and half of the 2,000-paragraph one is that floor, which is worth knowing before
-    reading a 0.3 ms difference as a result.
+    The same paragraphs, built by hand into a <code>contenteditable</code> div, with no editor in
+    the page at all. Putting a document on screen is mostly the browser making elements and laying
+    them out, and nothing can go faster than that. Two thirds of the 200-paragraph mount row and half
+    of the 2,000-paragraph one is that floor, which is worth knowing before reading a 0.3 ms difference
+    as a result.
   </p>
   <p>
     Every mount is also checked rather than trusted: the harness mounts once more outside the
@@ -154,19 +171,19 @@ const sizes = [
   <h2>The mount row was wrong, and the harness was why</h2>
   <p>
     For a while this page said Lexical put an editor on screen faster than Matra. It did not.
-    The harness ran each editor's teardown <em>inside</em> the timed function, and the layout
-    read that makes a render measurement real came after it — so an editor whose teardown
-    detaches its DOM had already taken its document off screen before the browser was asked
-    to lay anything out. Lexical's teardown does that. Matra's does not: it drops listeners
-    and leaves the document where it is.
+    The harness ran each editor's teardown <em>inside</em> the timed function, and the layout read
+    that makes a render measurement real came after it — so an editor whose teardown detaches its
+    DOM had already taken its document off screen before the browser was asked to lay anything out.
+    Lexical's teardown does that. Matra's does not: it drops listeners and leaves the document where
+    it is.
   </p>
   <p>
-    So Matra paid for laying out two thousand paragraphs and Lexical did not, on a row where
-    the layout is most of the number. Teardown now runs after the clock stops, every editor
-    pays for its own layout, and both mount rows changed hands. It is the same class of
-    mistake the harness already refused to make for Slate, made one level up — which is the
-    argument for a floor row and a verification pass rather than for trusting a number
-    because it came out of a timer.
+    So Matra paid for laying out two thousand paragraphs and Lexical did not, on a row where the
+    layout is most of the number. Teardown now runs after the clock stops, every editor pays for
+    its own layout, and both mount rows changed hands. It is the same class of mistake the
+    harness already refused to make for Slate, made one level up — which is the argument for a
+    floor row and a verification pass rather than for trusting a number because it came out of a
+    timer.
   </p>
 
   <h2>What is missing, and why</h2>
@@ -174,27 +191,35 @@ const sizes = [
     Slate is measured on mount only. Its keystroke goes through a React render that has not
     happened by the time the timer stops, and the harness checks whether the text on screen
     changed during the measurement — when it did not, it reports <code>NOT MEASURED</code>
-    instead of a number. An earlier version of the harness cheerfully reported Slate at
-    0.02 ms per keystroke, which was the model update with nothing drawn behind it.
+    instead of a number. An earlier version of the harness cheerfully reported Slate at 0.02 ms per
+    keystroke, which was the model update with nothing drawn behind it.
   </p>
   <p>
-    Each editor is driven through its own idiomatic API. That is the only fair way to do it
-    and also the caveat worth stating: Lexical and Slate carry the rich-text behaviour their
-    own quick-starts prescribe, which is not the same feature set as either starter kit.
+    Each editor is driven through its own idiomatic API. That is the only fair way to do it and
+    also the caveat worth stating: Lexical and Slate carry the rich-text behaviour their own
+    quick-starts prescribe, which is not the same feature set as either starter kit.
   </p>
 
   <h2>Bundle size</h2>
   <p>
-    One app importing that editor and its rich-text kit, bundled and minified with esbuild,
-    then gzipped. Same method for all four.
+    One app importing that editor and its rich-text kit, bundled and minified with esbuild, then
+    gzipped. Same method for all four.
   </p>
   <div class="scroll">
     <table>
       <thead><tr><th></th><th>Gzipped</th><th>What is in it</th></tr></thead>
       <tbody>
-        {sizes.map(([name, size, note]) => (
-          <tr><td>{name}</td><td>{size}</td><td>{note}</td></tr>
-        ))}
+        {
+          sizes.map(([name, size, note]) => (
+            <tr>
+              <>
+                <td>{name}</td>
+                <td>{size}</td>
+                <td>{note}</td>
+              </>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>

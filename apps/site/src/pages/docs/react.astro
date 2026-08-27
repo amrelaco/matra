@@ -1,7 +1,13 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="React · Matra docs" description="useEditor, useEditorState and EditorContent: a toolbar whose active states stay honest." section="Frameworks" heading="React">
+
+<Docs
+  title="React · Matra docs"
+  description="useEditor, useEditorState and EditorContent: a toolbar whose active states stay honest."
+  section="Frameworks"
+  heading="React"
+>
   <pre><code>npm i @matrajs/core @matrajs/react</code></pre>
 
   <h2>An editor</h2>
@@ -17,9 +23,9 @@ export function Editor() &#123;
   return &lt;EditorContent editor=&#123;editor&#125; /&gt;
 &#125;</code></pre>
   <p>
-    The editor is created once and destroyed on unmount. <strong>Options are read
-    once</strong> · changing them later does not recreate it, because tearing down a live
-    document on a prop change loses whatever the person was writing. Use commands instead.
+    The editor is created once and destroyed on unmount. <strong>Options are read once</strong> ·
+    changing them later does not recreate it, because tearing down a live document on a prop change
+    loses whatever the person was writing. Use commands instead.
   </p>
 
   <h2>A toolbar that stays honest</h2>
@@ -46,15 +52,14 @@ function BoldButton(&#123; editor &#125;) &#123;
 
   <div class="note">
     <code>onMouseDown</code> with <code>preventDefault</code>, not
-    <code>onClick</code>. A click moves focus to the button first, which collapses the
-    selection · so the command runs against a caret rather than the words you highlighted.
+    <code>onClick</code>. A click moves focus to the button first, which collapses the selection
+    · so the command runs against a caret rather than the words you highlighted.
   </div>
 
   <h2>Saving</h2>
   <pre><code>useEffect(() =&gt; editor.on('change', () =&gt; save(editor.getJSON())), [editor])</code></pre>
   <p>
-    <code>on</code> returns its own unsubscribe function, so it works as an effect cleanup
-    directly.
+    <code>on</code> returns its own unsubscribe function, so it works as an effect cleanup directly.
   </p>
 
   <h2>Focus</h2>

@@ -9,6 +9,7 @@ const links = [
   ['Pricing', '/pricing'],
 ]
 ---
+
 <nav>
   <div class="bar">
     <a href="/" class="brand" aria-label="Matra, home">
@@ -34,7 +35,13 @@ const links = [
         square: two items in a row, one boxed and one not, reads as a stray box
         rather than as a pair.
       -->
-      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Use the dark theme" aria-pressed="false">
+      <button
+        type="button"
+        class="theme-toggle"
+        data-theme-toggle
+        aria-label="Use the dark theme"
+        aria-pressed="false"
+      >
         <Icon icon={Moon02Icon} class="at-light" size={15} />
         <Icon icon={Sun03Icon} class="at-dark" size={15} />
         <span class="at-light">Dark</span>
@@ -76,15 +83,43 @@ const links = [
     text-decoration: none;
     flex: none;
   }
-  .links { display: flex; gap: var(--s3); font-size: 14.5px; margin-right: auto; }
-  .links a { text-decoration: none; color: var(--ink-soft); }
-  .links a:hover { color: var(--ink); }
-  .right { display: flex; align-items: center; gap: var(--s2); flex: none; }
-  .gh { display: inline-flex; align-items: center; gap: 7px; font-size: 14.5px; text-decoration: none; color: var(--ink-soft); }
-  .gh:hover { color: var(--ink); }
+  .links {
+    display: flex;
+    gap: var(--s3);
+    font-size: 14.5px;
+    margin-right: auto;
+  }
+  .links a {
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+  .links a:hover {
+    color: var(--ink);
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    flex: none;
+  }
+  .gh {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14.5px;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+  .gh:hover {
+    color: var(--ink);
+  }
 
   @media (max-width: 860px) {
-    .bar { gap: var(--s2); }
-    .links { display: none; }
+    .bar {
+      gap: var(--s2);
+    }
+    .links {
+      display: none;
+    }
   }
 </style>

@@ -1,7 +1,13 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Recipes · Matra docs" description="Autosave, read-only, Markdown, a table of contents, search highlighting, and the things people ask for on day one." section="Reference" heading="Recipes">
+
+<Docs
+  title="Recipes · Matra docs"
+  description="Autosave, read-only, Markdown, a table of contents, search highlighting, and the things people ask for on day one."
+  section="Reference"
+  heading="Recipes"
+>
   <p>The things people need on the first day, in the fewest lines that actually work.</p>
 
   <h2>Autosave, without saving on every keystroke</h2>
@@ -90,8 +96,8 @@ document.addEventListener('keydown', (event) =&gt; &#123;
   editor.commands[item.command](item.arg)
 &#125;, true)</code></pre>
   <p>
-    <code>Escape</code> is already bound by the extension and stays closed afterwards, so the
-    next arrow key does not reopen what was just dismissed.
+    <code>Escape</code> is already bound by the extension and stays closed afterwards, so the next
+    arrow key does not reopen what was just dismissed.
   </p>
 
   <h2>Search highlighting</h2>
@@ -103,7 +109,10 @@ document.addEventListener('keydown', (event) =&gt; &#123;
     attrs: &#123; class: 'hit' &#125;,
   &#125;)),
 &#125;)</code></pre>
-  <p>Decorations are drawn over the document, so a highlight never ends up in a copy or an export.</p>
+  <p>
+    Decorations are drawn over the document, so a highlight never ends up in a copy or an
+    export.
+  </p>
 
   <h2>Stable ids for anchoring comments</h2>
   <pre><code>import &#123; assignIds &#125; from '@matrajs/core'
@@ -128,14 +137,14 @@ editor.setContent(doc)</code></pre>
   <h2>Loading HTML you did not write</h2>
   <pre><code>editor.setContent(untrustedHtml)</code></pre>
   <p>
-    Safe by construction. Executable attributes are never set, URL attributes are scheme-checked,
-    undeclared attributes are dropped, and every route into the DOM · JSON, paste, command,
-    decoration · passes the same gate. See
+    Safe by construction. Executable attributes are never set, URL attributes are
+    scheme-checked, undeclared attributes are dropped, and every route into the DOM · JSON,
+    paste, command, decoration · passes the same gate. See
     <a href="https://github.com/amrelaco/matra/blob/main/SECURITY.md">SECURITY.md</a>.
   </p>
 
   <div class="note">
-    <code>getHTML()</code> output is safe to render in the editor. If you store it and serve it
-    somewhere else, sanitise at that boundary too · defence in depth is the point.
+    <code>getHTML()</code> output is safe to render in the editor. If you store it and serve it somewhere
+    else, sanitise at that boundary too · defence in depth is the point.
   </div>
 </Docs>

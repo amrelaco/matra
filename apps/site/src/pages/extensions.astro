@@ -543,6 +543,7 @@ const tiptapRatio = (sizes.tiptap.minimum / starterGz).toFixed(1)
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six']
 const spell = (n: number) => WORDS[n] ?? String(n)
 ---
+
 <Base
   title="Extensions · Matra"
   description="Every extension that ships with Matra, each shown in a live editor rather than listed in a table."
@@ -564,20 +565,21 @@ const spell = (n: number) => WORDS[n] ?? String(n)
     </div>
   </section>
 
-  {groups.map((group) => (
-    <section class="section">
-      <div class="wrap ext-row">
-        <div class="ext-copy">
-          <p class="kicker">{group.kicker}</p>
-          <h3>{group.title}</h3>
-          <p>{group.blurb}</p>
-          <ul class="chips" data-static>
-            {group.items.map((item) => (
-              <li class="mono">{item}</li>
-            ))}
-          </ul>
+  {
+    groups.map((group) => (
+      <section class="section">
+        <div class="wrap ext-row">
+          <div class="ext-copy">
+            <p class="kicker">{group.kicker}</p>
+            <h3>{group.title}</h3>
+            <p>{group.blurb}</p>
+            <ul class="chips" data-static>
+              {group.items.map((item) => (
+                <li class="mono">{item}</li>
+              ))}
+            </ul>
 
-          {/*
+            {/*
             How you actually get these. There is no per-extension install: they
             all ship in the one package, and the honest answer to "how do I add
             highlight" is the import line, not an npm command that does not
@@ -587,28 +589,29 @@ const spell = (n: number) => WORDS[n] ?? String(n)
             .map() expression: Astro's compiler takes either, and the parser
             the formatter uses only takes this one.
           */}
-          <div class="grab" data-static>
-            <code class="mono">{`import { ${group.items.join(', ')} } from '@matrajs/core'`}</code>
-            <button
-              type="button"
-              class="grab-copy mono"
-              data-copy={`import { ${group.items.join(', ')} } from '@matrajs/core'`}
-              aria-label={`Copy the import for ${group.kicker.toLowerCase()}`}
-            >
-              <Icon icon={Copy01Icon} class="at-idle" size={13} />
-              <Icon icon={Tick02Icon} class="at-done" size={13} />
-              <span class="at-idle">copy</span>
-              <span class="at-done">copied</span>
-            </button>
+            <div class="grab" data-static>
+              <code class="mono">{`import { ${group.items.join(', ')} } from '@matrajs/core'`}</code>
+              <button
+                type="button"
+                class="grab-copy mono"
+                data-copy={`import { ${group.items.join(', ')} } from '@matrajs/core'`}
+                aria-label={`Copy the import for ${group.kicker.toLowerCase()}`}
+              >
+                <Icon icon={Copy01Icon} class="at-idle" size={13} />
+                <Icon icon={Tick02Icon} class="at-done" size={13} />
+                <span class="at-idle">copy</span>
+                <span class="at-done">copied</span>
+              </button>
+            </div>
           </div>
+          <Window name={`${group.id}.md`} bleed="right">
+            <Toolbar slot="toolbar" for={group.id} tools={group.tools} />
+            <div id={`ed-${group.id}`} class="ext-editor" />
+          </Window>
         </div>
-        <Window name={`${group.id}.md`} bleed="right">
-          <Toolbar slot="toolbar" for={group.id} tools={group.tools} />
-          <div id={`ed-${group.id}`} class="ext-editor"></div>
-        </Window>
-      </div>
-    </section>
-  ))}
+      </section>
+    ))
+  }
 
   <section class="section">
     <div class="wrap">
@@ -626,19 +629,21 @@ const spell = (n: number) => WORDS[n] ?? String(n)
         is what a grid does when the count and the columns disagree.
       -->
       <div class="paid fills bleed" data-static>
-        {paid.map((item, index) => (
-          <div class="paid-card">
-            <p class="paid-no mono">{String(index + 1).padStart(2, '0')}</p>
-            <b>{item.name}</b>
-            <code class="paid-pkg mono">npm i {item.pkg}</code>
-            <p>{item.what}</p>
-            <ul class="chips" data-static>
-              {item.items.map((thing) => (
-                <li class="mono">{thing}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {
+          paid.map((item, index) => (
+            <div class="paid-card">
+              <p class="paid-no mono">{String(index + 1).padStart(2, '0')}</p>
+              <b>{item.name}</b>
+              <code class="paid-pkg mono">npm i {item.pkg}</code>
+              <p>{item.what}</p>
+              <ul class="chips" data-static>
+                {item.items.map((thing) => (
+                  <li class="mono">{thing}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
       </div>
 
       <p class="foot-note">
@@ -660,8 +665,8 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       <p class="kicker">What you ship</p>
       <h2>Take five, take everything.</h2>
       <p class="lede">
-        Every extension you leave out really does leave the bundle. It is also worth knowing
-        how little that saves: the engine is the floor and the extensions are rounding.
+        Every extension you leave out really does leave the bundle. It is also worth knowing how
+        little that saves: the engine is the floor and the extensions are rounding.
       </p>
     </div>
   </section>
@@ -669,25 +674,28 @@ const spell = (n: number) => WORDS[n] ?? String(n)
   <section class="section">
     <div class="wrap">
       <div class="ladder fills bleed" data-static>
-        {sizes.rungs.map((rung) => (
-          <div class="rung">
-            <div class="rung-what">
-              <b>{rung.label}</b>
-              <span class="mono">{rung.note}</span>
+        {
+          sizes.rungs.map((rung) => (
+            <div class="rung">
+              <div class="rung-what">
+                <b>{rung.label}</b>
+                <span class="mono">{rung.note}</span>
+              </div>
+              <div class="rung-track">
+                <div class="rung-bar" style={`--w: ${(rung.gz / widest) * 100}%`} />
+              </div>
+              <span class="rung-kb mono">{rung.gz.toFixed(1)} kB</span>
             </div>
-            <div class="rung-track">
-              <div class="rung-bar" style={`--w: ${(rung.gz / widest) * 100}%`}></div>
-            </div>
-            <span class="rung-kb mono">{rung.gz.toFixed(1)} kB</span>
-          </div>
-        ))}
+          ))
+        }
         <div class="rung rival">
           <div class="rung-what">
             <b>Tiptap, bold and underline only</b>
             <span class="mono">their per-package way, same bundler</span>
           </div>
           <div class="rung-track">
-            <div class="rung-bar" style={`--w: ${(sizes.tiptap.minimum / widest) * 100}%`}></div>
+            <div class="rung-bar" style={`--w: ${(sizes.tiptap.minimum / widest) * 100}%`}>
+            </div>
           </div>
           <span class="rung-kb mono">{sizes.tiptap.minimum.toFixed(1)} kB</span>
         </div>
@@ -697,10 +705,10 @@ const spell = (n: number) => WORDS[n] ?? String(n)
         Gzipped, bundled with esbuild, measured by <code>pnpm size</code>. Dropping from the
         starter kit to two marks saves
         {' '}{(starterGz - twoMarksGz).toFixed(1)} kB — because an extension costs about
-        {' '}{perExtension} kB and the engine underneath is {engineGz.toFixed(1)} kB. Tiptap
-        splitting into a package per extension gets their minimum to
-        {' '}{sizes.tiptap.minimum} kB, which is still {tiptapRatio}× Matra carrying
-        everything, because ProseMirror is underneath it and is not optional.
+        {' '}{perExtension} kB and the engine underneath is {engineGz.toFixed(1)} kB. Tiptap splitting
+        into a package per extension gets their minimum to
+        {' '}{sizes.tiptap.minimum} kB, which is still {tiptapRatio}× Matra carrying everything,
+        because ProseMirror is underneath it and is not optional.
       </p>
     </div>
   </section>
@@ -717,48 +725,52 @@ const spell = (n: number) => WORDS[n] ?? String(n)
     </div>
   </section>
 
-  {directory.map((group) => (
-    <section class="section">
-      <div class="wrap">
-        <div class="dir-head">
-          <h3>{group.group}</h3>
-          <span class="dir-pkg mono">{group.pkg}</span>
-          <p>{group.note}</p>
-        </div>
+  {
+    directory.map((group) => (
+      <section class="section">
+        <div class="wrap">
+          <div class="dir-head">
+            <h3>{group.group}</h3>
+            <span class="dir-pkg mono">{group.pkg}</span>
+            <p>{group.note}</p>
+          </div>
 
-        <div class="dir fills bleed" data-static>
-          {group.items.map((item) => (
-            <div class="dir-row">
-              <div class="dir-what">
-                <b class="mono">{item.name}</b>
-                <span>{item.what}</span>
+          <div class="dir fills bleed" data-static>
+            {group.items.map((item) => (
+              <div class="dir-row">
+                <div class="dir-what">
+                  <b class="mono">{item.name}</b>
+                  <span>{item.what}</span>
+                </div>
+                <code class="dir-use mono">{item.use}</code>
+                <div class="dir-keys">
+                  {item.key && <span class="dir-key mono">{item.key}</span>}
+                  {item.typed && <span class="dir-key typed mono">{item.typed}</span>}
+                </div>
+                <button
+                  type="button"
+                  class="dir-copy mono"
+                  data-copy={importLine(item.name, group.pkg)}
+                  aria-label={`Copy the import for ${item.name}`}
+                >
+                  <Icon icon={Copy01Icon} class="at-idle" size={13} />
+                  <Icon icon={Tick02Icon} class="at-done" size={13} />
+                  <span class="at-idle">import</span>
+                  <span class="at-done">copied</span>
+                </button>
               </div>
-              <code class="dir-use mono">{item.use}</code>
-              <div class="dir-keys">
-                {item.key && <span class="dir-key mono">{item.key}</span>}
-                {item.typed && <span class="dir-key typed mono">{item.typed}</span>}
-              </div>
-              <button
-                type="button"
-                class="dir-copy mono"
-                data-copy={importLine(item.name, group.pkg)}
-                aria-label={`Copy the import for ${item.name}`}
-              >
-                <Icon icon={Copy01Icon} class="at-idle" size={13} />
-                <Icon icon={Tick02Icon} class="at-done" size={13} />
-                <span class="at-idle">import</span>
-                <span class="at-done">copied</span>
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
-  ))}
+      </section>
+    ))
+  }
 
   <Footer />
 
-  <script>import '../scripts/extension-demos.ts'</script>
+  <script>
+    import '../scripts/extension-demos.ts'
+  </script>
 
   <style>
     /* The frame is `.boxed`; this is the row inside it. */
@@ -778,14 +790,19 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       background-position: 100% 0;
       background-repeat: no-repeat;
     }
-    .counts div:last-child { background-image: none; }
+    .counts div:last-child {
+      background-image: none;
+    }
     .counts b {
       font-family: var(--font-display);
       font-size: 34px;
       line-height: 1;
       color: var(--indigo);
     }
-    .counts span { font-size: 12.5px; color: var(--ink-faint); }
+    .counts span {
+      font-size: 12.5px;
+      color: var(--ink-faint);
+    }
 
     /* The window fills the section; the copy column carries the vertical
        padding · see the note on .demo-row in index.astro. */
@@ -801,7 +818,9 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       align-self: start;
       padding-block: var(--s6);
     }
-    .ext-copy h3 { margin-bottom: var(--s2); }
+    .ext-copy h3 {
+      margin-bottom: var(--s2);
+    }
     /*
      * The import line, framed like the install line in the hero: one box, a
      * dashed divider, and the word that says what pressing it does.
@@ -812,8 +831,16 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       margin-top: var(--s3);
       background-color: var(--surface);
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
     .grab code {
@@ -842,12 +869,30 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       background-position: 0 0;
       background-repeat: no-repeat;
     }
-    .grab-copy:hover { color: var(--ink); }
-    .grab-copy.done { color: var(--indigo); }
-    .ext-copy p { color: var(--ink-soft); font-size: 15.5px; margin: 0 0 var(--s3); }
-    .ext-editor { font-size: 15px; min-height: 150px; }
+    .grab-copy:hover {
+      color: var(--ink);
+    }
+    .grab-copy.done {
+      color: var(--indigo);
+    }
+    .ext-copy p {
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      margin: 0 0 var(--s3);
+    }
+    .ext-editor {
+      font-size: 15px;
+      min-height: 150px;
+    }
 
-    .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+    .chips {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+    }
     .chips li {
       font-size: 11px;
       color: var(--ink-faint);
@@ -855,15 +900,26 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       --dash: 5px;
       --dash-gap: 4px;
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
 
     /* --- the size ladder ---------------------------------------------------
        The same bar language as the speed chart on the home page, so a reader
        who has seen one recognises the other. */
-    .ladder { display: flex; flex-direction: column; }
+    .ladder {
+      display: flex;
+      flex-direction: column;
+    }
     .rung {
       display: grid;
       grid-template-columns: 280px minmax(0, 1fr) 80px;
@@ -875,16 +931,44 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       background-position: 0 0;
       background-repeat: no-repeat;
     }
-    .rung:first-child { background-image: none; }
-    .rung-what { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .rung-what b { font-size: 14px; font-weight: 400; }
-    .rung-what span { font-size: 11px; color: var(--ink-faint); }
-    .rung-track { height: 11px; background-color: var(--surface-2); }
-    .rung-bar { height: 100%; width: var(--w); background-color: var(--indigo); }
+    .rung:first-child {
+      background-image: none;
+    }
+    .rung-what {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .rung-what b {
+      font-size: 14px;
+      font-weight: 400;
+    }
+    .rung-what span {
+      font-size: 11px;
+      color: var(--ink-faint);
+    }
+    .rung-track {
+      height: 11px;
+      background-color: var(--surface-2);
+    }
+    .rung-bar {
+      height: 100%;
+      width: var(--w);
+      background-color: var(--indigo);
+    }
     /* Not us · drawn quieter, the way the floor row is on the speed chart. */
-    .rung.rival .rung-bar { background-color: var(--rule-firm); }
-    .rung.rival .rung-what b { color: var(--ink-soft); }
-    .rung-kb { font-size: 12px; text-align: right; color: var(--ink-soft); }
+    .rung.rival .rung-bar {
+      background-color: var(--rule-firm);
+    }
+    .rung.rival .rung-what b {
+      color: var(--ink-soft);
+    }
+    .rung-kb {
+      font-size: 12px;
+      text-align: right;
+      color: var(--ink-soft);
+    }
 
     /* --- the directory ---------------------------------------------------
        One row per extension: what it is, the line you would write, the keys it
@@ -897,8 +981,13 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       gap: 12px;
       padding-bottom: var(--s3);
     }
-    .dir-head h3 { font-size: 26px; }
-    .dir-pkg { font-size: 11px; color: var(--ink-faint); }
+    .dir-head h3 {
+      font-size: 26px;
+    }
+    .dir-pkg {
+      font-size: 11px;
+      color: var(--ink-faint);
+    }
     .dir-head p {
       flex: 1 1 100%;
       margin: 0;
@@ -917,11 +1006,25 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       background-position: 0 0;
       background-repeat: no-repeat;
     }
-    .dir-row:first-child { background-image: none; }
+    .dir-row:first-child {
+      background-image: none;
+    }
 
-    .dir-what { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .dir-what b { font-size: 13px; font-weight: 400; color: var(--ink); }
-    .dir-what span { font-size: 12.5px; color: var(--ink-faint); }
+    .dir-what {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .dir-what b {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+    .dir-what span {
+      font-size: 12.5px;
+      color: var(--ink-faint);
+    }
 
     .dir-use {
       font-size: 11.5px;
@@ -932,12 +1035,24 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       --dash: 4px;
       --dash-gap: 4px;
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
 
-    .dir-keys { display: flex; flex-wrap: wrap; gap: 5px; }
+    .dir-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
     .dir-key {
       font-size: 10.5px;
       color: var(--ink-faint);
@@ -945,12 +1060,23 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       --dash: 4px;
       --dash-gap: 3px;
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
     /* Typed, not pressed · the same distinction the shortcut panel makes. */
-    .dir-key.typed { color: var(--indigo); --rule-strong: var(--indigo); }
+    .dir-key.typed {
+      color: var(--indigo);
+      --rule-strong: var(--indigo);
+    }
 
     .dir-copy {
       display: inline-flex;
@@ -964,8 +1090,12 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       font-size: 11px;
       color: var(--ink-faint);
     }
-    .dir-copy:hover { color: var(--ink); }
-    .dir-copy.done { color: var(--indigo); }
+    .dir-copy:hover {
+      color: var(--ink);
+    }
+    .dir-copy.done {
+      color: var(--indigo);
+    }
 
     /* One cell per package, counted from the list · see .hanging on the home
        page, which broke the day an eighth group shipped. */
@@ -982,8 +1112,15 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       background-position: 100% 0;
       background-repeat: no-repeat;
     }
-    .paid-card:last-child { background-image: none; }
-    .paid-no { font-size: 11px; color: var(--indigo); letter-spacing: 0.1em; margin: 0; }
+    .paid-card:last-child {
+      background-image: none;
+    }
+    .paid-no {
+      font-size: 11px;
+      color: var(--indigo);
+      letter-spacing: 0.1em;
+      margin: 0;
+    }
     .paid-card b {
       display: block;
       font-family: var(--font-display);
@@ -1001,33 +1138,64 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       --dash: 4px;
       --dash-gap: 4px;
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
       background-repeat: no-repeat;
     }
-    .paid-card p { color: var(--ink-soft); font-size: 14px; margin: 14px 0 16px; line-height: 1.6; }
+    .paid-card p {
+      color: var(--ink-soft);
+      font-size: 14px;
+      margin: 14px 0 16px;
+      line-height: 1.6;
+    }
 
     @media (max-width: 900px) {
-      .ext-row { grid-template-columns: 1fr; gap: var(--s3); }
-      .rung { grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; }
-      .rung-track { grid-column: 1 / -1; }
+      .ext-row {
+        grid-template-columns: 1fr;
+        gap: var(--s3);
+      }
+      .rung {
+        grid-template-columns: minmax(0, 1fr) 72px;
+        gap: 8px;
+      }
+      .rung-track {
+        grid-column: 1 / -1;
+      }
       /* Stacked: name and description, then the line, then keys and import. */
       .dir-row {
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         padding: 16px var(--inset);
       }
-      .dir-what { grid-column: 1 / -1; }
-      .dir-use { grid-column: 1 / -1; }
-      .paid { grid-template-columns: 1fr; }
+      .dir-what {
+        grid-column: 1 / -1;
+      }
+      .dir-use {
+        grid-column: 1 / -1;
+      }
+      .paid {
+        grid-template-columns: 1fr;
+      }
       .paid-card {
         padding: var(--s3) calc(var(--inset) + 18px);
         background-image: var(--dash-h);
         background-size: 100% 1px;
         background-position: 0 100%;
       }
-      .paid-card:last-child { background-image: none; }
-      .counts div { padding: 16px 18px; }
+      .paid-card:last-child {
+        background-image: none;
+      }
+      .counts div {
+        padding: 16px 18px;
+      }
     }
   </style>
 </Base>

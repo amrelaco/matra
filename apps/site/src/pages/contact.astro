@@ -31,7 +31,11 @@ const routes = [
   ],
 ]
 ---
-<Base title="Contact · Matra" description="Where to send a bug, a licence question, a security report, or anything else.">
+
+<Base
+  title="Contact · Matra"
+  description="Where to send a bug, a licence question, a security report, or anything else."
+>
   <Nav />
   <Head
     kicker="Contact"
@@ -41,27 +45,63 @@ const routes = [
   <section class="section">
     <div class="wrap">
       <div class="routes">
-        {routes.map(([title, note, label, href]) => (
-          <a class="route" href={href}>
-            <h3>{title}</h3>
-            <p>{note}</p>
-            <span class="mono go">{label} →</span>
-          </a>
-        ))}
+        {
+          routes.map(([title, note, label, href]) => (
+            <a class="route" href={href}>
+              <h3>{title}</h3>
+              <p>{note}</p>
+              <span class="mono go">{label} →</span>
+            </a>
+          ))
+        }
       </div>
     </div>
   </section>
   <Footer />
   <style>
-    .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .route { background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
-      background-repeat: no-repeat; background-color: var(--surface); padding: 24px; text-decoration: none; display: block; }
-    .route:hover { border-color: var(--indigo); }
-    .route h3 { font-size: 20px; margin: 0 0 8px; }
-    .route p { font-size: 14px; color: var(--ink-soft); margin: 0 0 16px; }
-    .go { font-size: 12.5px; color: var(--indigo); }
-    @media (max-width: 720px) { .routes { grid-template-columns: 1fr; } }
+    .routes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .route {
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+      background-color: var(--surface);
+      padding: 24px;
+      text-decoration: none;
+      display: block;
+    }
+    .route:hover {
+      border-color: var(--indigo);
+    }
+    .route h3 {
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+    .route p {
+      font-size: 14px;
+      color: var(--ink-soft);
+      margin: 0 0 16px;
+    }
+    .go {
+      font-size: 12.5px;
+      color: var(--indigo);
+    }
+    @media (max-width: 720px) {
+      .routes {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </Base>

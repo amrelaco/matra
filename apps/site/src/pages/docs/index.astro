@@ -5,6 +5,7 @@ import Docs from '../../layouts/Docs.astro'
 /** Read off the same file the extensions page draws its chart from. */
 const starter = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
 ---
+
 <Docs
   title="Introduction · Matra docs"
   description="Matra is a headless rich text editor framework. It gives you a document model, an extension API and a command system, and stays out of your interface."
@@ -20,8 +21,9 @@ const starter = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
   <p>
     Every editor framework leaks its engine into your code. You import the engine's types, write
     against its internals, and upgrading it becomes your problem. Matra wraps the engine
-    completely: <strong>your document is plain JSON and no engine type appears in a public
-    signature.</strong>
+    completely: <strong
+      >your document is plain JSON and no engine type appears in a public signature.</strong
+    >
   </p>
   <p>
     It also has no runtime dependencies. The document model, transforms, position mapping,
@@ -33,21 +35,21 @@ const starter = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
   <p>Everything else follows from these, and there is not a fourth.</p>
   <ul>
     <li>
-      <strong>The document is data.</strong> Plain JSON — log it, store it, diff it, read it on
-      a server that has never loaded an editor.
+      <strong>The document is data.</strong> Plain JSON — log it, store it, diff it, read it on a
+      server that has never loaded an editor.
       <a href="/docs/document-model">Document model →</a>
     </li>
     <li>
-      <strong>The extension array is the feature list.</strong> What you pass in decides what
-      the editor can do, what it accepts on paste, and what
-      <code>editor.commands</code> is typed as. An editor with no heading extension has no
-      heading command, and TypeScript knows.
+      <strong>The extension array is the feature list.</strong> What you pass in decides what the
+      editor can do, what it accepts on paste, and what
+      <code>editor.commands</code> is typed as. An editor with no heading extension has no heading
+      command, and TypeScript knows.
       <a href="/docs/extensions">Writing an extension →</a>
     </li>
     <li>
       <strong>Positions are mapped, not remembered.</strong> A position held across an
-      <code>await</code> is wrong by the time you come back, so the async path never hands you a
-      raw number. <a href="/docs/position-mapping">Position mapping →</a>
+      <code>await</code> is wrong by the time you come back, so the async path never hands you a raw
+      number. <a href="/docs/position-mapping">Position mapping →</a>
     </li>
   </ul>
 
@@ -72,7 +74,11 @@ editor.mount(document.querySelector('#editor'))`}</code></pre>
           <td>The engine and 38 extensions</td>
         </tr>
         <tr>
-          <td><code>@matrajs/react</code>, <code>/vue</code>, <code>/svelte</code>, <code>/solid</code></td>
+          <td
+            ><code>@matrajs/react</code>, <code>/vue</code>, <code>/svelte</code>, <code
+              >/solid</code
+            ></td
+          >
           <td>MIT</td><td>Framework bindings · thin, and optional</td>
         </tr>
         <tr>
@@ -105,8 +111,7 @@ editor.mount(document.querySelector('#editor'))`}</code></pre>
     </li>
     <li>
       <strong>Fit it into your app.</strong>
-      <a href="/docs/frameworks">Frameworks</a> — React, Vue, Svelte, Solid, Angular and plain
-      JavaScript.
+      <a href="/docs/frameworks">Frameworks</a> — React, Vue, Svelte, Solid, Angular and plain JavaScript.
     </li>
     <li>
       <strong>Understand it.</strong>

@@ -1,7 +1,13 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Writing an extension · Matra docs" description="An extension is a plain object. Nodes, marks and behaviour, with command types inferred rather than declared." section="Concepts" heading="Writing an extension">
+
+<Docs
+  title="Writing an extension · Matra docs"
+  description="An extension is a plain object. Nodes, marks and behaviour, with command types inferred rather than declared."
+  section="Concepts"
+  heading="Writing an extension"
+>
   <p>
     An extension is a plain object with the same power as the built-ins. There is no base class
     to extend, nothing to register, and no declaration merging · pass it to
@@ -22,8 +28,8 @@ export const spoiler: MarkDef&lt;&#123; toggleSpoiler: Command &#125;&gt; = &#12
   keys: &#123; 'Mod-Shift-S': 'toggleSpoiler' &#125;,
 &#125;</code></pre>
   <p>
-    The generic is what makes <code>editor.commands.toggleSpoiler</code> exist and be typed. It
-    is the only ceremony, and it buys autocomplete on every call site.
+    The generic is what makes <code>editor.commands.toggleSpoiler</code> exist and be typed. It is
+    the only ceremony, and it buys autocomplete on every call site.
   </p>
 
   <h2>A node</h2>
@@ -88,8 +94,8 @@ editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
   <h2>Ordering</h2>
   <p>
     Extensions load in array order, adjustable with <code>priority</code>. Later ones win a key
-    binding conflict, and a more specific <code>parseDOM</code> rule needs a higher priority to
-    beat a general one · which is how a task list beats a plain bulleted list for the same
+    binding conflict, and a more specific <code>parseDOM</code> rule needs a higher priority to beat
+    a general one · which is how a task list beats a plain bulleted list for the same
     <code>&lt;ul&gt;</code>.
   </p>
 </Docs>

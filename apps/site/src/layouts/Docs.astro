@@ -68,6 +68,7 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
   here === '/docs' ? '/docs/index' : here
 }.astro`
 ---
+
 <Base title={title} description={description}>
   <Nav />
   <!--
@@ -79,16 +80,22 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
   <div class="section wide docs-shell">
     <aside class="docs-side">
       <nav aria-label="Documentation">
-        {nav.map(([group, items]) => (
-          <div class="docs-group">
-            <div class="docs-group-name mono">{group}</div>
-            {items.map(([label, href]) => (
-              <a href={href} class={href === here ? 'on' : ''} aria-current={href === here ? 'page' : undefined}>
-                {label}
-              </a>
-            ))}
-          </div>
-        ))}
+        {
+          nav.map(([group, items]) => (
+            <div class="docs-group">
+              <div class="docs-group-name mono">{group}</div>
+              {items.map(([label, href]) => (
+                <a
+                  href={href}
+                  class={href === here ? 'on' : ''}
+                  aria-current={href === here ? 'page' : undefined}
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          ))
+        }
       </nav>
     </aside>
 
@@ -98,18 +105,30 @@ const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages$
       <slot />
 
       <nav class="docs-pager" aria-label="More documentation">
-        {previous ? (
-          <a href={previous[1]} class="docs-pager-link">
-            <span class="mono"><Icon icon={ArrowLeft02Icon} size={13} />previous</span>
-            <b>{previous[0]}</b>
-          </a>
-        ) : <span />}
-        {next && (
-          <a href={next[1]} class="docs-pager-link next">
-            <span class="mono">next<Icon icon={ArrowRight02Icon} size={13} /></span>
-            <b>{next[0]}</b>
-          </a>
-        )}
+        {
+          previous ? (
+            <a href={previous[1]} class="docs-pager-link">
+              <span class="mono">
+                <Icon icon={ArrowLeft02Icon} size={13} />
+                previous
+              </span>
+              <b>{previous[0]}</b>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          next && (
+            <a href={next[1]} class="docs-pager-link next">
+              <span class="mono">
+                next
+                <Icon icon={ArrowRight02Icon} size={13} />
+              </span>
+              <b>{next[0]}</b>
+            </a>
+          )
+        }
       </nav>
 
       <p class="docs-edit"><a href={source}>Edit this page on GitHub</a></p>

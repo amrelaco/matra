@@ -34,14 +34,30 @@ const editorApi = [
     "'change' | 'focus' | 'blur' | 'selectionChange'. Returns its own unsubscribe.",
   ],
   ['extensionState(name)', 'S | undefined', 'What a stateful extension is currently holding.'],
-  ['mount(element)', 'void', 'Attach to the DOM. Or pass `element` to createEditor and skip it.'],
+  [
+    'mount(element)',
+    'void',
+    'Attach to the DOM. Or pass `element` to createEditor and skip it.',
+  ],
   ['destroy()', 'void', 'Detach and clean up.'],
-  ['unsafe', '{ view, state, schema }', 'Raw engine. Unstable, outside semver · needing it is a gap in the API above.'],
+  [
+    'unsafe',
+    '{ view, state, schema }',
+    'Raw engine. Unstable, outside semver · needing it is a gap in the API above.',
+  ],
 ]
 
 const options = [
-  ['extensions', 'T', 'Required. The feature list · it decides the schema, the keymap and the type of `commands`.'],
-  ['content', 'DocNode | string', 'JSON or HTML. Anything the schema cannot hold is dropped on the way in.'],
+  [
+    'extensions',
+    'T',
+    'Required. The feature list · it decides the schema, the keymap and the type of `commands`.',
+  ],
+  [
+    'content',
+    'DocNode | string',
+    'JSON or HTML. Anything the schema cannot hold is dropped on the way in.',
+  ],
   ['element', 'HTMLElement', 'Mount here immediately, instead of calling `mount` later.'],
   ['editable', 'boolean', 'Defaults to true.'],
   ['autofocus', "boolean | 'start' | 'end'", 'Where to put the caret on mount.'],
@@ -71,7 +87,13 @@ const ctxApi = [
   ['mark()', 'A PosMarker. Map positions through changes made after this point.'],
 ]
 ---
-<Docs title="API · Matra docs" description="The editor object, the core commands, and the command context, in one page." section="Reference" heading="API">
+
+<Docs
+  title="API · Matra docs"
+  description="The editor object, the core commands, and the command context, in one page."
+  section="Reference"
+  heading="API"
+>
   <p>
     Everything public, on one page. No engine type appears in any signature here · that is the
     contract, not a coincidence.
@@ -82,13 +104,15 @@ const ctxApi = [
     <table>
       <thead><tr><th>Option</th><th>Type</th><th></th></tr></thead>
       <tbody>
-        {options.map(([name, type, note]) => (
-          <tr>
-            <td class="mono n">{name}</td>
-            <td class="mono t">{type}</td>
-            <td class="d">{note}</td>
-          </tr>
-        ))}
+        {
+          options.map(([name, type, note]) => (
+            <tr>
+              <td class="mono n">{name}</td>
+              <td class="mono t">{type}</td>
+              <td class="d">{note}</td>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
@@ -98,13 +122,15 @@ const ctxApi = [
     <table>
       <thead><tr><th>Member</th><th>Returns</th><th></th></tr></thead>
       <tbody>
-        {editorApi.map(([name, type, note]) => (
-          <tr>
-            <td class="mono n">{name}</td>
-            <td class="mono t">{type}</td>
-            <td class="d">{note}</td>
-          </tr>
-        ))}
+        {
+          editorApi.map(([name, type, note]) => (
+            <tr>
+              <td class="mono n">{name}</td>
+              <td class="mono t">{type}</td>
+              <td class="d">{note}</td>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
@@ -115,13 +141,15 @@ const ctxApi = [
     <table>
       <thead><tr><th>Command</th><th>Arguments</th><th></th></tr></thead>
       <tbody>
-        {coreCommands.map(([name, args, note]) => (
-          <tr>
-            <td class="mono n">{name}</td>
-            <td class="mono t">{args}</td>
-            <td class="d">{note}</td>
-          </tr>
-        ))}
+        {
+          coreCommands.map(([name, args, note]) => (
+            <tr>
+              <td class="mono n">{name}</td>
+              <td class="mono t">{args}</td>
+              <td class="d">{note}</td>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
@@ -136,9 +164,16 @@ const ctxApi = [
   <div class="api">
     <table>
       <tbody>
-        {ctxApi.map(([name, note]) => (
-          <tr><td class="mono n">{name}</td><td class="d">{note}</td></tr>
-        ))}
+        {
+          ctxApi.map(([name, note]) => (
+            <tr>
+              <>
+                <td class="mono n">{name}</td>
+                <td class="d">{note}</td>
+              </>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
@@ -155,8 +190,8 @@ interface DocNode &#123;
   marks?: DocMark[]
 &#125;</code></pre>
   <p>
-    <code>Pos</code> is branded so a raw number cannot be passed by accident. Cast at the
-    boundary where you genuinely know the number is a position.
+    <code>Pos</code> is branded so a raw number cannot be passed by accident. Cast at the boundary
+    where you genuinely know the number is a position.
   </p>
 
   <h2>Writing a position down</h2>
@@ -165,9 +200,10 @@ interface DocNode &#123;
 pos(0)         // number -> Pos
 range(1, 6)    // (number, number) -> Range</code></pre>
   <p>
-    <code>Pos</code> is branded so that arithmetic on one does not typecheck · these are how you
-    write a literal without a cast. Not for carrying a position across an <code>await</code>:
-    that is <code>ctx.mark()</code>.
+    <code>Pos</code> is branded so that arithmetic on one does not typecheck · these are how you write
+    a literal without a cast. Not for carrying a position across an <code>await</code>: that is <code
+      >ctx.mark()</code
+    >.
   </p>
 
   <h2>Functions that need no editor</h2>
@@ -180,15 +216,44 @@ assignIds(doc, options)  // DocNode  -> DocNode with stable block ids</code></pr
   <p>None of these touches the DOM, so all four run on a server.</p>
 
   <style>
-    .api { overflow-x: auto; margin: 0 0 18px; }
-    .api table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-    .api td, .api th { text-align: left; padding: 9px 12px; background-image: var(--dash-h);
+    .api {
+      overflow-x: auto;
+      margin: 0 0 18px;
+    }
+    .api table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13.5px;
+    }
+    .api td,
+    .api th {
+      text-align: left;
+      padding: 9px 12px;
+      background-image: var(--dash-h);
       background-size: 100% 1px;
       background-position: 0 100%;
-      background-repeat: no-repeat; vertical-align: top; }
-    .api th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
-    .api td.n { white-space: nowrap; color: var(--ink); }
-    .api td.t { white-space: nowrap; color: var(--indigo); font-size: 12px; }
-    .api td.d { color: var(--ink-soft); }
+      background-repeat: no-repeat;
+      vertical-align: top;
+    }
+    .api th {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-weight: 400;
+    }
+    .api td.n {
+      white-space: nowrap;
+      color: var(--ink);
+    }
+    .api td.t {
+      white-space: nowrap;
+      color: var(--indigo);
+      font-size: 12px;
+    }
+    .api td.d {
+      color: var(--ink-soft);
+    }
   </style>
 </Docs>

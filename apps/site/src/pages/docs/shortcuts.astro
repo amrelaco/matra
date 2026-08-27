@@ -68,42 +68,54 @@ const rules = [
   ['-> ', 'An arrow. Also <-, (c), (tm), +/-.'],
 ]
 ---
-<Docs title="Keyboard shortcuts · Matra docs" description="Every shortcut and input rule the starter kit binds." section="Reference" heading="Keyboard shortcuts">
+
+<Docs
+  title="Keyboard shortcuts · Matra docs"
+  description="Every shortcut and input rule the starter kit binds."
+  section="Reference"
+  heading="Keyboard shortcuts"
+>
   <p>
-    <code>Mod</code> is Command on a Mac and Control everywhere else · you bind it once and it
-    is right on both.
+    <code>Mod</code> is Command on a Mac and Control everywhere else · you bind it once and it is
+    right on both.
   </p>
 
-  {groups.map(([name, rows]) => (
-    <>
-      <h2>{name}</h2>
-      <div class="keys">
-        {rows.map(([key, what]) => (
-          <div class="row">
-            <kbd>{key}</kbd>
-            <span>{what}</span>
-          </div>
-        ))}
-      </div>
-    </>
-  ))}
+  {
+    groups.map(([name, rows]) => (
+      <>
+        <h2>{name}</h2>
+        <div class="keys">
+          {rows.map(([key, what]) => (
+            <div class="row">
+              <kbd>{key}</kbd>
+              <span>{what}</span>
+            </div>
+          ))}
+        </div>
+      </>
+    ))
+  }
 
   <p>
-    Only <code>Escape</code> in that last group is bound by the extension. The rest is the
-    host's, because the suggestion extension detects the trigger and renders nothing — the
-    menu, and therefore what its arrow keys mean, is yours. The one on this site is about a
-    hundred lines; there is a working copy in <a href="/docs/recipes">Recipes</a>.
+    Only <code>Escape</code> in that last group is bound by the extension. The rest is the host's,
+    because the suggestion extension detects the trigger and renders nothing — the menu, and therefore
+    what its arrow keys mean, is yours. The one on this site is about a hundred lines; there is a
+    working copy in <a href="/docs/recipes">Recipes</a>.
   </p>
 
   <h2>Input rules</h2>
-  <p>Typed rather than pressed. Each one is a single undo step, so a wrong guess costs one Mod-Z.</p>
+  <p>
+    Typed rather than pressed. Each one is a single undo step, so a wrong guess costs one Mod-Z.
+  </p>
   <div class="keys">
-    {rules.map(([typed, what]) => (
-      <div class="row">
-        <kbd class="typed">{typed}</kbd>
-        <span>{what}</span>
-      </div>
-    ))}
+    {
+      rules.map(([typed, what]) => (
+        <div class="row">
+          <kbd class="typed">{typed}</kbd>
+          <span>{what}</span>
+        </div>
+      ))
+    }
   </div>
 
   <h2>Binding your own</h2>
@@ -119,17 +131,55 @@ const rules = [
   </p>
 
   <style>
-    .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; margin: 0 0 18px; }
-    .row { display: flex; align-items: baseline; gap: 12px; padding: 7px 0; background-image: var(--dash-h);
+    .keys {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 26px;
+      margin: 0 0 18px;
+    }
+    .row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 7px 0;
+      background-image: var(--dash-h);
       background-size: 100% 1px;
       background-position: 0 100%;
-      background-repeat: no-repeat; }
-    kbd { font-family: var(--font-mono); font-size: 11.5px; background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-      background-position: 0 0, 0 100%, 0 0, 100% 0;
-      background-repeat: no-repeat; background-color: var(--surface-2); padding: 3px 7px; white-space: nowrap; flex: none; min-width: 108px; text-align: center; }
-    kbd.typed { color: var(--indigo); }
-    .row span { font-size: 13.5px; color: var(--ink-soft); }
-    @media (max-width: 720px) { .keys { grid-template-columns: 1fr; } }
+      background-repeat: no-repeat;
+    }
+    kbd {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+      background-color: var(--surface-2);
+      padding: 3px 7px;
+      white-space: nowrap;
+      flex: none;
+      min-width: 108px;
+      text-align: center;
+    }
+    kbd.typed {
+      color: var(--indigo);
+    }
+    .row span {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+    @media (max-width: 720px) {
+      .keys {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </Docs>

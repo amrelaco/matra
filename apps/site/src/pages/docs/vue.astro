@@ -1,7 +1,13 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Vue · Matra docs" description="useEditor and EditorContent for Vue 3, first-class rather than community-maintained." section="Frameworks" heading="Vue">
+
+<Docs
+  title="Vue · Matra docs"
+  description="useEditor and EditorContent for Vue 3, first-class rather than community-maintained."
+  section="Frameworks"
+  heading="Vue"
+>
   <pre><code>npm i @matrajs/core @matrajs/vue</code></pre>
   <p>
     Vue is first-class here rather than a community package that lags the React one. Both
@@ -38,8 +44,8 @@ const characters = useEditorState(props.editor, (e) =&gt; e.getText().length)
 &lt;/template&gt;</code></pre>
 
   <div class="note">
-    <code>@mousedown.prevent</code> rather than <code>@click</code>. A click moves focus to
-    the button first and collapses the selection, so the command runs against a caret instead
-    of the words that were highlighted.
+    <code>@mousedown.prevent</code> rather than <code>@click</code>. A click moves focus to the
+    button first and collapses the selection, so the command runs against a caret instead of the
+    words that were highlighted.
   </div>
 </Docs>

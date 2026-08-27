@@ -6,6 +6,7 @@ interface Props {
 }
 const { kicker, title, lede } = Astro.props
 ---
+
 <!--
   The attribute goes on the heading, not on a div around it.
   Wrapped, the upgrade parsed the heading's text into a paragraph and rendered
@@ -16,6 +17,12 @@ const { kicker, title, lede } = Astro.props
   <div class="wrap">
     <p class="kicker">{kicker}</p>
     <h1 data-editable="line" set:html={title} />
-    {lede && <p class="lede" data-editable="prose">{lede}</p>}
+    {
+      lede && (
+        <p class="lede" data-editable="prose">
+          {lede}
+        </p>
+      )
+    }
   </div>
 </header>

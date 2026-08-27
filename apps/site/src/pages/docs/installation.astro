@@ -1,12 +1,18 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
-<Docs title="Installation · Matra docs" description="Which packages exist, which are MIT, and which need a subscription." section="Getting started" heading="Installation">
+
+<Docs
+  title="Installation · Matra docs"
+  description="Which packages exist, which are MIT, and which need a subscription."
+  section="Getting started"
+  heading="Installation"
+>
   <p>The core is all most projects need · every extension is in it.</p>
   <pre><code>npm i @matrajs/core</code></pre>
   <p>
-    It ships no appearance. <a href="/docs/styling">Styling</a> is a page of its own, and worth
-    reading before the first afternoon rather than after it.
+    It ships no appearance. <a href="/docs/styling">Styling</a> is a page of its own, and worth reading
+    before the first afternoon rather than after it.
   </p>
 
   <h2>Framework bindings</h2>
@@ -16,8 +22,9 @@ npm i @matrajs/svelte  # matra — a use: action and a store
 npm i @matrajs/solid   # createMatra — a ref and a signal</code></pre>
   <p>
     All four are MIT and all four are thin · the editor does not care which framework renders
-    around it, and no binding re-implements anything. <strong>Angular, Qwik and plain
-    JavaScript need no package at all</strong> — three calls and a teardown, which
+    around it, and no binding re-implements anything. <strong
+      >Angular, Qwik and plain JavaScript need no package at all</strong
+    > — three calls and a teardown, which
     <a href="/docs/frameworks">Frameworks</a> shows for each of them.
   </p>
 
@@ -26,9 +33,9 @@ npm i @matrajs/solid   # createMatra — a ref and a signal</code></pre>
 npm i @matrajs/collab    # authority, rebasing, remote cursors
 npm i @matrajs/versions  # snapshots, diff, restore</code></pre>
   <p>
-    Installed the same way as everything else. These two are source-available under a
-    commercial licence rather than MIT · free for evaluation, development, testing, teaching,
-    personal projects and teams of fewer than three developers, paid beyond that. See
+    Installed the same way as everything else. These two are source-available under a commercial
+    licence rather than MIT · free for evaluation, development, testing, teaching, personal
+    projects and teams of fewer than three developers, paid beyond that. See
     <a href="/licence">the licence</a>.
   </p>
 

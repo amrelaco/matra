@@ -14,6 +14,7 @@ const cases: [string, string, string, string][] = [
   ['Typed, then undone', '"hello world"', '7–12', 'back where it started'],
 ]
 ---
+
 <Docs
   title="Position mapping · Matra docs"
   description="A position is an integer into the document. The moment anything changes, that integer points somewhere else. Mapping is how a position survives an edit it did not expect."
@@ -44,9 +45,9 @@ const cases: [string, string, string, string][] = [
 
   <h2>Markers</h2>
   <p>
-    <code>ctx.mark()</code> takes a marker. It records where the document was at that instant,
-    and <code>map</code> replays every change made since — so the position comes back pointing
-    at the same <em>text</em> rather than at the same number.
+    <code>ctx.mark()</code> takes a marker. It records where the document was at that instant, and
+    <code>map</code> replays every change made since — so the position comes back pointing at the
+    same <em>text</em> rather than at the same number.
   </p>
 
   <pre><code>{`const at = ctx.mark()
@@ -76,14 +77,20 @@ for await (const chunk of stream) {
         </tr>
       </thead>
       <tbody>
-        {cases.map(([what, doc, moved, result]) => (
-          <tr>
-            <td>{what}</td>
-            <td><code>{doc}</code></td>
-            <td><code>{moved}</code></td>
-            <td>{result}</td>
-          </tr>
-        ))}
+        {
+          cases.map(([what, doc, moved, result]) => (
+            <tr>
+              <td>{what}</td>
+              <td>
+                <code>{doc}</code>
+              </td>
+              <td>
+                <code>{moved}</code>
+              </td>
+              <td>{result}</td>
+            </tr>
+          ))
+        }
       </tbody>
     </table>
   </div>
@@ -91,9 +98,9 @@ for await (const chunk of stream) {
   <div class="note">
     <p>
       The third row is the one to write code for. When the text a marker pointed at has been
-      deleted, the range <strong>collapses</strong> — <code>from</code> and <code>to</code> come
-      back equal. Check for it, because inserting into a collapsed range is not "the rewrite
-      landed", it is a model's answer appearing where the user just deleted a sentence.
+      deleted, the range <strong>collapses</strong> — <code>from</code> and <code>to</code> come back
+      equal. Check for it, because inserting into a collapsed range is not "the rewrite landed", it
+      is a model's answer appearing where the user just deleted a sentence.
     </p>
   </div>
 
@@ -132,28 +139,28 @@ if (target.from === target.to) {
 }`}</code></pre>
 
   <p>
-    Note what is <em>not</em> here: no locking the editor, no disabling input, no "please wait".
-    The user keeps typing and the answer still lands on the words they chose.
+    Note what is <em>not</em> here: no locking the editor, no disabling input, no "please wait". The
+    user keeps typing and the answer still lands on the words they chose.
   </p>
 
   <h2>Where else it matters</h2>
   <ul>
     <li>
-      <strong>Collaboration</strong> · a remote step arrives in the sender's coordinates, and
-      your unsent work has to be rebased over it. That is mapping, run in both directions.
+      <strong>Collaboration</strong> · a remote step arrives in the sender's coordinates, and your
+      unsent work has to be rebased over it. That is mapping, run in both directions.
     </li>
     <li>
-      <strong>Comments</strong> · anchored as marks rather than as numbers, so mapping keeps
-      them on the right words for free — and a thread does not slide up the page when somebody
-      deletes a paragraph above it.
+      <strong>Comments</strong> · anchored as marks rather than as numbers, so mapping keeps them
+      on the right words for free — and a thread does not slide up the page when somebody deletes
+      a paragraph above it.
     </li>
     <li>
-      <strong>Decorations</strong> · a search highlight, a remote caret, a spell-check squiggle.
-      All positions, all mapped on every change.
+      <strong>Decorations</strong> · a search highlight, a remote caret, a spell-check squiggle. All
+      positions, all mapped on every change.
     </li>
     <li>
-      <strong>Version history</strong> · a diff between two documents is only meaningful because
-      an old document stays exactly what it was.
+      <strong>Version history</strong> · a diff between two documents is only meaningful because an
+      old document stays exactly what it was.
     </li>
   </ul>
 
@@ -166,9 +173,8 @@ if (target.from === target.to) {
     your tests.
   </p>
   <p>
-    Here the async path does not offer you a raw number to hold. <code>ctx.mark()</code> is how
-    you carry a position across an <code>await</code>, and there is no shorter way to do it
-    wrong.
+    Here the async path does not offer you a raw number to hold. <code>ctx.mark()</code> is how you
+    carry a position across an <code>await</code>, and there is no shorter way to do it wrong.
   </p>
 
   <div class="note">
@@ -183,6 +189,8 @@ if (target.from === target.to) {
   <ul>
     <li><a href="/docs/document-model">Document model</a> · what the integers count.</li>
     <li><a href="/docs/commands">Commands</a> · where <code>ctx.mark()</code> lives.</li>
-    <li><a href="/docs/recipes">Recipes</a> · autosave, and other things with a gap in them.</li>
+    <li>
+      <a href="/docs/recipes">Recipes</a> · autosave, and other things with a gap in them.
+    </li>
   </ul>
 </Docs>

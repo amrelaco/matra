@@ -1,6 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro'
 ---
+
 <Docs
   title="Document model · Matra docs"
   description="Your document is plain JSON: a tree of nodes you can log, diff, store and send over the wire. What positions mean, what the schema refuses, and why it is immutable."
@@ -28,9 +29,9 @@ import Docs from '../../layouts/Docs.astro'
 
   <h2>Nodes and marks</h2>
   <p>
-    A <strong>node</strong> is a thing in the document: a paragraph, a heading, an image, a
-    table cell. A <strong>mark</strong> is something applied to a range of text: bold, a link, a
-    comment thread. Nodes nest; marks decorate.
+    A <strong>node</strong> is a thing in the document: a paragraph, a heading, an image, a table
+    cell. A <strong>mark</strong> is something applied to a range of text: bold, a link, a comment
+    thread. Nodes nest; marks decorate.
   </p>
   <p>The distinction matters when you write an extension, because it decides three things:</p>
   <ul>
@@ -39,12 +40,12 @@ import Docs from '../../layouts/Docs.astro'
       mark lives on a text node's <code>marks</code> array.
     </li>
     <li>
-      <strong>What it costs in positions.</strong> A node has borders and takes space (below); a
-      mark takes none at all.
+      <strong>What it costs in positions.</strong> A node has borders and takes space (below); a mark
+      takes none at all.
     </li>
     <li>
-      <strong>How it splits.</strong> Marks split and merge freely as you type through them.
-      Nodes do not — splitting one is a deliberate operation.
+      <strong>How it splits.</strong> Marks split and merge freely as you type through them. Nodes
+      do not — splitting one is a deliberate operation.
     </li>
   </ul>
 
@@ -56,7 +57,9 @@ import Docs from '../../layouts/Docs.astro'
   <ul>
     <li>The document starts at <code>0</code>.</li>
     <li>Each character of text costs <strong>one</strong>.</li>
-    <li>Each node border costs <strong>one</strong> — so a paragraph costs two, plus its inside.</li>
+    <li>
+      Each node border costs <strong>one</strong> — so a paragraph costs two, plus its inside.
+    </li>
     <li>
       A leaf — a hard break, an image, a mention — costs exactly <strong>one</strong>, whatever
       it renders as. A five-letter mention is one position, not five.
@@ -82,8 +85,8 @@ import Docs from '../../layouts/Docs.astro'
     <p>
       Never do arithmetic on a position across an <code>await</code>. Take a marker with
       <code>ctx.mark()</code> and map through it — see
-      <a href="/docs/position-mapping">position mapping</a>, which is the page that explains
-      why this one is worth reading.
+      <a href="/docs/position-mapping">position mapping</a>, which is the page that explains why
+      this one is worth reading.
     </p>
   </div>
 
@@ -101,10 +104,9 @@ editor.getHTML()
   <p>
     The heading became a paragraph and the emphasis was dropped, because there is no node or
     mark in that schema to hold them. A node can also name the marks it accepts —
-    <code>marks: ''</code> is why the text in a code block stays literal, whatever you paste
-    into it. That is what makes a comment box a comment box: somebody
-    pasting three pages of a Word document into it gets three paragraphs of text, not three
-    pages of headings and tables.
+    <code>marks: ''</code> is why the text in a code block stays literal, whatever you paste into
+    it. That is what makes a comment box a comment box: somebody pasting three pages of a Word document
+    into it gets three paragraphs of text, not three pages of headings and tables.
   </p>
 
   <h2>It is immutable</h2>
@@ -114,14 +116,14 @@ editor.getHTML()
   </p>
   <ul>
     <li>
-      <strong>An old document stays valid.</strong> Hold on to <code>getJSON()</code> from ten
-      seconds ago and it is still exactly what it was — which is how version history and
-      collaborative rebasing work at all.
+      <strong>An old document stays valid.</strong> Hold on to <code>getJSON()</code> from ten seconds
+      ago and it is still exactly what it was — which is how version history and collaborative rebasing
+      work at all.
     </li>
     <li>
-      <strong>Unchanged parts are the same object.</strong> Editing one paragraph leaves every
-      other paragraph as literally the same reference, which is what lets the renderer skip
-      them by identity rather than by comparison.
+      <strong>Unchanged parts are the same object.</strong> Editing one paragraph leaves every other
+      paragraph as literally the same reference, which is what lets the renderer skip them by identity
+      rather than by comparison.
     </li>
   </ul>
 
@@ -135,14 +137,20 @@ editor.getHTML()
 // On a server, in a worker, in a test · no DOM anywhere.
 const markdown = toMarkdown(JSON.parse(row.body))`}</code></pre>
   <p>
-    <code>toMarkdown</code> walks the JSON. It never touches a DOM, which is why it runs on a
-    server with no jsdom in sight and why it is in the benchmark rather than in a caveat.
+    <code>toMarkdown</code> walks the JSON. It never touches a DOM, which is why it runs on a server
+    with no jsdom in sight and why it is in the benchmark rather than in a caveat.
   </p>
 
   <h2>Next</h2>
   <ul>
-    <li><a href="/docs/commands">Commands</a> · how a change is made and why they return booleans.</li>
-    <li><a href="/docs/position-mapping">Position mapping</a> · how a position survives an edit.</li>
-    <li><a href="/docs/extensions">Writing an extension</a> · adding a node or a mark of your own.</li>
+    <li>
+      <a href="/docs/commands">Commands</a> · how a change is made and why they return booleans.
+    </li>
+    <li>
+      <a href="/docs/position-mapping">Position mapping</a> · how a position survives an edit.
+    </li>
+    <li>
+      <a href="/docs/extensions">Writing an extension</a> · adding a node or a mark of your own.
+    </li>
   </ul>
 </Docs>

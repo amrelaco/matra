@@ -4,7 +4,11 @@ import Legal from '../components/Legal.astro'
 import Nav from '../components/Nav.astro'
 import Base from '../layouts/Base.astro'
 ---
-<Base title="Privacy · Matra" description="The editor runs in your browser and never sends your documents to us. This covers matrajs.com and the account, and nothing else.">
+
+<Base
+  title="Privacy · Matra"
+  description="The editor runs in your browser and never sends your documents to us. This covers matrajs.com and the account, and nothing else."
+>
   <Nav />
   <Legal
     kicker="Privacy"
@@ -14,9 +18,9 @@ import Base from '../layouts/Base.astro'
   >
     <h2>The editor itself</h2>
     <p>
-      <code>@matrajs/core</code> makes no network requests. No telemetry, no phone-home, no
-      usage beacon, no licence check. Your document never leaves the page it is typed on, and
-      that is a property of the code rather than a promise about our intentions.
+      <code>@matrajs/core</code> makes no network requests. No telemetry, no phone-home, no usage
+      beacon, no licence check. Your document never leaves the page it is typed on, and that is a
+      property of the code rather than a promise about our intentions.
     </p>
 
     <h2>What an account stores</h2>
@@ -37,9 +41,7 @@ import Base from '../layouts/Base.astro'
       processor in the picture and no card number exists to lose. If that changes we will name
       the processor here before it handles anything of yours, rather than after.
     </p>
-    <p>
-      No advertising network, no data broker, and no model trained on anything of yours.
-    </p>
+    <p>No advertising network, no data broker, and no model trained on anything of yours.</p>
 
     <h2>Your rights</h2>
     <p>
