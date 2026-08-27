@@ -5,7 +5,7 @@
     @media (prefers-color-scheme: dark) { .stem { fill: #edebe6 } }
   </style>
   <rect width="64" height="12" fill="#7c82e8"/>
-  <rect class="stem" y="22" width="19.47" height="52"/>
-  <rect class="stem" x="22.27" y="22" width="19.47" height="32"/>
-  <rect class="stem" x="44.53" y="22" width="19.47" height="44"/>
+  <rect class="stem" y="22" width="18" height="52"/>
+  <rect class="stem" x="23" y="22" width="18" height="32"/>
+  <rect class="stem" x="46" y="22" width="18" height="44"/>
 </svg>

@@ -5,7 +5,11 @@
  * In Bengali and Devanagari the matra is the headline stroke letters hang from
  * · the horizontal line across the top of a word. The bar is that stroke; the
  * stems are what hangs off it, at three different lengths because a word is not
- * uniform. Taken from the brand system in the design file, proportions intact.
+ * uniform.
+ *
+ * The gaps between the stems are 5 of 64 rather than the design file's 2.8.
+ * At the size the mark is actually used · 26px in the nav, 18px in the footer ·
+ * a 2.8 gap lands under a pixel and the three stems close up into one block.
  */
 interface Props {
   size?: number
@@ -24,7 +28,7 @@ const height = (size / 64) * 74
   aria-label="Matra"
 >
   <rect width="64" height="12" fill="var(--indigo)" />
-  <rect y="22" width="19.47" height="52" fill="currentColor" />
-  <rect x="22.27" y="22" width="19.47" height="32" fill="currentColor" />
-  <rect x="44.53" y="22" width="19.47" height="44" fill="currentColor" />
+  <rect y="22" width="18" height="52" fill="currentColor" />
+  <rect x="23" y="22" width="18" height="32" fill="currentColor" />
+  <rect x="46" y="22" width="18" height="44" fill="currentColor" />
 </svg>
