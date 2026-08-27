@@ -12,6 +12,7 @@ export interface CtxHost {
   readonly mappings: Mapping[]
   focus(): void
   replay(direction: 'undo' | 'redo'): boolean
+  canReplay(direction: 'undo' | 'redo'): boolean
 }
 
 const asPos = (n: number) => n as Pos
@@ -76,7 +77,19 @@ function toNodes(schema: Schema, content: DocNode | DocNode[] | string): Node[] 
   return list.map((node) => schema.nodeFromJSON(node))
 }
 
-export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): Ctx {
+/**
+ * @param dry  Nothing built here will be applied · the caller is `editor.can`.
+ *   Every other command works by mutating `tr`, so discarding it is enough to
+ *   make them harmless. Undo and redo do not: they reach past the transaction
+ *   and apply themselves. Without this flag, asking whether undo is available
+ *   would perform it.
+ */
+export function createCtx(
+  host: CtxHost,
+  state: EditorState,
+  tr: Transaction,
+  dry = false,
+): Ctx {
   const schema = host.schema
 
   const markerFrom = (version: number): PosMarker => ({
@@ -332,7 +345,7 @@ export function createCtx(host: CtxHost, state: EditorState, tr: Transaction): C
     state,
     tr,
     schema,
-    replay: (direction) => host.replay(direction),
+    replay: (direction) => (dry ? host.canReplay(direction) : host.replay(direction)),
     stepFromJSON: (json) => stepFromJSON(schema, json),
     pluginState: (key) => state.pluginState(key),
   })

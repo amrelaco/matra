@@ -47,6 +47,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
     mappings,
     focus: () => view?.focus(),
     replay: (direction) => replay(direction),
+    canReplay: (direction) => history.has(direction),
   }
 
   // Extensions that declare state become engine plugins, reduced per transaction.
@@ -137,15 +138,36 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
   const rawCommands = collectCommands()
 
-  function bind(target: Record<string, AnyCommand>) {
+  /**
+   * Run a command against a transaction that is then thrown away.
+   *
+   * A command already answers "did this work" — but only by doing it, which is
+   * no use to a toolbar that wants to grey out a button before the user
+   * presses it. The command builds its transaction as usual and nothing is
+   * applied, so asking costs a transaction and changes nothing.
+   */
+  function dryRun(fn: (ctx: ReturnType<typeof createCtx>) => boolean): boolean {
+    const ctx = createCtx(host, state, state.tr, true)
+    try {
+      return fn(ctx)
+    } catch {
+      return false
+    }
+  }
+
+  function bind(
+    target: Record<string, AnyCommand>,
+    invoke: (fn: (ctx: ReturnType<typeof createCtx>) => boolean) => boolean,
+  ) {
     const bound: Record<string, (...args: unknown[]) => boolean> = {}
     for (const [name, command] of Object.entries(target)) {
-      bound[name] = (...args: unknown[]) => run((ctx) => command(ctx, ...args))
+      bound[name] = (...args: unknown[]) => invoke((ctx) => command(ctx, ...args))
     }
     return bound as CommandsOf<T> & CoreCommands
   }
 
-  const commands = bind(rawCommands)
+  const commands = bind(rawCommands, run)
+  const can = bind(rawCommands, dryRun)
 
   // --- keymap, input rules and history ---------------------------------------
 
@@ -228,6 +250,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
   const editor: Editor<T> = {
     commands,
+    can,
 
     batch(runner) {
       const tr = state.tr
@@ -383,6 +406,9 @@ export function createEditor<const T extends readonly AnyDef[]>(
   editor.on('change', () => {
     for (const def of defs) def.kind === 'extension' && def.onChange?.(editor)
   })
+
+  // Last, so that `onCreate` — which mounting runs — sees a finished editor.
+  if (options.element) editor.mount(options.element)
 
   return editor
 }

@@ -100,6 +100,11 @@ export class History {
     void before
   }
 
+  /** Is there anything to replay this way? Asked by `editor.can`, which must not take. */
+  has(direction: 'undo' | 'redo'): boolean {
+    return (direction === 'undo' ? this.undoStack : this.redoStack).length > 0
+  }
+
   /** Hand back the entry to replay, and remember which direction we are going. */
   take(direction: 'undo' | 'redo'): HistoryEntry | null {
     const stack = direction === 'undo' ? this.undoStack : this.redoStack

@@ -1,5 +1,6 @@
 export { createEditor } from './editor'
 export { buildSchema } from './schema'
+export { pos, range } from './pos'
 export * from './extensions'
 export type {
   AnyCommand,

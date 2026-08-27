@@ -305,6 +305,14 @@ export interface EditorOptions<T extends readonly AnyDef[]> {
   content?: DocNode | string
   editable?: boolean
   autofocus?: boolean | 'start' | 'end'
+  /**
+   * Mount here as soon as the editor exists.
+   *
+   * The same as calling `mount` yourself, and the same thing every framework
+   * binding does · there is no state between construction and mounting worth
+   * making people write a second line for.
+   */
+  element?: HTMLElement
 }
 
 /** Commands the engine always provides, whatever definitions you pass. */
@@ -319,6 +327,17 @@ export interface CoreCommands {
 
 export interface Editor<T extends readonly AnyDef[] = readonly AnyDef[]> {
   readonly commands: CommandsOf<T> & CoreCommands
+
+  /**
+   * The same commands, asking instead of doing.
+   *
+   * `editor.can.toggleBold()` returns what `editor.commands.toggleBold()`
+   * would return, and leaves the document alone. This is how a toolbar button
+   * knows to be disabled rather than to look enabled and do nothing when
+   * pressed — the caret is in a code block, or the selection cannot hold that
+   * mark, and the answer is available before the user finds out by pressing.
+   */
+  readonly can: CommandsOf<T> & CoreCommands
 
   /** Run several commands as one undo step. Rolls back entirely if any returns false. */
   batch(run: (c: CommandsOf<T> & CoreCommands) => void): boolean
