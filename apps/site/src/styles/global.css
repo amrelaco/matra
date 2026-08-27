@@ -17,6 +17,10 @@
   --surface: #fbf8f1;
   --surface-2: #f0ebde;
   --ink: #1a1917;
+  /* Headings, one step further from the page than the text under them. Set
+     against `--ink` rather than instead of it, so the contrast between a
+     heading and its paragraph is the same in both themes. */
+  --ink-strong: #0d0c0b;
   --ink-soft: #5f5c53;
   --ink-faint: #918d80;
   --rule: #e8e3d6;
@@ -88,6 +92,7 @@
   --surface: #191920;
   --surface-2: #22222b;
   --ink: #edebe6;
+  --ink-strong: #ffffff;
   --ink-soft: #a8a49b;
   --ink-faint: #6e6a63;
   --rule: #26262e;
@@ -143,6 +148,7 @@ h3 {
   font-family: var(--font-display);
   font-weight: 400;
   margin: 0;
+  color: var(--ink-strong);
 }
 
 h1 {
