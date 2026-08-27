@@ -57,3 +57,11 @@ jobs:
       # demo's send button was dead for exactly that reason.
       - name: Site wiring
         run: node scripts/wiring.mjs
+
+      # Speed is the claim this project is sold on, so a regression fails here
+      # rather than being noticed by a user with a long document. Compared in
+      # calibrated units — a figure divided by one unit of ordinary work
+      # measured in the same process — because absolute milliseconds on a
+      # shared CI vCPU mean nothing next to a laptop's.
+      - name: Performance ratchet
+        run: node bench/bench.mjs --check

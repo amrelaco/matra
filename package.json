@@ -12,6 +12,9 @@
     "check": "biome check . && prettier --check \"**/*.astro\"",
     "fix": "biome check --write . && prettier --write \"**/*.astro\"",
     "size": "node scripts/size.mjs",
+    "bench": "node bench/bench.mjs",
+    "bench:check": "node bench/bench.mjs --check",
+    "bench:record": "node bench/bench.mjs --record",
     "links": "node scripts/links.mjs",
     "wiring": "node scripts/wiring.mjs"
   },
