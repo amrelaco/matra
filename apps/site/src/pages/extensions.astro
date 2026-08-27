@@ -577,12 +577,16 @@ const spell = (n: number) => WORDS[n] ?? String(n)
             ))}
           </ul>
 
-          <!--
+          {/*
             How you actually get these. There is no per-extension install: they
             all ship in the one package, and the honest answer to "how do I add
             highlight" is the import line, not an npm command that does not
             exist.
-          -->
+
+            A JSX comment rather than an HTML one because this sits inside a
+            .map() expression: Astro's compiler takes either, and the parser
+            the formatter uses only takes this one.
+          */}
           <div class="grab" data-static>
             <code class="mono">{`import { ${group.items.join(', ')} } from '@matrajs/core'`}</code>
             <button

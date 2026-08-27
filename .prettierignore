@@ -1,0 +1,10 @@
+# Prettier is here for .astro only — the one file type Biome cannot parse.
+# Scope comes from the glob the script passes, not from a blanket ignore: a
+# leading `*` here matches directories too, so no `!` line can rescue a file
+# underneath one, and the check passes by examining nothing.
+dist
+node_modules
+.astro
+apps/site/dist
+apps/site/.astro
+design
