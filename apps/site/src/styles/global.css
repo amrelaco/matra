@@ -511,6 +511,7 @@ th {
   .keys-button {
     right: 14px;
     bottom: 14px;
+    padding: 12px;
   }
   /* Just the icon at this width · the label is the first thing to go. */
   .keys-button span,
@@ -983,10 +984,10 @@ h3[data-live] > p {
 /*
  * Bold has to actually look bold.
  *
- * Only weights 400 and 500 were loaded once, so a <strong> asking for 700 fell
- * back to the nearest face there was. The glyphs changed metrics without
- * getting heavier, which reads as the text quietly shifting rather than
- * emphasising. 700 is loaded above · keep it there.
+ * Only weights 400 and 500 of the UI face were loaded once, so a <strong>
+ * asking for 700 fell back to the nearest face it had. The glyphs changed
+ * metrics without getting heavier, which reads as the text quietly shifting
+ * rather than emphasising. Every weight the site asks for is imported.
  */
 strong,
 b {
@@ -1377,51 +1378,31 @@ html[data-theme-changing] {
 /* --- the keyboard panel ---------------------------------------------------- */
 
 /*
- * The shortcut button, drawn in the site's own frame.
+ * The shortcut button.
  *
- * It had its own copy of the dashed border, at the page's light weight, on a
- * fill — which is the one place that weight disappears. It takes the firmer
- * rule the window chrome takes, and says what it is rather than being a square
- * with a glyph in it.
+ * It is one of the site's own buttons · `.btn.ghost`, the bordered one, with
+ * nothing added but a corner to sit in. It used to carry a private copy of the
+ * dashed border at the chrome weight, and a second dashed box around the `?`
+ * inside the first one, which read as a floating widget from some other
+ * design rather than as a button belonging to this page.
  */
 .keys-button {
   position: fixed;
   right: 22px;
   bottom: 22px;
   z-index: 55;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 13px;
-  --rule-strong: var(--rule-firm);
-  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-  background-position: 0 0, 0 100%, 0 0, 100% 0;
-  background-repeat: no-repeat;
-  background-color: var(--surface);
-  color: var(--ink-soft);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  background-color: var(--paper);
   cursor: pointer;
 }
 
+/* Mono, so the key reads as a key · but no box. The button is the box. */
 .keys-button kbd {
-  font-family: inherit;
-  font-size: 11px;
-  line-height: 1;
-  padding: 2px 5px;
-  color: var(--ink);
-  --dash: 3px;
-  --dash-gap: 3px;
-  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
-  background-position: 0 0, 0 100%, 0 0, 100% 0;
-  background-repeat: no-repeat;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-soft);
 }
 
-.keys-button:hover,
 .keys-button[aria-expanded="true"] {
-  color: var(--ink);
   background-color: var(--surface-2);
 }
 
