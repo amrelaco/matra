@@ -17,7 +17,10 @@ const doc = (...texts: string[]) => ({ type: 'doc', content: texts.map(para) })
 /** A clock the test owns, so two versions never share a millisecond by luck. */
 const clock = () => {
   let at = 1_700_000_000_000
-  return () => (at += 1000)
+  return () => {
+    at += 1000
+    return at
+  }
 }
 
 const editorWith = (content: ReturnType<typeof doc>, now = clock()) =>
