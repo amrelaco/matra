@@ -34,6 +34,25 @@ editor.commands.askAi('shorten')   // false · there is nothing to shorten`}</co
     rather than swallowing the key.
   </p>
 
+  <h2>Names are checked too</h2>
+  <p>
+    The same inference covers the names you pass to <code>isActive</code>. An editor built
+    without <code>heading</code> has no <code>toggleHeading</code> — and no node called "heading"
+    either, so asking about one is a compile error rather than a permanent
+    <code>false</code>.
+  </p>
+  <pre><code>{`const editor = createEditor({ extensions: [document, paragraph, text, bold] })
+
+editor.isActive('bold')      // fine
+editor.isActive('heading')   // Argument of type '"heading"' is not assignable
+editor.isActive('bould')     // nor is a typo`}</code></pre>
+  <p>
+    This is the failure that used to be hardest to see. A missing command is a
+    <code>TypeError</code> the first time you press the button; a misspelt name in
+    <code>isActive</code> is a toolbar button that simply never lights up, on a page where everything
+    else works.
+  </p>
+
   <h2>Asking without doing</h2>
   <p>
     The boolean above only arrives after the change has happened, which is no use to a button
