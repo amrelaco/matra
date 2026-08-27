@@ -8,6 +8,16 @@ const editorApi = [
     'Every command from every extension you passed in, typed.',
   ],
   [
+    'can',
+    'CommandsOf<T> & CoreCommands',
+    'The same commands, returning what they would return and changing nothing. For disabling a button before it is pressed.',
+  ],
+  [
+    'isActive(name, attrs?)',
+    'boolean',
+    'Is this mark on, or is the caret inside a node of this type? Marks are looked up first.',
+  ],
+  [
     'batch(run)',
     'boolean',
     'Run several commands as one undo step. Rolls back entirely if any returns false.',
@@ -24,8 +34,17 @@ const editorApi = [
     "'change' | 'focus' | 'blur' | 'selectionChange'. Returns its own unsubscribe.",
   ],
   ['extensionState(name)', 'S | undefined', 'What a stateful extension is currently holding.'],
-  ['mount(element)', 'void', 'Attach to the DOM.'],
+  ['mount(element)', 'void', 'Attach to the DOM. Or pass `element` to createEditor and skip it.'],
   ['destroy()', 'void', 'Detach and clean up.'],
+  ['unsafe', '{ view, state, schema }', 'Raw engine. Unstable, outside semver · needing it is a gap in the API above.'],
+]
+
+const options = [
+  ['extensions', 'T', 'Required. The feature list · it decides the schema, the keymap and the type of `commands`.'],
+  ['content', 'DocNode | string', 'JSON or HTML. Anything the schema cannot hold is dropped on the way in.'],
+  ['element', 'HTMLElement', 'Mount here immediately, instead of calling `mount` later.'],
+  ['editable', 'boolean', 'Defaults to true.'],
+  ['autofocus', "boolean | 'start' | 'end'", 'Where to put the caret on mount.'],
 ]
 
 const coreCommands = [
@@ -57,6 +76,22 @@ const ctxApi = [
     Everything public, on one page. No engine type appears in any signature here · that is the
     contract, not a coincidence.
   </p>
+
+  <h2>createEditor(options)</h2>
+  <div class="api">
+    <table>
+      <thead><tr><th>Option</th><th>Type</th><th></th></tr></thead>
+      <tbody>
+        {options.map(([name, type, note]) => (
+          <tr>
+            <td class="mono n">{name}</td>
+            <td class="mono t">{type}</td>
+            <td class="d">{note}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 
   <h2>Editor</h2>
   <div class="api">
@@ -122,6 +157,17 @@ interface DocNode &#123;
   <p>
     <code>Pos</code> is branded so a raw number cannot be passed by accident. Cast at the
     boundary where you genuinely know the number is a position.
+  </p>
+
+  <h2>Writing a position down</h2>
+  <pre><code>import &#123; pos, range &#125; from '@matrajs/core'
+
+pos(0)         // number -> Pos
+range(1, 6)    // (number, number) -> Range</code></pre>
+  <p>
+    <code>Pos</code> is branded so that arithmetic on one does not typecheck · these are how you
+    write a literal without a cast. Not for carrying a position across an <code>await</code>:
+    that is <code>ctx.mark()</code>.
   </p>
 
   <h2>Functions that need no editor</h2>

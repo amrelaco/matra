@@ -29,10 +29,31 @@ editor.commands.toggleBold()       // false · code blocks accept no marks
 // With nothing selected:
 editor.commands.askAi('shorten')   // false · there is nothing to shorten`}</code></pre>
   <p>
-    So a toolbar button can disable itself by asking, and a keyboard shortcut that returns
-    <code>false</code> falls through to the browser's own handling rather than swallowing the
-    key.
+    A keyboard shortcut that returns <code>false</code> falls through to the browser's own
+    handling rather than swallowing the key.
   </p>
+
+  <h2>Asking without doing</h2>
+  <p>
+    The boolean above only arrives after the change has happened, which is no use to a button
+    that wants to be disabled <em>before</em> it is pressed. <code>editor.can</code> is the same
+    command surface, with the same names and the same arguments, that returns the answer and
+    changes nothing.
+  </p>
+  <pre><code>{`bold.disabled = !editor.can.toggleBold()
+undo.disabled = !editor.can.undo()`}</code></pre>
+  <p>
+    The command builds its transaction as usual and the transaction is thrown away, so asking
+    costs about what pressing the button costs and leaves the document, the selection and the
+    undo stack exactly as they were. No <code>change</code> event fires.
+  </p>
+  <div class="note">
+    <p>
+      Repaint on <code>selectionChange</code> as well as <code>change</code>. Whether bold is
+      possible depends on where the caret is, so moving it into a code block has to grey the
+      button out even though nothing was edited.
+    </p>
+  </div>
 
   <h2>Types are inferred, not declared</h2>
   <p>
@@ -118,6 +139,27 @@ ctx.isolateUndo()`}</code></pre>
       nothing, which is a mistake worth making only once.
     </p>
   </div>
+
+  <h2>Writing a position down</h2>
+  <p>
+    <code>Pos</code> is branded, so arithmetic on one does not typecheck: <code>from + 5</code>
+    is a plain <code>number</code>, and a plain <code>number</code> is not accepted back. That is
+    deliberate · a position computed from a stale one is the bug this editor exists to prevent,
+    and it is invisible at runtime.
+  </p>
+  <p>
+    It does mean a literal position needs saying out loud. <code>pos</code> and
+    <code>range</code> are that, and nothing else:
+  </p>
+  <pre><code>{`import { pos, range } from '@matrajs/core'
+
+editor.commands.select(pos(0))
+editor.commands.replace(range(1, 6), 'goodbye')`}</code></pre>
+  <p>
+    Use them for positions you are writing down, never for one you are carrying across an
+    <code>await</code> · that is <code>ctx.mark()</code>, which maps rather than guesses. See
+    <a href="/docs/position-mapping">position mapping</a>.
+  </p>
 
   <h2>Writing your own</h2>
   <p>

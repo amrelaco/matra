@@ -13,9 +13,13 @@ import Docs from '../../layouts/Docs.astro'
 const editor = createEditor({
   extensions: starterKit,
   content: '<p>Hello.</p>',
-})
-
-editor.mount(document.querySelector('#editor'))`}</code></pre>
+  element: document.querySelector('#editor'),
+})`}</code></pre>
+  <p>
+    <code>element</code> mounts it there and then. Leave it out and you get an unmounted editor
+    to <code>mount</code> yourself later, which is what the framework bindings do · in React the
+    element does not exist until after the first render.
+  </p>
 
   <div class="note">
     <p>
@@ -77,16 +81,26 @@ bold.addEventListener('mousedown', (event) => {
     you have to check your text to use. Ask the document:
   </p>
   <pre><code>{`const paint = () => {
+  // Is it on?
   bold.setAttribute('aria-pressed', String(editor.isActive('bold')))
   h2.setAttribute('aria-pressed', String(editor.isActive('heading', { level: 2 })))
+
+  // Is it even possible here? No, inside a code block.
+  bold.disabled = !editor.can.toggleBold()
+  undo.disabled = !editor.can.undo()
 }
 
 editor.on('change', paint)
 editor.on('selectionChange', paint)
 paint()`}</code></pre>
   <p>
+    Two different questions, and a toolbar needs both. <code>isActive</code> asks whether the
+    thing is done; <code>editor.can</code> asks whether it could be. A button that answers only
+    the first looks pressable over a code block, gets pressed, and does nothing.
+  </p>
+  <p>
     <code>selectionChange</code> matters as much as <code>change</code>: moving the caret into
-    bold text does not change the document, and the button still has to light up.
+    bold text does not change the document, and the button still has to light up · or grey out.
   </p>
 
   <h2>Reading the document</h2>
@@ -142,7 +156,9 @@ off()`}</code></pre>
     </li>
     <li>
       <strong>"My toolbar button does nothing."</strong> Almost always <code>click</code>
-      instead of <code>mousedown</code> with <code>preventDefault</code>.
+      instead of <code>mousedown</code> with <code>preventDefault</code>. If it is right and the
+      button still does nothing, ask <code>editor.can</code> · the answer is usually that the
+      caret is somewhere the command refuses.
     </li>
     <li>
       <strong>"The command does not exist."</strong> Its extension is not in your array. That is
