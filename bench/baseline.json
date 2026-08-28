@@ -1,12 +1,12 @@
 {
   "units": {
-    "create": 16.895,
-    "parseLarge": 129.473,
-    "getHTML": 1180.563,
-    "getJSON": 10.691,
-    "getText": 26.582,
-    "insert": 2.58,
-    "mark": 4.036,
-    "keystroke": 4.994
+    "create": 17.519,
+    "parseLarge": 127.208,
+    "getHTML": 89.592,
+    "getJSON": 11.273,
+    "getText": 27.56,
+    "insert": 2.731,
+    "mark": 4.464,
+    "keystroke": 5.036
   }
 }

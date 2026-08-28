@@ -71,7 +71,7 @@ pnpm wiring      # every script on the site finds the markup it asks for
 mapping, editor state and the editable view are written from scratch, with
 **zero runtime dependencies**. 551 tests, 56 of them adversarial.
 
-An app on the starter kit bundles **24.7 kB gzipped**, because nothing arrives
+An app on the starter kit bundles **25 kB gzipped**, because nothing arrives
 that the editor does not use. The whole ladder, from an empty extension array
 upwards, is measured by `pnpm size` and checked in CI.
 
@@ -115,7 +115,7 @@ what the numbers are not.
 
 | | Matra | Tiptap | Lexical | Slate |
 |---|---|---|---|---|
-| Bundle, gzipped | **24.7 kB** | 117 kB | ~35 kB | ~50 kB |
+| Bundle, gzipped | **25 kB** | 117 kB | ~35 kB | ~50 kB |
 | Runtime dependencies | **0** | 51 packages | few | several |
 | Engine types in your code | **none** | ProseMirror | Lexical | Slate |
 | Command types | **inferred** | module augmentation | manual | manual |

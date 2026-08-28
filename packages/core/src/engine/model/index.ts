@@ -1,6 +1,7 @@
 export { ContentMatch, type MatchableType } from './content-expression'
 export { DOMParser } from './dom-parser'
 export { DOMSerializer } from './dom-serializer'
+export { HTMLSerializer } from './html-serializer'
 export { Fragment } from './fragment'
 export { Mark, type MarkSpec, MarkType } from './mark'
 export { Node } from './node'

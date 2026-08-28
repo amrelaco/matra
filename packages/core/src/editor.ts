@@ -2,7 +2,14 @@ import { type CtxHost, createCtx } from './ctx'
 import { History } from './engine/history'
 import { InputRules, type TextContext } from './engine/input-rules'
 import { Keymap } from './engine/keys'
-import { DOMParser, DOMSerializer, Fragment, type Node, type Schema } from './engine/model'
+import {
+  DOMParser,
+  DOMSerializer,
+  Fragment,
+  HTMLSerializer,
+  type Node,
+  type Schema,
+} from './engine/model'
 import { EditorState, Plugin, TextSelection, type Transaction } from './engine/state'
 import type { Mapping } from './engine/transform'
 import {
@@ -38,6 +45,10 @@ export function createEditor<const T extends readonly AnyDef[]>(
   const mappings: Mapping[] = []
   const listeners = new Map<EventName, Set<(editor: Editor<T>) => void>>()
   const serializer = DOMSerializer.fromSchema(schema)
+  // getHTML answers without touching the DOM, so a document stored as JSON can
+  // be rendered on a server or at the edge. The two serializers are held to the
+  // same output by a test.
+  const htmlSerializer = HTMLSerializer.fromSchema(schema)
   const parser = DOMParser.fromSchema(schema)
 
   let view: EditorView | null = null
@@ -289,7 +300,7 @@ export function createEditor<const T extends readonly AnyDef[]>(
 
     getJSON: () => state.doc.toJSON() as unknown as DocNode,
 
-    getHTML: () => serializer.serializeHTML(state.doc.content),
+    getHTML: () => htmlSerializer.serializeHTML(state.doc.content),
 
     getText: () => state.doc.textBetween(0, state.doc.content.size, '\n'),
 
