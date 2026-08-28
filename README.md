@@ -62,6 +62,7 @@ pnpm build       # tsup, all packages
 pnpm size        # the bundle ladder the site quotes
 pnpm bench:check # the performance ratchet, against the recorded baseline
 pnpm links       # no dead internal links on the site
+pnpm packaging   # every built package imports and requires (run after build)
 pnpm wiring      # every script on the site finds the markup it asks for
 ```
 

@@ -16,6 +16,7 @@
     "bench:check": "node bench/bench.mjs --check",
     "bench:record": "node bench/bench.mjs --record",
     "links": "node scripts/links.mjs",
+    "packaging": "node scripts/packaging.mjs",
     "wiring": "node scripts/wiring.mjs"
   },
   "devDependencies": {

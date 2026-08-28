@@ -40,6 +40,13 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # The suite runs against src through a Vitest alias, so nothing else here
+      # ever loads what is actually published: the exports map, the file list,
+      # the CJS build. A package that imports and refuses to require is a broken
+      # release that every green tick above would have waved through.
+      - name: The packages load as published
+        run: node scripts/packaging.mjs
+
       # The bundle size is quoted on the landing page, so it is checked here
       # rather than discovered by a reader. `--check` also refuses a committed
       # sizes.json that nobody regenerated: a number the site prints and the
