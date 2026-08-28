@@ -72,3 +72,53 @@ jobs:
       # shared CI vCPU mean nothing next to a laptop's.
       - name: Performance ratchet
         run: node bench/bench.mjs --check
+
+  # Every binding advertises a peer range, and the workspace only ever installs
+  # one point in it — so `react: ^18 || ^19` was a promise nothing checked. Each
+  # entry here is an edge of a range a user is entitled to be on.
+  #
+  # The version is forced with a pnpm override rather than by editing the
+  # devDependency: pnpm keys a package by its resolved peers, so swapping the
+  # dependency alone leaves the test renderer bound to the version it was first
+  # installed against, and the run fails on two copies of React rather than on
+  # anything real.
+  peers:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: React 19
+            binding: react
+            overrides: "react: ^19\nreact-dom: ^19"
+          - name: Vue 3.4
+            binding: vue
+            overrides: "vue: ~3.4"
+          - name: Svelte 4
+            binding: svelte
+            overrides: "svelte: ^4"
+          - name: Solid 1.8
+            binding: solid
+            overrides: "solid-js: ~1.8"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Pin the peer to the edge of its range
+        run: |
+          {
+            echo 'overrides:'
+            printf '%b\n' '${{ matrix.overrides }}' | sed 's/^/  /'
+          } >> pnpm-workspace.yaml
+          tail -5 pnpm-workspace.yaml
+
+      # Not --frozen-lockfile: the override is the point, and it changes the
+      # resolution the lockfile records.
+      - run: pnpm install --no-frozen-lockfile
+
+      - run: pnpm exec vitest run packages/${{ matrix.binding }}
