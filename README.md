@@ -68,7 +68,7 @@ pnpm wiring      # every script on the site finds the markup it asks for
 
 ## Status
 
-0.15 — the engine is ours end to end. Document model, transforms, position
+0.16 — the engine is ours end to end. Document model, transforms, position
 mapping, editor state and the editable view are written from scratch, with
 **zero runtime dependencies**. 551 tests, 56 of them adversarial.
 

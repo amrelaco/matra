@@ -166,7 +166,7 @@ is pulled in that the editor does not use.
 
 Extensions have landed since, so that last number is not today's. The current
 figure is whatever `pnpm size` prints — **25 kB** for the starter kit as of
-0.15 — and it is checked in CI rather than quoted from here.
+0.16 — and it is checked in CI rather than quoted from here.
 
 ## What typing costs
 
