@@ -251,6 +251,12 @@ real users on real devices, not by unit tests. Treat the current view as
 working-but-unproven until it has survived iOS Safari and Android Chrome, and
 expect a tail of fixes there rather than a clean finish.
 
+`harness/ime` is where that gets checked: a page to open on a real phone that
+watches the document and the screen for the moment they disagree, logs the
+composition events the browser actually sent, and walks a checklist of the cases
+that break editors. Deliberately manual — the value is in the keyboards a device
+farm does not have installed.
+
 ## Rules while this is in progress
 
 - No ProseMirror type may enter a public signature. `types.ts` stays clean.

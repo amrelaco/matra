@@ -80,7 +80,8 @@ Drag and drop landed in 0.9.0: blocks drag with a handle, a line shows where
 they will land, and the move is one undo step.
 
 The view passes its tests but has not yet met real IME users on iOS Safari or
-Android Chrome. See [ENGINE.md](./ENGINE.md) for where the risk actually sits.
+Android Chrome. See [ENGINE.md](./ENGINE.md) for where the risk actually sits,
+and [harness/ime](./harness/ime) for the page that checks it on a real device.
 
 ## Extensions
 

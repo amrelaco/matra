@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Matra · IME conformance</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fff;
+        --fg: #111;
+        --muted: #666;
+        --line: #d8d8d8;
+        --card: #fafafa;
+        --ok: #0a7d3f;
+        --bad: #b3261e;
+        --warn: #8a6100;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f0f10;
+          --fg: #ececec;
+          --muted: #9a9a9a;
+          --line: #2c2c2e;
+          --card: #171719;
+          --ok: #4ade80;
+          --bad: #ff6b6b;
+          --warn: #e3b341;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 1rem;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.5 system-ui, sans-serif;
+        -webkit-text-size-adjust: 100%;
+      }
+      h1 { font-size: 1.15rem; margin: 0 0 .25rem; }
+      h2 { font-size: .95rem; margin: 1.25rem 0 .5rem; }
+      p.lede { margin: 0 0 1rem; color: var(--muted); font-size: .9rem; }
+      section { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: .75rem; margin-bottom: 1rem; }
+
+      /* The editor ships no appearance, so the harness supplies one. */
+      #editor {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+        padding: .75rem;
+        min-height: 8rem;
+        font-size: 1.05rem;
+        outline: none;
+      }
+      #editor:focus-within { border-color: var(--fg); }
+      #editor h1, #editor h2 { margin: .4em 0; }
+      #editor p { margin: .4em 0; }
+      #editor strong { font-weight: 700; }
+
+      #verdict { font-weight: 600; padding: .5rem .75rem; border-radius: 10px; border: 1px solid var(--line); }
+      #verdict[data-state='ok'] { color: var(--ok); }
+      #verdict[data-state='bad'] { color: var(--bad); }
+
+      .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+      button {
+        font: inherit;
+        padding: .45rem .8rem;
+        border-radius: 9px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--fg);
+        cursor: pointer;
+        min-height: 2.4rem;
+      }
+      button[data-verdict='pass'] { border-color: var(--ok); color: var(--ok); }
+      button[data-verdict='fail'] { border-color: var(--bad); color: var(--bad); }
+      button[aria-pressed='true'] { background: var(--fg); color: var(--bg); }
+
+      ol { margin: 0; padding-left: 1.2rem; }
+      li { margin-bottom: .9rem; }
+      li .what { display: block; margin-bottom: .35rem; }
+      .hint { color: var(--muted); font-size: .85rem; }
+
+      pre, #log {
+        margin: 0;
+        font: 12px/1.45 ui-monospace, Menlo, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 14rem;
+        overflow: auto;
+        color: var(--muted);
+      }
+      #log b { color: var(--fg); font-weight: 600; }
+      #log .composing { color: var(--warn); }
+      textarea { width: 100%; min-height: 9rem; font: 12px/1.45 ui-monospace, Menlo, monospace;
+        background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 9px; padding: .5rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Matra · IME conformance</h1>
+    <p class="lede">
+      Open this on a real phone with a real keyboard. happy-dom cannot compose text, so
+      nothing in the test suite can tell you whether this works.
+    </p>
+
+    <section>
+      <div id="verdict" data-state="ok">Model and screen agree</div>
+      <p class="hint" style="margin:.5rem 0 0">
+        Checked after every input. If these ever disagree the editor has lost an edit — that is
+        the bug, whatever it looked like on screen.
+      </p>
+    </section>
+
+    <section>
+      <div id="editor"></div>
+      <div class="row" style="margin-top:.6rem">
+        <button id="bold">Bold</button>
+        <button id="undo">Undo</button>
+        <button id="redo">Redo</button>
+        <button id="reset">Reset</button>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="margin-top:0">What the browser sent</h2>
+      <div id="log">waiting…</div>
+    </section>
+
+    <section>
+      <h2 style="margin-top:0">What the editor recorded</h2>
+      <pre id="text"></pre>
+    </section>
+
+    <section>
+      <h2 style="margin-top:0">Checklist</h2>
+      <ol id="checks"></ol>
+    </section>
+
+    <section>
+      <h2 style="margin-top:0">Report</h2>
+      <div class="row"><button id="build">Build report</button></div>
+      <textarea id="report" readonly placeholder="Press “Build report”, then copy this into an issue."></textarea>
+    </section>
+
+    <script type="module">
+      import { createEditor, starterKit } from '../../packages/core/dist/index.js'
+
+      const CONTENT = '<h2>IME check</h2><p>Compose a word here.</p>'
+      const host = document.querySelector('#editor')
+
+      let editor = createEditor({ extensions: starterKit, content: CONTENT, element: host })
+
+      /**
+       * The one assertion worth making automatically.
+       *
+       * An IME bug does not look like an exception; it looks like the screen and
+       * the document quietly disagreeing — a character committed twice, a
+       * composition that never landed in the model. render-fuzz.test.ts makes
+       * exactly this comparison in happy-dom. This makes it against a real
+       * keyboard, which is the part that has never been checked.
+       */
+      const verdict = document.querySelector('#verdict')
+      const textOut = document.querySelector('#text')
+      let diverged = null
+
+      /** A block's text, exactly as its element will concatenate it. */
+      const textOf = (node) =>
+        node.text ?? (node.content ?? []).map(textOf).join('')
+
+      // Compared block by block rather than as one string: `getText()` joins
+      // blocks with a newline and `textContent` joins them with nothing, so a
+      // whole-document comparison reports a clean load as data loss. Blocks are
+      // also how render-fuzz.test.ts does it, and where a real divergence shows.
+      const normalise = (s) => s.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+      const modelBlocks = () => (editor.getJSON().content ?? []).map((b) => normalise(textOf(b)))
+      const screenBlocks = () => [...host.children].map((el) => normalise(el.textContent ?? ''))
+
+      function compare() {
+        const model = modelBlocks()
+        const screen = screenBlocks()
+        textOut.textContent = model
+          .map((line, i) => `${i}  model : ${line}\n${i}  screen: ${screen[i] ?? '(no block)'}`)
+          .join('\n')
+
+        const same =
+          model.length === screen.length && model.every((line, i) => line === screen[i])
+
+        if (same) {
+          if (!diverged) {
+            verdict.dataset.state = 'ok'
+            verdict.textContent = `Model and screen agree · ${model.length} blocks`
+          }
+          return
+        }
+        diverged ??= { model, screen, at: new Date().toISOString() }
+        verdict.dataset.state = 'bad'
+        const at = model.findIndex((line, i) => line !== screen[i])
+        verdict.textContent = `They disagree at block ${at < 0 ? model.length : at} — the editor lost an edit`
+      }
+
+      // Composition is the whole point, so show what actually arrived rather
+      // than asking a tester to guess from the result.
+      const log = document.querySelector('#log')
+      const lines = []
+      const record = (event) => {
+        const data = 'data' in event && event.data != null ? JSON.stringify(event.data) : ''
+        const composing = event.isComposing ? ' isComposing' : ''
+        lines.push(
+          `<b>${event.type}</b>${composing ? `<span class="composing">${composing}</span>` : ''} ${data}`,
+        )
+        if (lines.length > 60) lines.shift()
+        log.innerHTML = lines.join('\n')
+        log.scrollTop = log.scrollHeight
+        queueMicrotask(compare)
+      }
+
+      for (const type of [
+        'compositionstart',
+        'compositionupdate',
+        'compositionend',
+        'beforeinput',
+        'input',
+      ]) {
+        host.addEventListener(type, record, true)
+      }
+
+      document.querySelector('#bold').onmousedown = (e) => e.preventDefault()
+      document.querySelector('#bold').onclick = () => { editor.commands.toggleBold(); compare() }
+      document.querySelector('#undo').onclick = () => { editor.commands.undo?.(); compare() }
+      document.querySelector('#redo').onclick = () => { editor.commands.redo?.(); compare() }
+      document.querySelector('#reset').onclick = () => {
+        editor.destroy()
+        host.innerHTML = ''
+        diverged = null
+        lines.length = 0
+        log.textContent = 'waiting…'
+        editor = createEditor({ extensions: starterKit, content: CONTENT, element: host })
+        compare()
+      }
+
+      /**
+       * Each of these has broken a hand-written editor somewhere. They are the
+       * cases a desktop keyboard never reaches.
+       */
+      const CHECKS = [
+        ['Bangla, phonetic', 'Compose যুক্তাক্ষর — a conjunct built from several keystrokes lands once, not twice.'],
+        ['Japanese or Korean', 'Type romaji, choose a candidate. The candidate replaces the reading; it is not appended to it.'],
+        ['Backspace mid-composition', 'Compose three characters, backspace once before committing. It removes one, and the rest survive.'],
+        ['iOS autocorrect', 'Type a word iOS wants to correct, accept the correction. The old word is gone, not doubled.'],
+        ['Android glide typing', 'Swipe a word. One word arrives, in one undo step.'],
+        ['Keyboard suggestion bar', 'Tap a suggestion mid-sentence. It replaces the word being typed, not the one beside it.'],
+        ['Caret after commit', 'After committing a composition the caret sits at the end of what you composed.'],
+        ['Undo a composed word', 'Undo removes the whole composed word, not one character of it.'],
+        ['Mark over a composition', 'Select a composed word and press Bold. It bolds exactly that word.'],
+        ['Enter while composing', 'Press Enter with a composition open. It commits or splits, and does not lose the text.'],
+        ['Emoji and surrogate pairs', 'Type an emoji, then a letter after it. The letter lands after the emoji, not inside it.'],
+        ['Long document', 'Press Reset, paste several screens of text, compose at the bottom. The caret does not jump.'],
+      ]
+
+      const results = new Map()
+      const list = document.querySelector('#checks')
+      for (const [title, detail] of CHECKS) {
+        const li = document.createElement('li')
+        li.innerHTML = `<span class="what"><strong>${title}</strong><br><span class="hint">${detail}</span></span>`
+        const row = document.createElement('div')
+        row.className = 'row'
+        for (const outcome of ['pass', 'fail', 'n/a']) {
+          const button = document.createElement('button')
+          button.textContent = outcome
+          button.dataset.verdict = outcome
+          button.setAttribute('aria-pressed', 'false')
+          button.onclick = () => {
+            results.set(title, outcome)
+            for (const sibling of row.children) sibling.setAttribute('aria-pressed', 'false')
+            button.setAttribute('aria-pressed', 'true')
+          }
+          row.appendChild(button)
+        }
+        li.appendChild(row)
+        list.appendChild(li)
+      }
+
+      document.querySelector('#build').onclick = () => {
+        const report = [
+          `user agent : ${navigator.userAgent}`,
+          `screen     : ${window.innerWidth}x${window.innerHeight}`,
+          `languages  : ${navigator.languages?.join(', ') ?? 'unknown'}`,
+          '',
+          diverged
+            ? `DIVERGED at ${diverged.at}\n  model : ${diverged.model.join(' | ')}\n  screen: ${diverged.screen.join(' | ')}`
+            : 'model and screen agreed throughout',
+          '',
+          ...CHECKS.map(([title]) => `${(results.get(title) ?? 'not run').padEnd(8)} ${title}`),
+          '',
+          'last events:',
+          ...lines.slice(-20).map((line) => `  ${line.replace(/<[^>]+>/g, '')}`),
+        ].join('\n')
+        const box = document.querySelector('#report')
+        box.value = report
+        box.select()
+      }
+
+      compare()
+    </script>
+  </body>
+</html>
