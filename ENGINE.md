@@ -152,6 +152,8 @@ All four ProseMirror packages are gone and the entire suite passes on our
 engine: 178 tests, unchanged in intent from when they ran against ProseMirror.
 That was the contract, and it held.
 
+Measured at the cutover:
+
 | | before | after |
 |---|---|---|
 | runtime dependencies | 9 | **0** |
@@ -159,8 +161,12 @@ That was the contract, and it held.
 | full app bundle gzipped | 66.4 kB | **18.4 kB** |
 
 The core package grew because the engine is now inside it. What matters to a
-user is the last row: an app ships 18.4 kB instead of 66.4 kB, because nothing
+user is the last row: an app ships a fraction of what it did, because nothing
 is pulled in that the editor does not use.
+
+Extensions have landed since, so that last number is not today's. The current
+figure is whatever `pnpm size` prints — **24.7 kB** for the starter kit as of
+0.15 — and it is checked in CI rather than quoted from here.
 
 ## What typing costs
 

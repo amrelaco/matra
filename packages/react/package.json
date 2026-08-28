@@ -1,7 +1,7 @@
 {
   "name": "@matrajs/react",
-  "version": "0.14.0",
-  "description": "React bindings for Matra \u2014 useEditor and EditorContent.",
+  "version": "0.15.0",
+  "description": "React bindings for Matra \u2014 useEditor, useEditorState, useEditorFocus and EditorContent.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
   "homepage": "https://matrajs.com",
