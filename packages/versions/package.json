@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/versions",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Version history for Matra \u2014 snapshots, a real diff between them, and restore as one undo step.",
   "license": "SEE LICENSE IN LICENSE",
   "author": "Nahim Hossain Shohan",

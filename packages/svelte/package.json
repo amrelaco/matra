@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/svelte",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Svelte bindings for Matra \u2014 a use: action and a store that follows the editor.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",
