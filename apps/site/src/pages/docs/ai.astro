@@ -1,0 +1,147 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+
+<Docs
+  title="AI · Matra docs"
+  description="Streaming edits that survive concurrent typing: the stream you supply, askAi, and what cancel, accept and reject each do."
+  section="Paid features"
+  heading="AI"
+>
+  <pre><code>npm i @matrajs/ai</code></pre>
+
+  <p>
+    <code>@matrajs/ai</code> streams a rewrite into the selected range and keeps that range correct
+    while it arrives. Someone can carry on typing above, below or inside the selection and the streamed
+    text still lands on the words they picked, because every chunk is applied to a
+    <strong>re-resolved</strong> range rather than to the two numbers captured when the request started.
+    That is <a href="/docs/position-mapping">position mapping</a> doing the work, and it is the whole
+    reason this package exists.
+  </p>
+
+  <div class="note">
+    This package is <a href="/pricing">commercial</a>. Free to evaluate, develop against, test
+    with, teach with and use in personal projects · a subscription buys running it in
+    production. Nothing phones home and there is no runtime licence check.
+  </div>
+
+  <h2>You supply the stream</h2>
+  <p>
+    The extension never talks to a model. It takes an <code>AiStream</code> — any function returning
+    an async iterable of strings — so the key stays on your server and the provider stays yours to
+    change.
+  </p>
+  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
+import &#123; ai &#125; from '@matrajs/ai'
+
+const editor = createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    ai(&#123;
+      async *stream(&#123; text, instruction, signal &#125;) &#123;
+        const response = await fetch('/api/rewrite', &#123;
+          method: 'POST',
+          headers: &#123; 'content-type': 'application/json' &#125;,
+          body: JSON.stringify(&#123; text, instruction &#125;),
+          signal,
+        &#125;)
+
+        const stream = response.body!.pipeThrough(new TextDecoderStream())
+        for await (const chunk of stream) yield chunk
+      &#125;,
+    &#125;),
+  ] as const,
+&#125;)</code></pre>
+
+  <p>
+    Each chunk you yield replaces the range with <em>everything received so far</em>, so yield
+    deltas rather than the whole answer again. <code>signal</code> aborts when the session is cancelled
+    or the editor is destroyed · pass it to <code>fetch</code> and a cancelled rewrite stops costing
+    tokens straight away.
+  </p>
+
+  <h2>Commands</h2>
+  <table>
+    <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>askAi(instruction)</code></td>
+        <td>
+          Starts a session over the current selection. Returns <code>false</code> on an empty selection,
+          and <code>false</code> if a session is already streaming — one at a time.
+        </td>
+      </tr>
+      <tr>
+        <td><code>cancelAi()</code></td>
+        <td>
+          Aborts the stream. <strong>What already arrived stays in the document</strong> · nothing
+          further is applied.
+        </td>
+      </tr>
+      <tr>
+        <td><code>acceptAi()</code></td>
+        <td>Ends the session and keeps the result. The document is not touched.</td>
+      </tr>
+      <tr>
+        <td><code>rejectAi()</code></td>
+        <td>
+          Aborts and puts the selection back over the rewritten range. The original text comes
+          back by undoing.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code>editor.commands.select(&#123; from, to &#125;)   // a rewrite needs a selection
+editor.commands.askAi('make this shorter')</code></pre>
+
+  <div class="note">
+    Chunks are applied as they arrive, so the stream is several history steps rather than one. A
+    reject followed by undo restores the paragraph · that is the path to wire to a
+    <em>discard</em> button.
+  </div>
+
+  <h2>Status, for spinners and toasts</h2>
+  <p><code>onStatus</code> is called on every transition, with the session as it stands.</p>
+  <pre><code>ai(&#123;
+  stream,
+  onStatus: (session) =&gt; &#123;
+    setBusy(session.status === 'streaming')
+    if (session.status === 'error') toast(session.error!.message)
+  &#125;,
+&#125;)</code></pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>id</code></td><td><code>number</code></td>
+        <td>One per session. A late chunk from a superseded session is discarded.</td>
+      </tr>
+      <tr>
+        <td><code>status</code></td>
+        <td><code>'idle' | 'streaming' | 'done' | 'error' | 'cancelled'</code></td><td></td>
+      </tr>
+      <tr>
+        <td><code>range</code></td><td><code>Range</code></td>
+        <td>Where the rewrite is going, re-resolved as of now.</td>
+      </tr>
+      <tr>
+        <td><code>received</code></td><td><code>string</code></td>
+        <td>Everything that has arrived so far.</td>
+      </tr>
+      <tr>
+        <td><code>error</code></td><td><code>Error?</code></td>
+        <td>Set when <code>status</code> is <code>'error'</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What a failure does</h2>
+  <p>
+    A stream that throws reports <code>'error'</code> with the thrown error, and stops. It does not
+    throw out of the command and it does not tear the document up: whatever had already streamed stays,
+    exactly as if the model had stopped early. A provider having a bad afternoon must not take an
+    editor down with it.
+  </p>
+</Docs>

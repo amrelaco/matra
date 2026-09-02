@@ -1,0 +1,203 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+
+<Docs
+  title="Collaboration · Matra docs"
+  description="Step exchange, rebasing and remote cursors over a central authority — with no CRDT and no dependency."
+  section="Paid features"
+  heading="Collaboration"
+>
+  <pre><code>npm i @matrajs/collab</code></pre>
+
+  <p>
+    The protocol is the well-trodden one. A client sends the steps it has made together with the
+    version they applied to; the authority accepts them only if that version is still current. A
+    client whose version is stale pulls what it missed, <strong
+      >rebases its own unsent work over it</strong
+    >, and tries again. Neither side loses an edit.
+  </p>
+  <p>
+    There is no CRDT here and no dependency. Rebasing already lives in the engine — mapping a
+    step over another is what lets a local edit survive a remote one — so collaboration is a
+    version counter and a transport on top of that.
+  </p>
+
+  <div class="note">
+    This package is <a href="/pricing">commercial</a>. Free to evaluate, develop against, test
+    with, teach with and use in personal projects · a subscription buys running it in
+    production. Nothing phones home and there is no runtime licence check.
+  </div>
+
+  <h2>The client</h2>
+  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
+import &#123; collab &#125; from '@matrajs/collab'
+
+const editor = createEditor(&#123;
+  extensions: [...starterKit, collab(&#123; clientId: 'nahim-1a2b' &#125;)] as const,
+&#125;)</code></pre>
+
+  <table>
+    <thead><tr><th>Option</th><th>Type</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>clientId</code></td><td><code>string</code></td>
+        <td
+          >Required. Two clients must never share one · it is how a client recognises its own
+          work coming back.</td
+        >
+      </tr>
+      <tr>
+        <td><code>version</code></td><td><code>number?</code></td>
+        <td>The version this client starts from. Defaults to <code>0</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>The authority</h2>
+  <p>
+    <code>Authority</code> is a plain class with no server attached, so the same object works over
+    a WebSocket, over HTTP polling, in a Durable Object, or in an in-memory channel in a test.
+  </p>
+  <pre><code>import &#123; Authority &#125; from '@matrajs/collab'
+
+const authority = new Authority((version) =&gt; broadcast(version))</code></pre>
+
+  <table>
+    <thead><tr><th>Member</th><th></th></tr></thead>
+    <tbody>
+      <tr><td><code>version</code></td><td>How many steps it holds.</td></tr>
+      <tr>
+        <td><code>receive(version, steps)</code></td>
+        <td>
+          Appends if the client is current, and returns whether it was.
+          <code>false</code> means <em>pull, rebase, try again</em>. Rejecting rather than
+          merging is what keeps the history linear and every client's version meaningful.
+        </td>
+      </tr>
+      <tr
+        ><td><code>since(version)</code></td><td
+          >Everything that happened after that version.</td
+        ></tr
+      >
+    </tbody>
+  </table>
+
+  <h2>The loop</h2>
+  <p>Two functions, and they are the whole integration.</p>
+  <pre><code>import &#123; getVersion, sendableSteps &#125; from '@matrajs/collab'
+
+/** Send what the authority has not seen. */
+function push() &#123;
+  const sendable = sendableSteps(editor)
+  if (!sendable) return true
+
+  const accepted = authority.receive(sendable.version, sendable.steps)
+  if (accepted) editor.commands.confirmCollabSteps(sendable.steps.length)
+  return accepted
+&#125;
+
+/** Take what we missed and rebase onto it. */
+function pull() &#123;
+  const missing = authority.since(getVersion(editor))
+  if (missing.length) editor.commands.receiveCollabSteps(missing)
+&#125;
+
+editor.on('change', () =&gt; &#123;
+  if (!push()) &#123;
+    pull()
+    push()
+  &#125;
+&#125;)</code></pre>
+
+  <table>
+    <thead><tr><th>Export</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>sendableSteps(editor)</code></td>
+        <td>
+          <code>&#123; version, steps, clientId &#125;</code>, or <code>null</code> when there is
+          nothing outstanding.
+        </td>
+      </tr>
+      <tr
+        ><td><code>getVersion(editor)</code></td><td
+          >The version this client believes it is on.</td
+        ></tr
+      >
+      <tr>
+        <td><code>receiveCollabSteps(steps)</code></td>
+        <td>
+          Applies other clients' steps. Your own are skipped — they are already in the document,
+          and applying them twice would duplicate the edit.
+        </td>
+      </tr>
+      <tr>
+        <td><code>confirmCollabSteps(count)</code></td>
+        <td>The authority took this many · stop tracking them as unconfirmed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    A step that no longer applies is <strong>dropped rather than thrown</strong>. One malformed
+    message from a peer must not take an editor down, and a hostile one must not be able to try.
+  </div>
+
+  <h2>Remote cursors</h2>
+  <p>A second extension, because presence is optional and costs a little to keep.</p>
+  <pre><code>import &#123; colorFor, remoteCursorCSS, remoteCursors &#125; from '@matrajs/collab'
+
+const editor = createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    collab(&#123; clientId &#125;),
+    remoteCursors(),
+  ] as const,
+&#125;)
+
+editor.on('selectionChange', () =&gt; &#123;
+  const &#123; from, to &#125; = editor.selection
+  socket.send(JSON.stringify(&#123;
+    clientId,
+    anchor: from,
+    head: to,
+    meta: &#123; name: 'Nahim' &#125;,
+  &#125;))
+&#125;)
+
+socket.onmessage = (event) =&gt; editor.commands.setPresence(JSON.parse(event.data))</code></pre>
+
+  <table>
+    <thead><tr><th>Command or export</th><th></th></tr></thead>
+    <tbody>
+      <tr
+        ><td><code>setPresence(presence)</code></td><td
+          ><code>&#123; clientId, anchor, head, meta? &#125;</code></td
+        ></tr
+      >
+      <tr><td><code>removePresence(clientId)</code></td><td>Someone left.</td></tr>
+      <tr
+        ><td><code>clearPresence()</code></td><td>Everyone left · a reconnect, usually.</td></tr
+      >
+      <tr>
+        <td><code>colorFor(clientId)</code></td>
+        <td>
+          A stable colour derived from the id, at a fixed saturation and lightness so it stays
+          legible on light and dark. Derived beats assigned: two clients that never speak still
+          agree on what colour a third person is.
+        </td>
+      </tr>
+      <tr
+        ><td><code>remoteCursorCSS</code></td><td
+          >The stylesheet the decorations expect. See <a href="/docs/styling">Styling</a>.</td
+        ></tr
+      >
+    </tbody>
+  </table>
+
+  <p>Read the cursors for an avatar row:</p>
+  <pre><code>import type &#123; RemoteCursors &#125; from '@matrajs/collab'
+
+const people = editor.extensionState&lt;RemoteCursors&gt;('remoteCursors')</code></pre>
+</Docs>

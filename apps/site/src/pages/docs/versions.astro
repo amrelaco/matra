@@ -1,0 +1,213 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+
+<Docs
+  title="Version history · Matra docs"
+  description="Snapshots, a real word-level diff between them, and restore as one undo step."
+  section="Paid features"
+  heading="Version history"
+>
+  <pre><code>npm i @matrajs/versions</code></pre>
+
+  <p>
+    Snapshots of the document, a <strong>real diff</strong> between any two of them — block pairing
+    and then word runs inside a changed block, not a line-by-line text compare — and a restore that
+    lands as a single undo step.
+  </p>
+
+  <div class="note">
+    This package is <a href="/pricing">commercial</a>. Free to evaluate, develop against, test
+    with, teach with and use in personal projects · a subscription buys running it in
+    production. Nothing phones home and there is no runtime licence check.
+  </div>
+
+  <h2>Setting it up</h2>
+  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
+import &#123; localVersionStore, versions &#125; from '@matrajs/versions'
+
+const editor = createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    versions(&#123;
+      idleMs: 30_000,
+      keep: 50,
+      store: localVersionStore('doc-42'),
+      onChange: (state) =&gt; render(state.versions, state.diff),
+    &#125;),
+  ] as const,
+&#125;)</code></pre>
+
+  <table>
+    <thead><tr><th>Option</th><th>Type</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>idleMs</code></td><td><code>number | null</code></td>
+        <td>
+          Snapshot once the document has been still this long. <code>null</code> turns automatic snapshots
+          off and leaves them to <code>snapshotVersion</code>. A version per keystroke is not
+          history, it is a keylogger with a nicer name.
+        </td>
+      </tr>
+      <tr>
+        <td><code>keep</code></td><td><code>number</code></td>
+        <td>How many to hold. The oldest go first · the very first one never does.</td>
+      </tr>
+      <tr>
+        <td><code>store</code></td><td><code>VersionStore</code></td>
+        <td>Where the list lives between visits. Without one it lives until reload.</td>
+      </tr>
+      <tr>
+        <td><code>onChange</code></td><td><code>(state) =&gt; void</code></td>
+        <td>Called whenever the list or the preview changes.</td>
+      </tr>
+      <tr>
+        <td><code>now</code></td><td><code>() =&gt; number</code></td>
+        <td>
+          Where "now" comes from. Injected rather than reached for, because a test that has to
+          sleep to make two versions differ is a test that fails on a slow machine.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    A first version — <code>Opened</code> — exists from the moment the editor does, mounted or not,
+    so a headless editor in a test, a server render or an import job always has a "before" to compare
+    against.
+  </p>
+
+  <h2>Commands</h2>
+  <table>
+    <thead><tr><th>Command</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>snapshotVersion(label?)</code></td>
+        <td>
+          Takes one now. Returns <code>false</code> when nothing has moved since the last version
+          — a list of identical entries is a list nobody will scroll.
+        </td>
+      </tr>
+      <tr>
+        <td><code>restoreVersion(id)</code></td>
+        <td>
+          Puts that document back. Takes a <code>Before restore</code> snapshot first, so the way
+          back is the version list rather than undo · and undo is not where anybody thinks to look
+          for their work.
+        </td>
+      </tr>
+      <tr>
+        <td><code>previewVersion(id | null)</code></td>
+        <td
+          >Decorate the document with the diff against that version. <code>null</code> clears it.</td
+        >
+      </tr>
+      <tr><td><code>forgetVersion(id)</code></td><td>Drop one from the list.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code>import &#123; versionList &#125; from '@matrajs/versions'
+
+editor.commands.snapshotVersion('before the rewrite')
+
+const [first] = versionList(editor)
+editor.commands.previewVersion(first.id)   // show what changed
+editor.commands.restoreVersion(first.id)   // go back · one undo step</code></pre>
+
+  <div class="note">
+    A restore is <strong>isolated as its own undo step</strong>, whatever was typed a second
+    before it. Undo grouping is a kindness to typing and a hazard to anything deliberate.
+  </div>
+
+  <h2>A version</h2>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th></th></tr></thead>
+    <tbody>
+      <tr
+        ><td><code>id</code></td><td><code>number</code></td><td
+          >Continues from what the store loaded, rather than restarting at one and colliding.</td
+        ></tr
+      >
+      <tr
+        ><td><code>label</code></td><td><code>string</code></td><td
+          >Defaults to <code>Snapshot</code>.</td
+        ></tr
+      >
+      <tr
+        ><td><code>at</code></td><td><code>number</code></td><td
+          >Epoch milliseconds, from the clock you supplied.</td
+        ></tr
+      >
+      <tr
+        ><td><code>doc</code></td><td><code>DocNode</code></td><td>The document as it was.</td
+        ></tr
+      >
+      <tr
+        ><td><code>size</code></td><td><code>number</code></td><td>Characters at the time.</td
+        ></tr
+      >
+    </tbody>
+  </table>
+
+  <h2>Persisting</h2>
+  <p>
+    <code>localVersionStore(key)</code> is a <code>localStorage</code> implementation, and the interface
+    is two methods if you would rather keep them on a server.
+  </p>
+  <pre><code>interface VersionStore &#123;
+  /** Sync, so the first render already has them. */
+  load(): Version[] | null
+  /** Called whenever the list changes · debouncing it is yours to decide. */
+  save(versions: Version[]): void
+&#125;</code></pre>
+
+  <h2>The diff on its own</h2>
+  <p>
+    The diff is exported separately, so a review screen can compare two documents without an
+    editor anywhere near it — on a server, in a worker, in a test.
+  </p>
+  <pre><code>import &#123; diffDocs &#125; from '@matrajs/versions'
+
+const diff = diffDocs(before, after)
+// &#123; blocks, added, removed, changed, same &#125;</code></pre>
+
+  <table>
+    <thead><tr><th>Export</th><th></th></tr></thead>
+    <tbody>
+      <tr
+        ><td><code>diffDocs(a, b)</code></td><td
+          ><code>DocDiff</code> — blocks paired, with word runs inside each changed one.</td
+        ></tr
+      >
+      <tr
+        ><td><code>diffWords(a, b)</code></td><td
+          ><code>WordRun[]</code> · <code>&#123; kind, text &#125;</code> where kind is added, removed
+          or same.</td
+        ></tr
+      >
+      <tr
+        ><td><code>textOf(node)</code></td><td>The text of a node, the way a reader sees it.</td
+        ></tr
+      >
+      <tr><td><code>sizeOf(node)</code></td><td>Its size in document coordinates.</td></tr>
+      <tr><td><code>blockStarts(doc)</code></td><td>Where each top-level block begins.</td></tr>
+      <tr
+        ><td><code>versionClasses</code></td><td
+          ><code>&#123; added, changed, removed &#125;</code> — the class names the preview decorations
+          use.</td
+        ></tr
+      >
+      <tr
+        ><td><code>versionDiffCSS</code></td><td
+          >The stylesheet for them. See <a href="/docs/styling">Styling</a>.</td
+        ></tr
+      >
+    </tbody>
+  </table>
+
+  <p>
+    A <code>BlockChange</code> carries <code>before</code> and <code>after</code> indices — one of
+    them <code>-1</code> when the block is new or gone — so a side-by-side view can line the two documents
+    up without matching text a second time.
+  </p>
+</Docs>
