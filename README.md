@@ -7,7 +7,9 @@ A headless rich text editor framework with a first-class extension API.
 - **Inferred types** — adding an extension adds its commands, fully typed, with no module augmentation
 - **Async-safe** — position mapping is built in, so a late AI response cannot corrupt the document
 
-See [DESIGN.md](./DESIGN.md) for the API rationale.
+See [DESIGN.md](./DESIGN.md) for the API rationale, [CHANGELOG.md](./CHANGELOG.md)
+for what changed when, and [CONTRIBUTING.md](./CONTRIBUTING.md) before a pull
+request.
 
 ## Packages
 
@@ -22,8 +24,13 @@ See [DESIGN.md](./DESIGN.md) for the API rationale.
 | `@matrajs/collab` | Authority, step rebasing, remote cursors | Commercial |
 | `@matrajs/versions` | Snapshots, a real diff between them, restore as one undo step | Commercial |
 
-> The `@matra` npm scope belongs to an unrelated project, so bindings live under
-> `@matrajs`, matching matrajs.com. The headline install stays `npm i @matrajs/core`.
+Matra is মাত্রা — the horizontal line that runs across the top of Bengali
+script and holds a word together. Packages live under the `@matrajs` scope,
+matching matrajs.com.
+
+**Installing a binding installs the engine with it.** For a React application
+`pnpm add @matrajs/react` is the entire install: one package, and no
+third-party dependency arrives behind it.
 
 ## Quick start
 
@@ -41,6 +48,359 @@ editor.commands.toggleBold()
 
 Every command comes from the array you passed. Nothing else is on `editor.commands`,
 and calling something that is not there is a compile error.
+
+## The packages in detail
+
+Eight packages, one version number, released together. Every other package
+depends on `@matrajs/core` and on nothing else, so installing a binding
+installs the whole editor — there is no second package to remember, no
+`@matrajs/pm` to keep in step, and no peer range to resolve by hand.
+
+---
+
+### `@matrajs/core` — MIT
+
+The engine, and the only package that is not optional. The document model,
+transforms, position mapping, editor state and the editable view are written
+here, with **zero runtime dependencies**.
+
+```sh
+pnpm add @matrajs/core
+```
+
+**Entry points**
+
+| Export | What it is |
+|---|---|
+| `createEditor(options)` | Builds an editor. The `extensions` array decides everything else about it. |
+| `buildSchema(extensions)` | The schema alone, for validating a document with no view and no DOM. |
+| `pos(…)`, `range(…)` | Constructors for the two position types. |
+| `starterKit` | Seventeen extensions in one array — document, paragraph, text, heading, blockquote, code block, bullet/ordered/list item, horizontal rule, hard break, bold, italic, strike, code, link, history. |
+| 38 named extensions | Every entry in [Extensions](#extensions), each importable on its own. |
+| Helpers | `tableOfContents(doc)`, `assignIds(doc)`, `commentRanges(doc)`, `activeSuggestion(editor)` — plain functions over a document, not extensions. |
+| `toMarkdown`, `fromMarkdown` | Pure string work, so they run in Node, in a worker and at the edge. |
+| `…CSS` helpers | `placeholderCSS`, `commentCSS`, `taskListCSS`, `dragHandleCSS`, `suggestionCSS` — stylesheets to paste into an app rather than a stylesheet to import. |
+
+**`EditorOptions`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `extensions` | `readonly AnyDef[]` | Declare it `as const`. The tuple is what makes the commands infer. |
+| `content` | `DocNode \| string` | Document JSON, or HTML to parse. |
+| `editable` | `boolean` | |
+| `autofocus` | `boolean \| 'start' \| 'end'` | |
+| `element` | `HTMLElement` | Mount as soon as the editor exists, instead of calling `mount` yourself. |
+
+**The editor**
+
+| Member | Signature | |
+|---|---|---|
+| `commands` | `CommandsOf<T> & CoreCommands` | Only what the extensions you passed provide. Anything else is a compile error. |
+| `can` | same shape | Asks instead of does, so a button can be disabled rather than dead. |
+| `batch(run)` | `=> boolean` | Several commands, one undo step. Rolls back entirely if any returns `false`. |
+| `isActive(name, attrs?)` | `=> boolean` | Marks first, then nodes · `isActive('heading', { level: 2 })` reads naturally. |
+| `getJSON()` | `=> DocNode` | |
+| `getHTML()` | `=> string` | Answers without a DOM. |
+| `getText()` | `=> string` | |
+| `setContent(content)` | `=> void` | |
+| `selection` | `Selection` | |
+| `editable` / `setEditable(v)` | | |
+| `on(event, fn)` | `=> () => void` | `change`, `focus`, `blur`, `selectionChange`. Returns its own unsubscribe. |
+| `extensionState<S>(name)` | `=> S \| undefined` | How a toolbar reads a character count or a collab version without a global. |
+| `mount(el)` / `destroy()` | | |
+| `unsafe` | `{ view, state, schema }` | Excluded from semver. Needing it means the public API has a gap — open an issue. |
+
+**Core commands**, present whatever you pass: `select`, `insert`, `replace`,
+`remove`, `moveBlock`, `focus`.
+
+---
+
+### `@matrajs/react` — MIT
+
+```sh
+pnpm add @matrajs/react
+```
+
+| Export | Signature |
+|---|---|
+| `useEditor(options)` | `Editor<T>` — created lazily on first render, destroyed on unmount. |
+| `useEditorState(editor, select)` | `S` — a `useSyncExternalStore` subscription to `change` and `selectionChange`. |
+| `useEditorFocus(editor)` | `boolean` |
+| `EditorContent` | `{ editor }` plus every `div` attribute. |
+
+```tsx
+import { starterKit } from '@matrajs/core'
+import { EditorContent, useEditor, useEditorState } from '@matrajs/react'
+
+export function Notes() {
+  const editor = useEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+  const bold = useEditorState(editor, (e) => e.isActive('bold'))
+
+  return (
+    <>
+      <button onClick={() => editor.commands.toggleBold()} aria-pressed={bold}>
+        Bold
+      </button>
+      <EditorContent editor={editor} className="prose" />
+    </>
+  )
+}
+```
+
+Options are read once. Changing them later does not recreate the editor,
+because tearing down a live document on a prop change loses the user's work —
+use the commands instead. The mount is guarded on `unsafe.view`, so StrictMode's
+double invoke cannot leave two views fighting over one element.
+
+---
+
+### `@matrajs/vue` — MIT
+
+The same four names as React, returning refs.
+
+```sh
+pnpm add @matrajs/vue
+```
+
+| Export | Signature |
+|---|---|
+| `useEditor(options)` | `Editor<T>`, `markRaw`ped · works in a component or a bare effect scope. |
+| `useEditorState(editor, select)` | `Readonly<Ref<S>>` |
+| `useEditorFocus(editor)` | `Readonly<Ref<boolean>>` |
+| `EditorContent` | Component with an `editor` prop. |
+
+```vue
+<script setup lang="ts">
+import { starterKit } from '@matrajs/core'
+import { EditorContent, useEditor, useEditorState } from '@matrajs/vue'
+
+const editor = useEditor({ extensions: starterKit })
+const bold = useEditorState(editor, (e) => e.isActive('bold'))
+</script>
+
+<template>
+  <button :aria-pressed="bold" @click="editor.commands.toggleBold()">Bold</button>
+  <EditorContent :editor="editor" />
+</template>
+```
+
+The mount is guarded, so a `<KeepAlive>` remount does not attach a second view.
+
+---
+
+### `@matrajs/svelte` — MIT
+
+Svelte already has the right shape — an action runs when the element exists and
+is told when it goes away — so the binding is thin on purpose. Written with
+stores rather than runes, so it behaves identically on Svelte 4 and 5.
+
+```sh
+pnpm add @matrajs/svelte
+```
+
+| Export | Signature |
+|---|---|
+| `matra(options)` | `{ action, editor, state }` |
+| `editorState(editor)` | `Readable<Editor<T>>` — republishes on change and selection. |
+
+```svelte
+<script>
+  import { starterKit } from '@matrajs/core'
+  import { matra } from '@matrajs/svelte'
+
+  const { action, editor, state } = matra({ extensions: starterKit })
+</script>
+
+<button aria-pressed={$state.isActive('bold')} onclick={() => editor.commands.toggleBold()}>
+  Bold
+</button>
+<div use:action></div>
+```
+
+The editor exists before the element does, so commands, `content` and
+`getJSON()` all work before anything is on screen — which is what a server
+render and a test both need.
+
+---
+
+### `@matrajs/solid` — MIT
+
+Solid's reactivity is not a render loop, so there is no `useSyncExternalStore`
+shape to reach for: a signal that bumps on every change is enough.
+
+```sh
+pnpm add @matrajs/solid
+```
+
+| Export | Signature |
+|---|---|
+| `createMatra(options)` | `{ editor, mount, state }` — bound to the component's lifetime. |
+
+```tsx
+import { starterKit } from '@matrajs/core'
+import { createMatra } from '@matrajs/solid'
+
+const { editor, mount, state } = createMatra({ extensions: starterKit })
+
+return (
+  <>
+    <button aria-pressed={state().isActive('bold')} onClick={() => editor.commands.toggleBold()}>
+      Bold
+    </button>
+    <div ref={mount} />
+  </>
+)
+```
+
+`state()` returns the editor itself rather than a copy: a toolbar asks
+`isActive` at render time, and cloning a document to answer that would be the
+expensive way to do nothing.
+
+---
+
+### `@matrajs/ai` — Commercial
+
+Streaming edits that survive concurrent typing. The range being rewritten is
+re-resolved against the current document on every chunk, so a user who keeps
+typing while the model streams does not end up with a corrupted paragraph.
+
+```sh
+pnpm add @matrajs/ai
+```
+
+| Export | What it is |
+|---|---|
+| `ai(options)` | The extension. `{ stream, onStatus? }`. |
+| `AiStream` | `(request: AiRequest) => AsyncIterable<string>` — yours to implement. |
+| `AiRequest` | `{ text, instruction, signal }` |
+| `AiSession` | `{ id, status, range, received, error? }` |
+| `AiStatus` | `'idle' \| 'streaming' \| 'done' \| 'error' \| 'cancelled'` |
+
+Commands: `askAi(instruction)`, `cancelAi()`, `acceptAi()`, `rejectAi()`.
+
+```ts
+import { createEditor, starterKit } from '@matrajs/core'
+import { ai } from '@matrajs/ai'
+
+const editor = createEditor({
+  extensions: [
+    ...starterKit,
+    ai({
+      async *stream({ text, instruction, signal }) {
+        const response = await fetch('/api/rewrite', {
+          method: 'POST',
+          body: JSON.stringify({ text, instruction }),
+          signal,
+        })
+        for await (const chunk of response.body!.pipeThrough(new TextDecoderStream())) yield chunk
+      },
+      onStatus: (session) => setSpinner(session.status === 'streaming'),
+    }),
+  ] as const,
+})
+
+editor.commands.askAi('make this shorter')
+```
+
+`stream` runs in your application, so the model key stays on your server. The
+extension never talks to us.
+
+---
+
+### `@matrajs/collab` — Commercial
+
+Step exchange, rebasing and presence, with **no CRDT dependency**. Another
+client's work rebases over unsent local work without either being lost.
+
+```sh
+pnpm add @matrajs/collab
+```
+
+| Export | What it is |
+|---|---|
+| `collab(options)` | The extension. `{ clientId, version? }`. |
+| `Authority` | The server side · `receive(version, steps)` and `since(version)`. Transport-agnostic. |
+| `sendableSteps(editor)` | `Sendable \| null` — what to put on the wire. |
+| `getVersion(editor)` | `number` |
+| `remoteCursors()` | The presence extension. |
+| `colorFor(clientId)` | A stable colour per client. |
+| `remoteCursorCSS` | The stylesheet the cursor decorations expect. |
+| `CollabStep`, `Presence`, `Sendable`, `CollabState` | Wire types. |
+
+Command: `receiveCollabSteps(steps)` — steps this client sent are skipped, and a
+step that no longer applies is dropped rather than thrown, because one bad
+message from a peer must not take the editor down.
+
+```ts
+import { createEditor, starterKit } from '@matrajs/core'
+import { collab, remoteCursors, sendableSteps } from '@matrajs/collab'
+
+const editor = createEditor({
+  extensions: [...starterKit, collab({ clientId: 'me' }), remoteCursors()] as const,
+})
+
+editor.on('change', () => {
+  const sendable = sendableSteps(editor)
+  if (sendable) socket.send(JSON.stringify(sendable))
+})
+
+socket.onmessage = (event) => editor.commands.receiveCollabSteps(JSON.parse(event.data))
+```
+
+`Authority` is a plain class with no server attached — run it in a WebSocket
+handler, a Durable Object, or a test.
+
+---
+
+### `@matrajs/versions` — Commercial
+
+Snapshots, a real diff between them, and restore as one undo step.
+
+```sh
+pnpm add @matrajs/versions
+```
+
+| Export | What it is |
+|---|---|
+| `versions(options)` | The extension. `{ now?, idleMs?, keep?, onChange?, store? }`. |
+| `versionList(editor)` | `Version[]` |
+| `localVersionStore(key)` | A `VersionStore` on `localStorage`. |
+| `diffDocs(a, b)` | `DocDiff` — block-level changes between two documents. |
+| `diffWords(a, b)` | `WordRun[]` |
+| `blockStarts`, `sizeOf`, `textOf` | The primitives the diff is built from. |
+| `versionClasses`, `versionDiffCSS` | Class names and the stylesheet for preview decorations. |
+| `Version` | `{ id, label, at, doc, size }` |
+
+Commands: `snapshotVersion(label?)`, `restoreVersion(id)`,
+`previewVersion(id | null)`, `forgetVersion(id)`.
+
+```ts
+import { createEditor, starterKit } from '@matrajs/core'
+import { localVersionStore, versionList, versions } from '@matrajs/versions'
+
+const editor = createEditor({
+  extensions: [
+    ...starterKit,
+    versions({
+      idleMs: 30_000,
+      keep: 50,
+      store: localVersionStore('doc-42'),
+      onChange: (state) => render(state.versions, state.diff),
+    }),
+  ] as const,
+})
+
+editor.commands.snapshotVersion('before the rewrite')
+editor.commands.previewVersion(versionList(editor)[0].id)
+```
+
+`idleMs: null` turns automatic snapshots off and leaves them to
+`snapshotVersion`. A version per keystroke is not history, it is a keylogger
+with a nicer name. `now` is injected rather than reached for, so a test does not
+have to sleep to make two versions differ.
+
+
+---
 
 ## Security
 
@@ -70,7 +430,7 @@ pnpm wiring      # every script on the site finds the markup it asks for
 
 0.16 — the engine is ours end to end. Document model, transforms, position
 mapping, editor state and the editable view are written from scratch, with
-**zero runtime dependencies**. 551 tests, 56 of them adversarial.
+**zero runtime dependencies**. 580 tests, 68 of them adversarial.
 
 An app on the starter kit bundles **25 kB gzipped**, because nothing arrives
 that the editor does not use. The whole ladder, from an empty extension array
@@ -140,6 +500,7 @@ not.
 ## Releasing
 
 One registry, and an order that matters. See [RELEASING.md](./RELEASING.md).
+Every release is recorded in [CHANGELOG.md](./CHANGELOG.md).
 
 ## Licence
 
