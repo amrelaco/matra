@@ -4,18 +4,19 @@ import Docs from '../../layouts/Docs.astro'
 
 <Docs
   title="Vue · Matra docs"
-  description="useEditor and EditorContent for Vue 3, first-class rather than community-maintained."
+  description="useEditor, useEditorState, useEditorFocus and EditorContent for Vue 3 — first-class rather than community-maintained."
   section="Frameworks"
   heading="Vue"
 >
-  <pre><code>npm i @matrajs/core @matrajs/vue</code></pre>
+  <pre><code>npm i @matrajs/vue</code></pre>
   <p>
     Vue is first-class here rather than a community package that lags the React one. Both
-    bindings are written together and released together.
+    bindings are written together, tested together and released together, against the same
+    version number. The engine comes with it · there is no second package.
   </p>
 
   <h2>An editor</h2>
-  <pre><code>&lt;script setup&gt;
+  <pre><code>&lt;script setup lang="ts"&gt;
 import &#123; starterKit &#125; from '@matrajs/core'
 import &#123; EditorContent, useEditor &#125; from '@matrajs/vue'
 
@@ -28,18 +29,39 @@ const editor = useEditor(&#123;
 &lt;template&gt;
   &lt;EditorContent :editor="editor" /&gt;
 &lt;/template&gt;</code></pre>
-  <p>The editor is destroyed automatically when the component unmounts.</p>
+  <p>
+    The editor is destroyed when the component unmounts, or when the surrounding effect scope is
+    stopped — so it also works outside a component, in a composable or a store. It is
+    <code>markRaw</code>ped, so Vue never walks the document making it reactive: the editor
+    publishes its own changes and a proxy over a live document would cost a great deal to
+    achieve nothing.
+  </p>
 
-  <h2>A toolbar</h2>
-  <pre><code>&lt;script setup&gt;
+  <h2>A toolbar that stays honest</h2>
+  <p>
+    Commands mutate the document; Vue does not hear about that on its own, so a naive toolbar
+    goes stale the moment the caret moves. <code>useEditorState</code> returns a readonly ref that
+    follows both changes and selection changes.
+  </p>
+  <pre><code>&lt;script setup lang="ts"&gt;
+import type &#123; Editor &#125; from '@matrajs/core'
 import &#123; useEditorState &#125; from '@matrajs/vue'
 
-const props = defineProps(['editor'])
+const props = defineProps&lt;&#123; editor: Editor &#125;&gt;()
+
+const bold = useEditorState(props.editor, (e) =&gt; e.isActive('bold'))
+const canBold = useEditorState(props.editor, (e) =&gt; e.can.toggleBold())
 const characters = useEditorState(props.editor, (e) =&gt; e.getText().length)
 &lt;/script&gt;
 
 &lt;template&gt;
-  &lt;button @mousedown.prevent="editor.commands.toggleBold()"&gt;Bold&lt;/button&gt;
+  &lt;button
+    :aria-pressed="bold"
+    :disabled="!canBold"
+    @mousedown.prevent="editor.commands.toggleBold()"
+  &gt;
+    Bold
+  &lt;/button&gt;
   &lt;span&gt;&#123;&#123; characters &#125;&#125;&lt;/span&gt;
 &lt;/template&gt;</code></pre>
 
@@ -48,4 +70,80 @@ const characters = useEditorState(props.editor, (e) =&gt; e.getText().length)
     button first and collapses the selection, so the command runs against a caret instead of the
     words that were highlighted.
   </div>
+
+  <p>
+    <code>can</code> is the same command asking rather than doing, which is how the button knows to
+    be disabled instead of looking enabled and doing nothing — the caret is in a code block, or the
+    selection cannot hold that mark.
+  </p>
+
+  <h2>Focus</h2>
+  <pre><code>const focused = useEditorFocus(editor)</code></pre>
+  <p>A readonly ref · useful for showing a toolbar only while the editor has the caret.</p>
+
+  <h2>Saving</h2>
+  <pre><code>&lt;script setup lang="ts"&gt;
+import &#123; onScopeDispose &#125; from 'vue'
+
+const editor = useEditor(&#123; extensions: starterKit &#125;)
+
+onScopeDispose(editor.on('change', () =&gt; save(editor.getJSON())))
+&lt;/script&gt;</code></pre>
+  <p>
+    <code>on</code> returns its own unsubscribe function, so it hands straight to
+    <code>onScopeDispose</code> with nothing in between.
+  </p>
+
+  <h2>v-model, if you want it</h2>
+  <p>
+    There is no <code>v-model</code> on <code>EditorContent</code> on purpose: a two-way binding over
+    a live document means re-parsing it on every keystroke, and the parse is what loses a selection.
+    Write it yourself where you actually need it, and only in one direction.
+  </p>
+  <pre><code>const model = defineModel&lt;string&gt;()
+
+const editor = useEditor(&#123;
+  extensions: starterKit,
+  content: model.value,
+&#125;)
+
+onScopeDispose(editor.on('change', () =&gt; &#123;
+  model.value = editor.getHTML()
+&#125;))</code></pre>
+
+  <div class="note">
+    Setting <code>model.value</code> from outside will not push back into the editor, which is the
+    behaviour you want · call <code>editor.commands</code> or
+    <code>editor.setContent()</code> for a deliberate change instead.
+  </div>
+
+  <h2>Nuxt</h2>
+  <p>
+    The editor touches the DOM only when it mounts, so it renders on the server without a shim.
+    Keep <code>EditorContent</code> out of the server pass and the rest works untouched:
+  </p>
+  <pre><code>&lt;template&gt;
+  &lt;ClientOnly&gt;
+    &lt;EditorContent :editor="editor" /&gt;
+  &lt;/ClientOnly&gt;
+&lt;/template&gt;</code></pre>
+  <p>
+    <code>useEditor</code> itself runs on the server — the editor exists before anything is on screen,
+    so <code>getJSON()</code>, <code>getHTML()</code> and <code>getText()</code> all answer during
+    a server render, with no DOM polyfill.
+  </p>
+
+  <div class="note">
+    With one condition: <strong
+      >server-side content must be JSON or Markdown, not an HTML string</strong
+    >. Reading HTML is a DOM job, so <code>content: '&lt;p&gt;…&lt;/p&gt;'</code> needs a browser
+    · <code>content: fromMarkdown(text)</code> and <code>content: storedJson</code> do not. Writing
+    HTML out with <code>getHTML()</code> works either way.
+  </div>
+
+  <h2>KeepAlive</h2>
+  <p>
+    The mount is guarded, so a component brought back by <code>&lt;KeepAlive&gt;</code> or a hot reload
+    does not attach a second view to one element and leave two carets fighting over it.
+  </p>
 </Docs>

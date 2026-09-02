@@ -8,7 +8,10 @@ import Docs from '../../layouts/Docs.astro'
   section="Frameworks"
   heading="React"
 >
-  <pre><code>npm i @matrajs/core @matrajs/react</code></pre>
+  <pre><code>npm i @matrajs/react</code></pre>
+  <p>
+    The engine comes with it · there is no second package, and nothing third-party behind it.
+  </p>
 
   <h2>An editor</h2>
   <pre><code>import &#123; starterKit &#125; from '@matrajs/core'
@@ -57,6 +60,27 @@ function BoldButton(&#123; editor &#125;) &#123;
     · so the command runs against a caret rather than the words you highlighted.
   </div>
 
+  <h2>Buttons that know when they cannot</h2>
+  <p>
+    <code>can</code> is the same command asking rather than doing. A button reads it to be
+    <em>disabled</em> instead of looking enabled and doing nothing when pressed — the caret is in
+    a code block, or the selection cannot hold that mark, and the answer is available before the user
+    finds out by pressing.
+  </p>
+  <pre><code>const canBold = useEditorState(editor, (e) =&gt; e.can.toggleBold())
+
+&lt;button disabled=&#123;!canBold&#125; …&gt;Bold&lt;/button&gt;</code></pre>
+
+  <h2>Several changes, one undo</h2>
+  <pre><code>editor.batch((c) =&gt; &#123;
+  c.toggleBold()
+  c.toggleItalic()
+&#125;)</code></pre>
+  <p>
+    One history step, and it rolls back entirely if any command in it returns <code>false</code
+    >.
+  </p>
+
   <h2>Saving</h2>
   <pre><code>useEffect(() =&gt; editor.on('change', () =&gt; save(editor.getJSON())), [editor])</code></pre>
   <p>
@@ -65,4 +89,13 @@ function BoldButton(&#123; editor &#125;) &#123;
 
   <h2>Focus</h2>
   <pre><code>const focused = useEditorFocus(editor)</code></pre>
+  <p>
+    True while the editor has DOM focus · useful for showing a toolbar only while the caret is
+    actually in the document.
+  </p>
+
+  <div class="note">
+    StrictMode double-invokes effects in development. The mount is guarded, so that cannot leave
+    two views attached to one element — you do not need to disable StrictMode to use this.
+  </div>
 </Docs>
