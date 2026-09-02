@@ -8,7 +8,13 @@ import Docs from '../../layouts/Docs.astro'
   section="Getting started"
   heading="Installation"
 >
-  <p>The core is all most projects need · every extension is in it.</p>
+  <p>
+    One package. <strong>Installing a binding installs the engine with it</strong>, so a React
+    application needs nothing else · no second package, and no third-party dependency arrives
+    behind it.
+  </p>
+  <pre><code>npm i @matrajs/react   # or vue, svelte, solid</code></pre>
+  <p>Without a framework, or with one that needs no binding, install the engine directly.</p>
   <pre><code>npm i @matrajs/core</code></pre>
   <p>
     It ships no appearance. <a href="/docs/styling">Styling</a> is a page of its own, and worth reading
@@ -16,6 +22,7 @@ import Docs from '../../layouts/Docs.astro'
   </p>
 
   <h2>Framework bindings</h2>
+  <p>Each one depends on <code>@matrajs/core</code> and pulls it in for you.</p>
   <pre><code>npm i @matrajs/react   # useEditor, useEditorState, EditorContent
 npm i @matrajs/vue     # useEditor, EditorContent
 npm i @matrajs/svelte  # matra — a use: action and a store
@@ -33,10 +40,14 @@ npm i @matrajs/solid   # createMatra — a ref and a signal</code></pre>
 npm i @matrajs/collab    # authority, rebasing, remote cursors
 npm i @matrajs/versions  # snapshots, diff, restore</code></pre>
   <p>
-    Installed the same way as everything else. These two are source-available under a commercial
+    Installed the same way as everything else. All three are source-available under a commercial
     licence rather than MIT · free for evaluation, development, testing, teaching, personal
-    projects and teams of fewer than three developers, paid beyond that. See
-    <a href="/licence">the licence</a>.
+    projects and organisations with fewer than three developers on the software, paid beyond
+    that. Each has its own page — <a href="/docs/ai">AI</a>, <a href="/docs/collab"
+      >Collaboration</a
+    > and
+    <a href="/docs/versions">Version history</a> — and the terms are on
+    <a href="/licence">the licence page</a>.
   </p>
 
   <div class="note">
