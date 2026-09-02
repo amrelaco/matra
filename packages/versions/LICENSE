@@ -3,8 +3,9 @@ Version 1.0, 24 August 2026
 Copyright (c) 2026 Amrela
 
 This package is source-available, not open source. The Matra core
-(@matrajs/core, @matrajs/react, @matrajs/vue) is MIT and always will be; this
-package is not.
+(@matrajs/core) and every framework binding (@matrajs/react, @matrajs/vue,
+@matrajs/svelte, @matrajs/solid) are MIT and always will be; this package is
+not.
 
 1. FREE USE
 
