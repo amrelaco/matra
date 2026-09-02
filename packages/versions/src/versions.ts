@@ -1,4 +1,12 @@
-import type { Command, Ctx, DecorationSpec, DocNode, Editor, ExtensionDef } from '@matrajs/core'
+import type {
+  AnyDef,
+  Command,
+  Ctx,
+  DecorationSpec,
+  DocNode,
+  Editor,
+  ExtensionDef,
+} from '@matrajs/core'
 import { type DocDiff, blockStarts, diffDocs, sizeOf } from './diff'
 
 /** One saved state of the document. */
@@ -345,7 +353,7 @@ function snapshot(editor: Editor, label: string): void {
 }
 
 /** Everything a caller has saved, newest last. */
-export function versionList(editor: Editor<readonly never[]>): Version[] {
+export function versionList(editor: Editor<readonly AnyDef[]>): Version[] {
   return editor.extensionState<VersionsState>('versions')?.versions ?? []
 }
 
