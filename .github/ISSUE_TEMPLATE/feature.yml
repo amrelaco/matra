@@ -1,0 +1,33 @@
+name: Feature or extension request
+description: Something the editor should be able to do and cannot.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything in `@matrajs/core` is in the bundle everyone downloads, so a
+        new extension has to earn its bytes. Saying who needs it and what they
+        are doing carries more weight here than a list of features elsewhere.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to build
+      description: The problem, rather than the API you have in mind for it.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you are doing instead today
+      description: |
+        Writing it as your own extension is a first-class option — see
+        [Writing an extension](https://matrajs.com/docs/extensions). If you
+        tried and hit a wall, the wall is the useful part of this report.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Where it belongs
+      options:
+        - label: I think this should ship in the box rather than be my own extension.

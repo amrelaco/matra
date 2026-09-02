@@ -1,0 +1,63 @@
+name: Bug report
+description: Something behaves differently from what the documentation says.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A failing test is the most useful thing you can send. If you can add one
+        to `packages/core/src/*.test.ts`, open a pull request instead — it will
+        be looked at faster than an issue.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The version of `@matrajs/core` you are on.
+      placeholder: "0.16.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which package
+      multiple: true
+      options:
+        - "@matrajs/core"
+        - "@matrajs/react"
+        - "@matrajs/vue"
+        - "@matrajs/svelte"
+        - "@matrajs/solid"
+        - "@matrajs/ai"
+        - "@matrajs/collab"
+        - "@matrajs/versions"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      description: |
+        The extension array you passed, the content, and the commands or keys
+        that got you there. A minimal snippet beats a description.
+      render: ts
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      description: Skip this for something that reproduces headlessly.
+      placeholder: "Safari 18, iOS 18.4"
+  - type: checkboxes
+    id: ime
+    attributes:
+      label: Composition
+      options:
+        - label: This involves an IME — Japanese, Chinese, Korean, or a mobile keyboard with suggestions.
