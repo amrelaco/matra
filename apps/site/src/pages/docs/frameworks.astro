@@ -188,6 +188,14 @@ off()`}</code></pre>
     <a href="/docs/api"><code>toMarkdown</code></a> runs on a server with no jsdom in sight.
   </p>
 
+  <div class="note">
+    One condition: <strong
+      >content loaded on a server must be JSON or Markdown, not an HTML string</strong
+    >. Reading HTML is a DOM job, so <code>content: '&lt;p&gt;…&lt;/p&gt;'</code> needs a browser
+    · <code>content: storedJson</code> and <code>content: fromMarkdown(text)</code> do not. Writing
+    HTML out with <code>getHTML()</code> works either way.
+  </div>
+
   <h2>The paid packages, anywhere</h2>
   <p>
     <code>@matrajs/ai</code>, <code>@matrajs/collab</code> and

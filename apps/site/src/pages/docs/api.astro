@@ -56,7 +56,7 @@ const options = [
   [
     'content',
     'DocNode | string',
-    'JSON or HTML. Anything the schema cannot hold is dropped on the way in.',
+    'JSON or HTML. Anything the schema cannot hold is dropped on the way in. Parsing an HTML string needs a DOM · JSON and `fromMarkdown` output do not.',
   ],
   ['element', 'HTMLElement', 'Mount here immediately, instead of calling `mount` later.'],
   ['editable', 'boolean', 'Defaults to true.'],
