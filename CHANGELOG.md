@@ -18,6 +18,14 @@ legally, the licence boundary at `0.6.0`, it is stated on its own.
 - Bindings are tested in CI at both edges of every peer range, so a Vue 3.4 and
   a Vue 3.5 user are both covered by something other than optimism.
 - A page under `harness/ime` for checking composition on a real device.
+- **`versionList` accepts a real editor.** Its parameter had been typed so that
+  nothing satisfied it, and every caller had to cast.
+- The commercial licence names every MIT binding. It had listed `core`, `react`
+  and `vue` and omitted `svelte` and `solid`, contradicting the README.
+- Documentation: a page each for AI, collaboration and version history; every
+  package covered in detail in the README; and the fact that loading an HTML
+  string needs a DOM while JSON does not, which the tests asserted and nothing
+  said out loud.
 
 ## 0.15.0 — 2026-08-28
 
