@@ -1,13 +1,32 @@
 import type { DocNode, ExtensionDef } from '../types'
 
 export interface UniqueIdOptions {
-  /** Which node types get an id. Defaults to every block that can hold text. */
+  /** Which node types get an id. Defaults to the blocks in the box. */
   types?: string[]
   /** The attribute the id is written to. */
   attribute?: string
   /** Supply your own, when the ids have to match something outside the editor. */
   generate?: () => string
 }
+
+/** Every block type that ships, which is what "a stable id per block" means by default. */
+const DEFAULT_TYPES = [
+  'paragraph',
+  'heading',
+  'blockquote',
+  'codeBlock',
+  'bulletList',
+  'orderedList',
+  'listItem',
+  'taskList',
+  'taskItem',
+  'table',
+  'horizontalRule',
+  'image',
+  'callout',
+  'details',
+  'youtube',
+]
 
 /**
  * A stable id per block.
@@ -55,14 +74,30 @@ export function assignIds(doc: DocNode, options: UniqueIdOptions = {}): DocNode 
  * Declare the attribute so the schema keeps it.
  *
  * Without this the id is dropped on the way in: undeclared attributes do not
- * survive, which is a security property rather than an oversight.
+ * survive, which is a security property rather than an oversight. The id is
+ * written to the element as `data-<attribute>` and read back from there, so
+ * it survives HTML as well as JSON.
  */
 export function uniqueId(options: UniqueIdOptions = {}): ExtensionDef {
+  const attribute = options.attribute ?? 'id'
+  const dataAttribute = `data-${attribute}`
   return {
     kind: 'extension',
     name: 'uniqueId',
-    // The attribute has to be declared on the node types themselves; this
-    // extension carries the options so a host can read them back.
+    attributes: [
+      {
+        types: options.types ?? DEFAULT_TYPES,
+        attrs: {
+          [attribute]: {
+            default: null,
+            render: (value) =>
+              typeof value === 'string' && value ? { [dataAttribute]: value } : null,
+            parse: (dom) => dom.getAttribute(dataAttribute),
+          },
+        },
+      },
+    ],
+    // Kept so a host can read the options back off the extension.
     ...({ uniqueIdOptions: options } as Record<string, unknown>),
   }
 }

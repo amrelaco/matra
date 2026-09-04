@@ -35,6 +35,32 @@ export { assignIds, uniqueId, type UniqueIdOptions } from './unique-id'
 export { fromMarkdown, toMarkdown } from './markdown'
 export { dragHandle, dragHandleCSS, type DragHandleOptions } from './drag-handle'
 export { mention, type MentionOptions } from './mention'
+export { textStyle, type TextStyleAttrs } from './text-style'
+export {
+  search,
+  searchCSS,
+  type SearchOptions,
+  type SearchQuery,
+  type SearchState,
+} from './search'
+export { autolink, normalizeUrl, type AutolinkOptions } from './autolink'
+export { details, detailsSummary, detailsKit, detailsCSS } from './details'
+export { callout, calloutCSS, type CalloutType } from './callout'
+export { emoji, searchEmoji, EMOJI, type EmojiOptions } from './emoji'
+export { clearFormatting } from './clear-formatting'
+export { focus, type FocusOptions } from './focus'
+export { trailingNode, type TrailingNodeOptions } from './trailing-node'
+export { youtube, youtubeCSS, youtubeId, type YoutubeAttrs } from './youtube'
+export {
+  codeHighlight,
+  codeHighlightCSS,
+  basicHighlighter,
+  type CodeHighlightOptions,
+  type CodeToken,
+  type Highlighter,
+} from './code-highlight'
+export { indent, type IndentOptions } from './indent'
+export { fileHandler, type FileEvent, type FileHandlerOptions } from './file-handler'
 export {
   activeSuggestion,
   suggestion,

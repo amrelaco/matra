@@ -22,9 +22,9 @@ export const listItem = {
   parseDOM: [{ tag: 'li' }],
   toDOM: () => ['li', 0],
   commands: {
-    splitListItem: runList('split'),
-    liftListItem: runList('lift'),
-    sinkListItem: runList('sink'),
+    splitListItem: /* @__PURE__ */ runList('split'),
+    liftListItem: /* @__PURE__ */ runList('lift'),
+    sinkListItem: /* @__PURE__ */ runList('sink'),
   },
   keys: {
     Enter: 'splitListItem',

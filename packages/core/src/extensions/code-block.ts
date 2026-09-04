@@ -10,6 +10,10 @@ export const codeBlock = {
   // without it, parsing `<pre><code>x</code></pre>` put a `code` mark on the
   // text and rendered `<pre><code><code>x</code></code></pre>` back out.
   marks: '',
+  // Line breaks and indentation are the content. Without this the parser
+  // collapsed them the way HTML does, and a function pasted from a web page
+  // arrived as one long line.
+  code: true,
   attrs: { language: { default: null } },
   parseDOM: [
     {

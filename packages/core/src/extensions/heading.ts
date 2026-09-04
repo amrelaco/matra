@@ -19,7 +19,7 @@ export const heading = {
         ? ctx.setBlockType('paragraph')
         : ctx.setBlockType('heading', { level }),
   },
-  keys: Object.fromEntries(
+  keys: /* @__PURE__ */ Object.fromEntries(
     LEVELS.map((level) => [
       `Mod-Alt-${level}`,
       (ctx) => ctx.setBlockType('heading', { level }),

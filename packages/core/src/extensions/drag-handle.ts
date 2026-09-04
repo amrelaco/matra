@@ -1,3 +1,4 @@
+import { blockIndexAt } from '../engine/view/drag'
 import type { Editor, ExtensionDef } from '../types'
 
 export interface DragHandleOptions {
@@ -63,6 +64,10 @@ export function dragHandle(options: DragHandleOptions = {}): ExtensionDef {
       const onMove = (event: MouseEvent) => {
         const block = blockUnder(dom, event.clientY)
         if (!block) return
+        // Still over the same block: the handle is already where it should
+        // be, and measuring it again on every pixel of movement is what made
+        // moving the mouse over a long document feel heavy.
+        if (block === target && handle?.style.display === 'block') return
         target = block
         place(block, ownerDocument)
       }
@@ -110,11 +115,8 @@ function targetTop(block: HTMLElement): number {
 }
 
 function blockUnder(root: HTMLElement, y: number): HTMLElement | null {
-  for (const child of Array.from(root.children) as HTMLElement[]) {
-    const box = child.getBoundingClientRect()
-    if (y >= box.top && y <= box.bottom) return child
-  }
-  return null
+  const index = blockIndexAt(root.children, y)
+  return index === -1 ? null : (root.children[index] as HTMLElement)
 }
 
 function defaultHandle(ownerDocument: Document): HTMLElement {

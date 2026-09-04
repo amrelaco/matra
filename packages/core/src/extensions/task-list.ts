@@ -143,9 +143,9 @@ export const taskItem = {
   },
 
   commands: {
-    splitTaskItem: runItem('split'),
-    liftTaskItem: runItem('lift'),
-    sinkTaskItem: runItem('sink'),
+    splitTaskItem: /* @__PURE__ */ runItem('split'),
+    liftTaskItem: /* @__PURE__ */ runItem('lift'),
+    sinkTaskItem: /* @__PURE__ */ runItem('sink'),
 
     /**
      * Tick or untick, at the caret or at a position you already know.
