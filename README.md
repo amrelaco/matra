@@ -442,6 +442,7 @@ pnpm bench:check # the performance ratchet, against the recorded baseline
 pnpm links       # no dead internal links on the site
 pnpm packaging   # every built package imports and requires (run after build)
 pnpm wiring      # every script on the site finds the markup it asks for
+pnpm exercise        # drive every extension through the built package in a DOM: every command, rule and paste
 pnpm install:matrix  # pack every package, npm-install it into fresh Vite apps for each framework, build and run them
 pnpm facts       # the counts the site prints — tests, adversarial tests, extensions
 ```
@@ -454,7 +455,7 @@ mapping, editor state and the editable view are written from scratch, with
 package is installed with plain npm into a fresh React, Vue, Svelte, Solid
 and vanilla Vite app and built there before a release (`pnpm install:matrix`).
 
-An app on the starter kit bundles **30 kB gzipped**, because nothing arrives
+An app on the starter kit bundles **31 kB gzipped**, because nothing arrives
 that the editor does not use — seventy-nine extensions ship in the package
 and none of them is in the bundle until it is in the array. The whole ladder,
 from an empty extension array upwards, is measured by `pnpm size` and checked
@@ -547,7 +548,7 @@ what the numbers are not.
 
 | | Matra | Tiptap | Lexical | Slate |
 |---|---|---|---|---|
-| Bundle, gzipped | **30 kB** | 117 kB | ~35 kB | ~50 kB |
+| Bundle, gzipped | **31 kB** | 117 kB | ~35 kB | ~50 kB |
 | Runtime dependencies | **0** | 51 packages | few | several |
 | Engine types in your code | **none** | ProseMirror | Lexical | Slate |
 | Command types | **inferred** | module augmentation | manual | manual |

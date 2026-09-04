@@ -49,7 +49,7 @@ honest:
 | Phase | Layer | Lines | gz | Status |
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
-| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 30 kB | **done** |
+| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 31 kB | **done** |
 | 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | **done** |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | **done** |
 | 5 | view — contenteditable, IME, selection sync | ~6,000 | 59 kB | **done** |
@@ -177,8 +177,25 @@ user is the last row: an app ships a fraction of what it did, because nothing
 is pulled in that the editor does not use.
 
 Extensions have landed since, so that last number is not today's. The current
-figure is whatever `pnpm size` prints — **30 kB** for the starter kit as of
+figure is whatever `pnpm size` prints — **31 kB** for the starter kit as of
 1.0 — and it is checked in CI rather than quoted from here.
+
+## What 1.0.1 changed underneath
+
+- **A replace step can say what it kept.** `ReplaceStep` takes optional
+  `ranges` — `[start, oldSize, newSize]` triples over the old document — and
+  its map tells that story instead of treating the whole range as gone.
+  `Transform.rebuild(from, to, content, kept)` derives the triples from the
+  runs of content an operation leaves in place. Retyping a block, wrapping,
+  lifting, splitting, nesting and un-nesting list items all go through it,
+  which is why a caret now survives every one of them.
+- **Lists are one command.** `toggleList` in `list-commands.ts` wraps blocks
+  one item each, takes items out of a top-level list, outdents from a nested
+  one, and changes a list's kind in place.
+- **The renderer remembers what it drew.** Two weak maps — node decorations
+  written onto an element, decorations drawn inside a content element — are
+  what a patch is compared against, rather than last render's set mapped
+  through the edit, which loses a decoration whose range the edit replaced.
 
 ## What 1.0 changed underneath
 

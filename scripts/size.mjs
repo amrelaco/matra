@@ -25,11 +25,15 @@ import { build } from 'esbuild'
  * a paragraph, paste paragraphs into a paragraph and lines of text as lines,
  * change a node's attributes without moving what is inside it, compare
  * decorations after mapping them, patch a paragraph's text in place, find
- * positions by bisection and share a compiled schema between editors. Every
- * rung is measured, and the figure printed on the site is the one measured
- * here.
+ * positions by bisection and share a compiled schema between editors.
+ * Raised to 32 at 1.0.1, when a structural change learned to say what it
+ * kept in place — so a caret stays in its word through a heading, a quote,
+ * a list, Tab and Shift-Tab — the list button learned to leave a list and to
+ * make one item per block, and the renderer learned to remember what it
+ * drew on each element. Every rung is measured, and the figure printed on
+ * the site is the one measured here.
  */
-const BUDGET_KB = 30
+const BUDGET_KB = 32
 const OUT = 'apps/site/src/data/sizes.json'
 const CHECK = process.argv.includes('--check')
 

@@ -2,6 +2,51 @@
 
 All packages share one version number and are released together.
 
+## 1.0.1 — 2026-09-05
+
+Three bugs a person meets in the first minute, found by driving every
+extension through the built package in every framework, and the harness that
+found them.
+
+**The caret stays put through a change of structure.** Select a word, press
+the heading button, press bold: the word is bold. Press Tab in a list item:
+the caret is still in the word it was in. Both failed, because a structural
+change — a paragraph made a heading, blocks wrapped in a list or a quote, an
+item nested or lifted, a block split — was a plain replacement whose position
+map sent every position inside it to the end. A replace step can now carry
+the finer story (`[start, oldSize, newSize]` triples over the tokens that
+actually moved), `Transform.rebuild` writes it from the runs of content an
+operation keeps in place, and every structural operation in the engine uses
+it. Carets, markers, decorations and collaborators' positions all follow.
+The JSON is backwards compatible: a 1.0.0 client applies the same
+replacement and maps the old, coarser way.
+
+**The list button works.** Toggling a bullet, ordered or task list off did
+nothing at all: there was no wrapper to lift a paragraph out of, so the
+command was refused. Turning two selected paragraphs into a list made one
+item holding both. The three toggles now share one command: outside a list
+the selected blocks become a list, one item each; in a list of that kind the
+selected items leave it, one level out when nested and out to plain blocks at
+the top; in a list of another kind the list changes kind where it stands.
+Shift-Tab on a top-level item leaves the list the same way.
+
+**What is drawn on an element is what the document says.** A node
+decoration — the focus class, a search highlight — whose whole range an edit
+replaced was forgotten by the renderer's comparison, so the element it was
+drawn on was patched and kept its class: after `setContent` two paragraphs
+could both claim the caret. The renderer now remembers what it drew on each
+element and inside it, and compares against that.
+
+**`pnpm exercise`.** Every extension the package exports, built into one
+editor and driven the way a person drives it — every command run, every
+input rule typed, paste pasted, menus waited for — against the built package
+in a DOM. The install matrix runs the same file inside each of the five
+framework apps, so a framework proves three things at once: the package
+installs, every extension works in it, and the binding relays what happened.
+CI runs both.
+
+**Bundle.** The starter kit is 31 kB gzipped, from 30. The budget is 32.
+
 ## 1.0.0 — 2026-09-04
 
 The engine got faster everywhere it was measured, thirty-six extensions
