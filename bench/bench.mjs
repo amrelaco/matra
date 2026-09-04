@@ -245,6 +245,17 @@ if (record) {
 const TOLERANCE = 1.2
 const IMPROVED = 0.9
 
+/*
+ * A change smaller than this many units is noise, whatever the ratio says.
+ *
+ * 0.17 took a character insert from 2.73 units to 0.22 and a mark from 4.46
+ * to 0.22. At those sizes twenty per cent is a twentieth of a unit — under
+ * what two identical runs differ by — and a gate that fails on the weather
+ * is a gate that gets deleted. Below the floor a figure is reported and not
+ * judged; above it the ratio decides, as before.
+ */
+const FLOOR = 0.1
+
 if (check) {
   let baseline
   try {
@@ -266,14 +277,17 @@ if (check) {
       continue
     }
     const ratio = now / then
-    const verdict = ratio > TOLERANCE ? 'SLOWER' : ratio < IMPROVED ? 'faster' : 'ok'
+    const beyondNoise = Math.abs(now - then) >= FLOOR
+    const isSlower = ratio > TOLERANCE && beyondNoise
+    const isFaster = ratio < IMPROVED && beyondNoise
+    const verdict = isSlower ? 'SLOWER' : isFaster ? 'faster' : 'ok'
     const delta = `${ratio > 1 ? '+' : ''}${((ratio - 1) * 100).toFixed(0)}%`
     console.log(
       `${key.padEnd(12)} ${then.toFixed(2).padStart(9)} → ${now.toFixed(2).padStart(9)}  ` +
         `${delta.padStart(6)}  ${verdict}`,
     )
-    if (ratio > TOLERANCE) slower.push(`${key}: ${then} → ${now} u`)
-    if (ratio < IMPROVED) faster.push(`${key}: ${then} → ${now} u`)
+    if (isSlower) slower.push(`${key}: ${then} → ${now} u`)
+    if (isFaster) faster.push(`${key}: ${then} → ${now} u`)
   }
 
   // A figure the baseline has never seen is not a pass. It is a benchmark
