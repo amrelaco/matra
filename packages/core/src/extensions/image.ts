@@ -7,7 +7,7 @@ export interface ImageAttrs {
 }
 
 /** Reject anything that is not an image URL a browser will fetch safely. */
-function isSafeSrc(src: unknown): src is string {
+export function isSafeImageSrc(src: unknown): src is string {
   if (typeof src !== 'string' || !src.length) return false
   if (src.startsWith('//')) return false
   if (src.startsWith('/') || src.startsWith('./')) return true
@@ -37,7 +37,7 @@ export const image = {
       tag: 'img[src]',
       getAttrs: (dom) => {
         const src = (dom as Element).getAttribute('src')
-        if (!isSafeSrc(src)) return false
+        if (!isSafeImageSrc(src)) return false
         return {
           src,
           alt: (dom as Element).getAttribute('alt'),
@@ -49,6 +49,6 @@ export const image = {
   toDOM: (node) => ['img', node.attrs ?? {}],
   commands: {
     insertImage: (ctx, attrs) =>
-      isSafeSrc(attrs.src) ? ctx.insert({ type: 'image', attrs: { ...attrs } }) : false,
+      isSafeImageSrc(attrs.src) ? ctx.insert({ type: 'image', attrs: { ...attrs } }) : false,
   },
 } satisfies NodeDef<{ insertImage: Command<[ImageAttrs]> }>

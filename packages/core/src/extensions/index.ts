@@ -69,3 +69,56 @@ export {
   type SuggestionState,
   type SuggestionStore,
 } from './suggestion'
+export { locked, lockedCSS, type LockedOptions, type LockedState } from './locked'
+export { field, fieldsIn, fillFieldsIn, fieldsCSS, type FieldValue } from './fields'
+export {
+  ghostText,
+  ghostTextCSS,
+  type GhostContext,
+  type GhostTextOptions,
+  type GhostTextState,
+} from './ghost-text'
+export {
+  dictation,
+  dictationCSS,
+  dictationSupported,
+  type DictationOptions,
+  type DictationState,
+} from './dictation'
+export {
+  smartPaste,
+  looksLikeMarkdown,
+  parseDelimited,
+  type SmartPasteOptions,
+} from './smart-paste'
+export {
+  bubbleMenu,
+  floatingMenu,
+  type BubbleMenuOptions,
+  type FloatingMenuOptions,
+} from './menus'
+export { imageResize, imageResizeCSS, type ImageResizeOptions } from './image-resize'
+export {
+  invisibleCharacters,
+  invisibleCharactersCSS,
+  type InvisibleCharactersOptions,
+  type InvisibleCharactersState,
+} from './invisible-characters'
+export { column, columnList, columnsCSS, columnsKit } from './columns'
+export { pageBreak, pageBreakCSS } from './page-break'
+export { lineHeight, lineHeightOf } from './line-height'
+export { kbd } from './kbd'
+export { hashtag, hashtagsIn, type HashtagOptions } from './hashtag'
+export { snippets, type Snippet, type SnippetsOptions } from './snippets'
+export { embed, embedCSS, type EmbedAllow, type EmbedAttrs, type EmbedOptions } from './embed'
+export { textTransform } from './text-transform'
+export { mathInline, mathBlock, mathKit, mathCSS, type MathOptions } from './math'
+export { footnoteRef, footnote, footnotes, footnotesKit, footnotesCSS } from './footnotes'
+export {
+  selectionHighlight,
+  selectionHighlightCSS,
+  type SelectionHighlightOptions,
+} from './selection-highlight'
+export { textDirection, type TextDirection, type TextDirectionOptions } from './text-direction'
+export { typewriter, type TypewriterOptions, type TypewriterState } from './typewriter'
+export { autosave, type AutosaveOptions, type AutosaveState } from './autosave'
