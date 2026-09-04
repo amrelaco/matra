@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/solid",
-  "version": "0.16.0",
+  "version": "1.0.0",
   "description": "Solid bindings for Matra \u2014 createMatra, and a signal that follows it.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",

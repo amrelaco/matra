@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/ai",
-  "version": "0.16.0",
+  "version": "1.0.0",
   "description": "AI extension for Matra \u2014 streaming edits that survive concurrent typing.",
   "license": "SEE LICENSE IN LICENSE",
   "author": "Nahim Hossain Shohan",
