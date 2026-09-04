@@ -178,6 +178,88 @@ const ctxApi = [
     </table>
   </div>
 
+  <h2>What an extension may declare</h2>
+  <div class="api">
+    <table>
+      <tbody>
+        <tr
+          ><td class="mono n">commands</td><td class="d"
+            >Plain functions of <code>(ctx, …args) =&gt; boolean</code>. Their types land on <code
+              >editor.commands</code
+            > and <code>editor.can</code>.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">keys</td><td class="d"
+            >A binding to a command name or a function · <code
+              >&#123; 'Mod-Shift-S': 'toggleSpoiler' &#125;</code
+            >. A binding that returns false lets the next one try.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">inputRules</td><td class="d"
+            >A RegExp on the text before the caret and a handler. One undo step each.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">attributes</td><td class="d"
+            >Attributes added to nodes and marks defined elsewhere, rendered and parsed.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">handlePaste · handleDrop</td><td class="d"
+            >Claim a paste or a drop before the editor parses it. Return true to keep it.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">filterChange</td><td class="d"
+            >Veto a change before it lands. Nothing is applied, recorded or redrawn when it
+            returns false.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">decorations</td><td class="d"
+            >Draw over the document: inline attributes, node attributes, widgets. Never in the
+            document.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">state</td><td class="d"
+            ><code>init</code> and <code>apply</code>, reduced on every transaction · read with <code
+              >editor.extensionState(name)</code
+            >.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">nodeViews</td><td class="d"
+            >Render nodes defined elsewhere with your own DOM, keyed by node name.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">onCreate · onChange · onDestroy</td><td class="d"
+            >Lifecycle, each handed the editor. <code>onCreate</code> runs when the editor mounts.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">priority</td><td class="d"
+            >Load order. Higher loads first; a later binding for the same key wins.</td
+          ></tr
+        >
+        <tr
+          ><td class="mono n">nodes · marks</td><td class="d"
+            >A node declares <code>content</code>, <code>group</code>, <code>attrs</code>, <code
+              >parseDOM</code
+            >, <code>toDOM</code>, <code>nodeView</code>, <code>listItem</code>, <code
+              >marks</code
+            >, <code>code</code>; a mark declares <code>inclusive</code>, <code>excludes</code>, <code
+              >parseDOM</code
+            >, <code>toDOM</code>.</td
+          ></tr
+        >
+      </tbody>
+    </table>
+  </div>
+
   <h2>Types worth knowing</h2>
   <pre><code>type Pos = number &amp; &#123; readonly __pos: unique symbol &#125;
 type Range = &#123; from: Pos; to: Pos &#125;

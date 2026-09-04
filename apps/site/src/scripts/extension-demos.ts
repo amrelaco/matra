@@ -12,19 +12,28 @@ import {
   characterCount,
   code,
   codeBlock,
+  columnsCSS,
+  columnsKit,
   createEditor,
   document as doc,
+  field,
+  fieldsCSS,
   hardBreak,
   heading,
   highlight,
   history,
   horizontalRule,
+  invisibleCharacters,
+  invisibleCharactersCSS,
   italic,
   link,
   listItem,
+  locked,
+  lockedCSS,
   orderedList,
   paragraph,
   placeholder,
+  snippets,
   strike,
   suggestion,
   tableCell,
@@ -35,6 +44,7 @@ import {
   taskList,
   text,
   textAlign,
+  textTransform,
   typography,
   underline,
 } from '@matrajs/core'
@@ -181,6 +191,59 @@ function mountAll(): void {
         '<p>Now type a word and press Mod-Z. It takes the whole word, not one letter.</p>',
     }),
   )
+
+  mount('templates', () =>
+    createEditor({
+      extensions: [
+        doc,
+        paragraph,
+        text,
+        bold,
+        italic,
+        hardBreak,
+        history,
+        field,
+        locked(),
+        snippets([{ trigger: 'sig', content: '— Nahim, Matra' }]),
+        slash(),
+      ],
+      content:
+        '<p data-locked="true">This clause is locked. Put the caret here and type, paste, or drag: nothing lands.</p>' +
+        '<p>Dear <span data-field="name" data-field-label="Name"></span>, we are writing from ' +
+        '<span data-field="city"></span>. Type <strong>sig</strong> and a space for a signature.</p>',
+    }),
+  )
+
+  mount('layout', () =>
+    createEditor({
+      extensions: [
+        doc,
+        paragraph,
+        text,
+        heading,
+        bold,
+        italic,
+        hardBreak,
+        history,
+        ...columnsKit,
+        invisibleCharacters(),
+        textTransform,
+        slash(),
+      ],
+      content:
+        '<p>Put the caret here and press the columns button. The paragraph becomes the first column and an empty one appears beside it.</p>' +
+        '<p>Select <strong>this bold phrase</strong> and change its case. Then show the invisible characters and watch the dots appear between every word.</p>',
+    }),
+  )
+}
+
+/** The CSS the demo extensions ask for, once per page. */
+function injectCSS(): void {
+  if (window.document.querySelector('style[data-ext-demo]')) return
+  const style = window.document.createElement('style')
+  style.setAttribute('data-ext-demo', '')
+  style.textContent = [lockedCSS, fieldsCSS, columnsCSS, invisibleCharactersCSS].join('\n')
+  window.document.head.appendChild(style)
 }
 
 // --- toolbars ---------------------------------------------------------------
@@ -209,7 +272,9 @@ function wireTools(): void {
         ? undefined
         : name === 'setTextAlign'
           ? TEXT_ALIGN[Number(raw)]
-          : Number(raw)
+          : /^-?\d+(\.\d+)?$/.test(raw)
+            ? Number(raw)
+            : JSON.parse(raw)
 
     button.addEventListener('mousedown', (event) => {
       event.preventDefault()
@@ -265,6 +330,7 @@ function setup(): void {
   editors.clear()
   hosts = []
 
+  injectCSS()
   mountAll()
   wireTools()
   wireCopies()

@@ -1,0 +1,89 @@
+---
+import Docs from '../../layouts/Docs.astro'
+---
+
+<Docs
+  title="Docs for AI tools · Matra docs"
+  description="An MCP server that serves this documentation to Claude, Cursor, Codex and anything else that speaks the protocol. Zero dependencies, one command."
+  section="Reference"
+  heading="Docs for AI tools (MCP)"
+>
+  <p>
+    <code>@matrajs/mcp</code> is this documentation as a
+    <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server. Connect it and an
+    AI assistant answers questions about Matra from these pages rather than from memory — which matters
+    for a framework whose API is inferred from an array and has no ProseMirror underneath, because
+    memory will confidently describe something else.
+  </p>
+  <pre><code>npx -y @matrajs/mcp            # stdio · what a desktop client spawns
+npx -y @matrajs/mcp --http     # http://localhost:3333/mcp</code></pre>
+
+  <h2>Step 1 · Connect it</h2>
+  <p><strong>Claude Code</strong></p>
+  <pre><code>claude mcp add matra -- npx -y @matrajs/mcp</code></pre>
+  <p><strong>Claude Desktop</strong> · in <code>claude_desktop_config.json</code></p>
+  <pre><code>&#123;
+  "mcpServers": &#123;
+    "matra": &#123; "command": "npx", "args": ["-y", "@matrajs/mcp"] &#125;
+  &#125;
+&#125;</code></pre>
+  <p>
+    <strong>Cursor</strong> · the same object under <code>"mcpServers"</code> in <code
+      >.cursor/mcp.json</code
+    >.
+  </p>
+  <p><strong>Codex</strong> · in <code>~/.codex/config.toml</code></p>
+  <pre><code>[mcp_servers.matra]
+command = "npx"
+args = ["-y", "@matrajs/mcp"]</code></pre>
+  <p>
+    <strong>Anything that speaks HTTP</strong> · run <code>npx -y @matrajs/mcp --http 3333</code
+    > and point the client at <code>http://localhost:3333/mcp</code>.
+  </p>
+
+  <h2>Step 2 · Ask</h2>
+  <p>
+    Ask the assistant how to add search and replace, or what <code>ctx.mark()</code> is for. It calls
+    <code>search_docs</code>, reads the page it needs with <code>read_doc</code>, and quotes it.
+    Nothing is fetched at runtime · every page ships inside the package.
+  </p>
+
+  <h2>What it serves</h2>
+  <table>
+    <thead><tr><th>Tool</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr
+        ><td><code>list_docs</code></td><td
+          >Every page, with its slug and a one-line description.</td
+        ></tr
+      >
+      <tr><td><code>read_doc &#123; slug &#125;</code></td><td>One page, as Markdown.</td></tr>
+      <tr
+        ><td><code>search_docs &#123; query, limit? &#125;</code></td><td
+          >Ranked pages with a snippet each.</td
+        ></tr
+      >
+    </tbody>
+  </table>
+  <p>
+    Every page is also a resource at <code>matra://docs/&lt;slug&gt;</code>. The pages are the
+    repository's Markdown — the README, the engine notes, benchmarks, security, the changelog —
+    and every page of this site, converted to Markdown when the package is built.
+  </p>
+
+  <h2>From code</h2>
+  <pre><code>import &#123; createServer &#125; from '@matrajs/mcp'
+
+const server = createServer(docs)
+server.handle(&#123; jsonrpc: '2.0', id: 1, method: 'tools/list' &#125;)</code></pre>
+  <p>
+    <code>createServer</code> is the protocol without a transport: one message in, one reply out.
+    Put it behind whatever transport you already run.
+  </p>
+
+  <div class="note">
+    The server is read-only and speaks only about Matra. It declares three tools, all marked
+    read-only and idempotent, and no prompts. It never sends a message the client did not ask
+    for, which is why the HTTP mode needs no event stream.
+  </div>
+</Docs>

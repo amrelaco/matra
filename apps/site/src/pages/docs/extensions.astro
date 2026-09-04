@@ -91,6 +91,101 @@ editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
   attrs: &#123; class: 'search-hit' &#125;,
 &#125;))</code></pre>
 
+  <h2>Attributes on somebody else's node</h2>
+  <p>
+    Alignment belongs on a paragraph, but the paragraph should not have to know about alignment.
+    An extension may declare an attribute for nodes and marks defined elsewhere: it lands in the
+    schema of every type named, is rendered onto the element, and is read back on parse. This is
+    how <code>textAlign</code>, <code>indent</code> and <code>uniqueId</code> work.
+  </p>
+  <pre><code>export const tone: ExtensionDef = &#123;
+  kind: 'extension',
+  name: 'tone',
+  attributes: [&#123;
+    types: ['paragraph', 'heading'],
+    attrs: &#123;
+      tone: &#123;
+        default: null,
+        render: (value) =&gt; (&#123; 'data-tone': String(value) &#125;),   // onto the element
+        parse: (dom) =&gt; dom.getAttribute('data-tone'),          // and back off it
+      &#125;,
+    &#125;,
+  &#125;],
+  commands: &#123;
+    setTone: (ctx, tone) =&gt; ctx.setBlockType('paragraph', &#123; tone &#125;),
+  &#125;,
+&#125;</code></pre>
+  <p>
+    Leave <code>render</code> and <code>parse</code> off and the value goes to
+    <code>data-&lt;name&gt;</code>. A <code>style</code> or <code>class</code> the render returns
+    is composed with the node's own rather than replacing it. A node that declares the attribute itself
+    keeps its own rendering, and the global is not applied twice.
+  </p>
+
+  <h2>Paste and drop</h2>
+  <p>
+    An extension can claim what arrives from the clipboard or by drag before the editor parses
+    it. Return <code>true</code> and the editor leaves it alone; anything else and the next handler,
+    then the editor, gets its turn. Files come through the same way — a screenshot pasted from the
+    clipboard is a file — and a drop carries the position it landed on.
+  </p>
+  <pre><code>handlePaste: (ctx, &#123; html, text, files &#125;) =&gt; &#123;
+  if (text !== 'magic') return false
+  return ctx.insert('✨')
+&#125;,
+handleDrop: (ctx, &#123; files, pos &#125;) =&gt; &#123;
+  const marker = ctx.mark()          // survives the upload
+  upload(files[0]).then((src) =&gt;
+    editor.commands.insert(&#123; type: 'image', attrs: &#123; src &#125; &#125;, pos &amp;&amp; marker.map(pos)))
+  return true
+&#125;</code></pre>
+  <p>
+    <code>fileHandler()</code> is this, packaged: an <code>accept</code> list and a callback with
+    the editor, the files, the position and the marker already in it.
+  </p>
+
+  <h2>Whitespace in code</h2>
+  <p>
+    HTML collapses runs of whitespace and so does the parser — except inside a node that says
+    <code>code: true</code>, and inside any <code>&lt;pre&gt;</code>, where every space and line
+    break is content. The stock code block says it; a node of your own that holds code should
+    too.
+  </p>
+
+  <h2>Refusing a change</h2>
+  <p>
+    An extension can veto a change before it lands. The context it gets is built on the document
+    as it is, holding the change as it would be, so it can compare the two; return
+    <code>false</code> and the document, the selection and the undo history stay exactly as they were.
+    A keystroke, a paste, a drop, a drag and a command are all changes, so one filter covers them
+    all — which is how <code>locked()</code> works — and <code>editor.can</code> asks the same question,
+    so a button greys out rather than doing nothing.
+  </p>
+  <pre><code>filterChange: (ctx) =&gt; &#123;
+  const &#123; state, tr &#125; = engine(ctx)   // the state before, the transaction as built
+  return !tr.docChanged || tr.doc.textContent.length &lt;= 280
+&#125;</code></pre>
+  <p>
+    Undo and redo, and <code>setContent</code>, carry a meta the filter can look for, so a
+    change that was allowed in can always be allowed back out.
+  </p>
+
+  <h2>Rendering somebody else's node</h2>
+  <p>
+    A node view belongs to the node that needs one — except when the need belongs to another
+    extension. Resize handles belong on an image, and the image should not have to know about
+    them. An extension may render nodes defined elsewhere, keyed by name; its view wins over the
+    node's own. This is how <code>imageResize()</code> works, alongside a <code>width</code> it adds
+    with <code>attributes</code>.
+  </p>
+  <pre><code>nodeViews: &#123;
+  image: (&#123; node, getPos, editor &#125;) =&gt; &#123;
+    const dom = document.createElement('span')
+    // … an &lt;img&gt; and a handle
+    return &#123; dom, update: (next) =&gt; next.type === 'image', stopEvent: (event) =&gt; event.target === handle &#125;
+  &#125;,
+&#125;</code></pre>
+
   <h2>Ordering</h2>
   <p>
     Extensions load in array order, adjustable with <code>priority</code>. Later ones win a key

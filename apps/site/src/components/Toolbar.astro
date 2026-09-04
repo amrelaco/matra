@@ -21,8 +21,8 @@ export type IconData = [string, Record<string, string>][]
 
 export interface Tool {
   cmd: string
-  /** Passed to the command · a heading level, a table size. */
-  arg?: number
+  /** Passed to the command · a heading level, a table size, or JSON for anything else. */
+  arg?: number | string
   icon: IconData
   /** What it is, for the tooltip and for screen readers. */
   title: string

@@ -11,12 +11,21 @@ import Docs from '../../layouts/Docs.astro'
   <p>The things people need on the first day, in the fewest lines that actually work.</p>
 
   <h2>Autosave, without saving on every keystroke</h2>
-  <pre><code>let timer
-editor.on('change', () =&gt; &#123;
-  clearTimeout(timer)
-  timer = setTimeout(() =&gt; save(editor.getJSON()), 800)
-&#125;)</code></pre>
-  <p>Store the JSON, not the HTML. It survives schema changes better and diffs cleanly.</p>
+  <pre><code>import &#123; autosave &#125; from '@matrajs/core'
+
+autosave(&#123;
+  delay: 800,                                          // after the last keystroke
+  save: (doc) =&gt; localStorage.setItem('draft', JSON.stringify(doc)),
+  restore: () =&gt; JSON.parse(localStorage.getItem('draft') ?? 'null'),
+&#125;)
+
+editor.extensionState('autosave')   // &#123; dirty, saving, savedAt, error &#125; for a status line
+editor.commands.save()              // now, from a button</code></pre>
+  <p>
+    Store the JSON, not the HTML. It survives schema changes better and diffs cleanly. A dirty
+    document is also saved when the tab is hidden and when the editor is destroyed, which is
+    where a timer-only autosave loses the last paragraph.
+  </p>
 
   <h2>Read-only</h2>
   <pre><code>editor.setEditable(false)</code></pre>
@@ -147,4 +156,360 @@ editor.setContent(doc)</code></pre>
     <code>getHTML()</code> output is safe to render in the editor. If you store it and serve it somewhere
     else, sanitise at that boundary too · defence in depth is the point.
   </div>
+  <h2>Find and replace, step by step</h2>
+  <pre><code>import &#123; createEditor, search, searchCSS, starterKit &#125; from '@matrajs/core'
+
+// 1. put it in the array
+const editor = createEditor(&#123; extensions: [...starterKit, search()] as const &#125;)
+
+// 2. paste its CSS once · the editor ships no appearance
+document.head.appendChild(Object.assign(document.createElement('style'), &#123; textContent: searchCSS &#125;))
+
+// 3. wire a panel
+input.oninput = () =&gt; editor.commands.setSearch(&#123; query: input.value, wholeWord: false &#125;)
+next.onclick = () =&gt; editor.commands.nextMatch()          // selects it, so the view scrolls
+replaceOne.onclick = () =&gt; editor.commands.replaceMatch(replacement.value)
+replaceAll.onclick = () =&gt; editor.commands.replaceAllMatches(replacement.value)  // one undo step
+
+// 4. show the count
+editor.on('change', () =&gt; &#123;
+  const &#123; matches, current &#125; = editor.extensionState('search')
+  counter.textContent = matches.length ? `$&#123;current + 1&#125; of $&#123;matches.length&#125;` : 'no matches'
+&#125;)</code></pre>
+  <p>
+    Typing while the search is open rescans the paragraph being typed in and nothing else · the
+    other paragraphs' matches are read back from a cache keyed on the block, and the renderer
+    leaves their elements alone.
+  </p>
+
+  <h2>Text colour, font and size</h2>
+  <pre><code>import &#123; textStyle &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123; extensions: [...starterKit, textStyle] as const &#125;)
+
+editor.commands.setColor('#c00')          // keeps whatever font is already set
+editor.commands.setFontFamily('Georgia, serif')
+editor.commands.setFontSize('1.25em')
+editor.commands.unsetColor()               // the font stays
+editor.commands.unsetTextStyle()           // everything off</code></pre>
+  <p>
+    One mark with four attributes rather than four marks, so a coloured, resized word is one
+    <code>span</code>. Every value is checked against the shape of a colour, a font list or a
+    length before it reaches a <code>style</code> attribute · whatever route it arrived by.
+  </p>
+
+  <h2>Tables people can actually edit</h2>
+  <pre><code>import &#123; tableKit &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123; extensions: [...starterKit, ...tableKit] as const &#125;)
+
+editor.commands.insertTable(3, 3)   // a header row and two body rows, caret in the first cell
+// Tab moves to the next cell, Shift-Tab back, Tab in the last cell adds a row
+editor.commands.addRowAfter()
+editor.commands.addColumnBefore()
+editor.commands.deleteColumn()
+editor.commands.toggleHeaderRow()
+
+// a toolbar knows when to show table buttons
+const inTable = editor.isActive('table')</code></pre>
+  <p>
+    A cell that spans the boundary a new row or column crosses is widened rather than split, and
+    a cell that spans into a deleted row moves down one shorter · the way a spreadsheet does it.
+  </p>
+
+  <h2>Images dropped or pasted, uploaded, and put where they landed</h2>
+  <pre><code>import &#123; fileHandler, image &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    image,
+    fileHandler(&#123;
+      accept: ['image/'],
+      async onDrop(&#123; editor, files, pos, marker &#125;) &#123;
+        for (const file of files) &#123;
+          const src = await upload(file)                       // your endpoint
+          // the user kept typing while that ran · the marker says where "here" is now
+          editor.commands.insert(&#123; type: 'image', attrs: &#123; src &#125; &#125;, pos &amp;&amp; marker.map(pos))
+        &#125;
+      &#125;,
+      onPaste: (&#123; editor, files &#125;) =&gt; /* a screenshot from the clipboard arrives here */ void 0,
+    &#125;),
+  ] as const,
+&#125;)</code></pre>
+
+  <h2>A YouTube embed</h2>
+  <pre><code>import &#123; youtube, youtubeCSS &#125; from '@matrajs/core'
+
+editor.commands.insertYoutube(&#123; src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', start: 42 &#125;)</code></pre>
+  <p>
+    Only the id is stored. The frame's address is built from it, on the privacy domain, so a
+    document can never carry a frame pointing anywhere else.
+  </p>
+
+  <h2>Callouts and toggles</h2>
+  <pre><code>import &#123; callout, calloutCSS, detailsKit, detailsCSS &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123; extensions: [...starterKit, callout, ...detailsKit] as const &#125;)
+
+editor.commands.toggleCallout('warning')   // wraps the block · again to lift it back out
+editor.commands.setCalloutEmoji('⚠️')
+
+editor.commands.insertDetails()            // the block becomes a toggle with an empty summary
+// Enter in the summary moves into the content; the triangle writes `open` to the document
+editor.commands.toggleDetails()
+editor.commands.unsetDetails()</code></pre>
+
+  <h2>Code with colours</h2>
+  <pre><code>import &#123; codeHighlight, codeHighlightCSS &#125; from '@matrajs/core'
+
+// the built-in tokeniser: comments, strings, numbers, shared keywords
+createEditor(&#123; extensions: [...starterKit, codeHighlight()] as const &#125;)
+
+// or the real thing · Shiki, Prism, lowlight · as a function of the code and its language
+codeHighlight(&#123;
+  highlight: (code, language) =&gt;
+    tokenize(code, language).map((token) =&gt; (&#123; from: token.start, to: token.end, color: token.color &#125;)),
+&#125;)</code></pre>
+  <p>
+    The colours are decorations. The document keeps plain text, which is what copying the code
+    out and saving it both want, and a block is only re-tokenised when it changes.
+  </p>
+
+  <h2>Links as you type, emoji as you type, Tab to indent</h2>
+  <pre><code>import &#123; autolink, emoji, indent, clearFormatting, focus, trailingNode &#125; from '@matrajs/core'
+
+createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    autolink(),                         // https://… followed by a space becomes a link · pasted URLs too
+    emoji(&#123; emoticons: true &#125;),          // :tada: and :) as you type
+    indent(),                           // Tab and Shift-Tab on paragraphs and headings
+    clearFormatting,                    // Mod-\ · every mark off, back to a paragraph
+    focus(),                            // .has-focus on the block the caret is in
+    trailingNode(),                     // always a paragraph after a table or an image
+  ] as const,
+&#125;)</code></pre>
+  <p>
+    Each is one line in the array and nothing else to wire. The ones with input rules are one
+    undo step per replacement, so a wrong guess costs one Mod-Z.
+  </p>
+
+  <h2>A template: fixed clauses, blanks, and a mail merge with no editor</h2>
+  <pre><code>import &#123; createEditor, field, fieldsCSS, fillFieldsIn, locked, lockedCSS, starterKit &#125; from '@matrajs/core'
+
+// 1. put both in the array
+const editor = createEditor(&#123; extensions: [...starterKit, field, locked()] as const, content &#125;)
+
+// 2. lock the clauses nobody may edit · the caret in the block, then
+editor.commands.lock()            // toggleLock(), unlock() · one undo step each
+editor.can.insert('x')            // false inside a locked block, so a button greys out
+
+// 3. blanks: type &#123;&#123;name&#125;&#125;, or
+editor.commands.insertField('name', 'Full name')
+
+// 4. fill them, here or on a server
+editor.commands.fillFields(&#123; name: 'Ada Lovelace' &#125;)          // in the editor
+const letter = fillFieldsIn(template, &#123; name: 'Ada Lovelace' &#125;) // plain JSON, no DOM
+
+// 5. the CSS
+document.head.appendChild(Object.assign(document.createElement('style'), &#123; textContent: lockedCSS + fieldsCSS &#125;))</code></pre>
+  <p>
+    A locked block refuses a keystroke, a paste, a drop, a drag and a command alike, because all
+    of them are changes and the lock is a change filter. Typing beside it, and moving other
+    blocks past it, is fine. A field is an atom: it cannot be half-deleted into <code
+      >&#123;&#123;nam&#125;&#125;</code
+    >, and <code>fieldsIn(doc)</code> lists what a template still needs.
+  </p>
+
+  <h2>Inline completion from any source</h2>
+  <pre><code>import &#123; ghostText, ghostTextCSS &#125; from '@matrajs/core'
+
+ghostText(&#123;
+  delay: 300,                                  // the caret rests this long before asking
+  suggest: async (&#123; before, after &#125;) =&gt; &#123;
+    const reply = await fetch('/complete', &#123; method: 'POST', body: JSON.stringify(&#123; before, after &#125;) &#125;)
+    return (await reply.json()).text           // or null for nothing
+  &#125;,
+&#125;)
+
+// Tab takes it · Escape dismisses it · a word at a time if you like
+editor.commands.acceptGhostWord()</code></pre>
+  <p>
+    The suggestion is a decoration, never part of the document: not saved, not sent to
+    collaborators, not undone. Any keystroke or caret move dismisses it, and a reply that
+    arrives after the document moved on is dropped, so a slow model never writes into a sentence
+    that has changed underneath it.
+  </p>
+
+  <h2>Dictation</h2>
+  <pre><code>import &#123; dictation, dictationCSS, dictationSupported &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123; extensions: [...starterKit, dictation(&#123; lang: 'en-GB' &#125;)] as const &#125;)
+
+if (dictationSupported()) button.onclick = () =&gt; editor.commands.toggleDictation()
+editor.extensionState('dictation')   // &#123; listening, interim, error &#125;</code></pre>
+  <p>
+    The browser's own recogniser, so nothing is downloaded and nothing is sent anywhere the
+    browser does not already send it. Words the recogniser is still deciding on are drawn after
+    the caret and become text only once it settles; a space is put in front when the caret
+    follows a word. Chrome, Edge and Safari can listen; Firefox cannot yet, and every command
+    returns false there.
+  </p>
+
+  <h2>Paste what was meant</h2>
+  <pre><code>import &#123; smartPaste &#125; from '@matrajs/core'
+
+createEditor(&#123; extensions: [...starterKit, ...tableKit, smartPaste()] as const &#125;)
+
+// a spreadsheet copied as text      →  a table, first row as headers
+// a README copied from a terminal   →  headings, lists, code fences
+// **bold** in one line              →  bold, in the sentence the caret is in</code></pre>
+  <p>
+    Only plain text is looked at; anything with real HTML on the clipboard is left to the
+    parser, which already reads a table copied from a browser. A heading pasted into an editor
+    that has no heading extension stays text, because that editor cannot hold one.
+    Comma-separated text counts too, when every line has the same number of short cells; pass <code
+      >csv: false</code
+    > to turn that off.
+  </p>
+
+  <h2>A bubble menu and a floating menu</h2>
+  <pre><code>import &#123; bubbleMenu, floatingMenu &#125; from '@matrajs/core'
+
+const bubble = document.querySelector('#bubble')      // your element, your buttons, your CSS
+const plus = document.querySelector('#plus')
+
+createEditor(&#123;
+  extensions: [...starterKit, bubbleMenu(&#123; element: bubble &#125;), floatingMenu(&#123; element: plus &#125;)] as const,
+&#125;)
+
+// buttons keep the selection by cancelling mousedown
+bubble.querySelector('button').onmousedown = (event) =&gt; &#123; event.preventDefault(); editor.commands.toggleBold() &#125;</code></pre>
+  <p>
+    The bubble appears over a selection and hides when it collapses or focus leaves both the
+    editor and the menu; the floating one appears on an empty top-level line. Both position the
+    element absolutely against whatever it is positioned in, and both take a <code
+      >shouldShow(editor)</code
+    > when the default is not the rule you want.
+  </p>
+
+  <h2>Images that resize</h2>
+  <pre><code>import &#123; image, imageResize, imageResizeCSS &#125; from '@matrajs/core'
+
+createEditor(&#123; extensions: [...starterKit, image, imageResize(&#123; min: 48, max: 1200 &#125;)] as const &#125;)
+
+editor.commands.setImageWidth(320, pos)   // or drag the handle</code></pre>
+  <p>
+    The width is an attribute added to the stock image from outside, written to the <code
+      >width</code
+    > attribute so the HTML carries it and a browser honours it before any CSS loads. The handle is
+    a node view from outside too: an editor without the extension renders a plain <code
+      >&lt;img&gt;</code
+    >.
+  </p>
+
+  <h2>Columns and page breaks</h2>
+  <pre><code>import &#123; columnsKit, columnsCSS, pageBreak, pageBreakCSS &#125; from '@matrajs/core'
+
+createEditor(&#123; extensions: [...starterKit, ...columnsKit, pageBreak] as const &#125;)
+
+editor.commands.setColumns(3)     // the block at the caret becomes the first column
+editor.commands.addColumn()       // up to six
+editor.commands.unsetColumns()    // every column's blocks, in order, back as blocks
+editor.commands.insertPageBreak() // a labelled line here, a new page in print</code></pre>
+  <p>
+    The columns are a CSS grid on the list, so the document says how many there are and the page
+    decides how wide each one is. The page break's CSS includes the <code>@media print</code> rule,
+    so <code>window.print()</code> starts a new page at each one.
+  </p>
+
+  <h2>Footnotes and formulas</h2>
+  <pre><code>import &#123; footnotesKit, footnotesCSS, mathKit, mathCSS &#125; from '@matrajs/core'
+import katex from 'katex'
+
+createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    ...footnotesKit(),
+    ...mathKit(&#123; render: (latex, element, display) =&gt; katex.render(latex, element, &#123; displayMode: display &#125;) &#125;),
+  ] as const,
+&#125;)
+
+editor.commands.insertFootnote()          // a marker here, a note below, the caret in the note
+editor.commands.insertInlineMath('x^2')   // or type $x^2$ and a space · $$…$$ on a line for display</code></pre>
+  <p>
+    Footnote numbers are decorations computed from where the markers stand, so moving a
+    paragraph renumbers everything and the document never stores a number. A formula stores only
+    its source; the renderer is yours, and without one the source shows in a <code
+      >&lt;code&gt;</code
+    >. The exported HTML carries the source as text, so a page with no script still reads it.
+  </p>
+
+  <h2>Text case, invisible characters, the other occurrences</h2>
+  <pre><code>import &#123; invisibleCharacters, invisibleCharactersCSS, selectionHighlight, selectionHighlightCSS, textTransform &#125; from '@matrajs/core'
+
+createEditor(&#123;
+  extensions: [...starterKit, textTransform, invisibleCharacters(), selectionHighlight(&#123; wholeWord: true &#125;)] as const,
+&#125;)
+
+editor.commands.sentenceCase()               // or uppercase, lowercase, capitalize, toggleCase
+editor.commands.toggleInvisibleCharacters()  // a dot on every space, a pilcrow on every block</code></pre>
+  <p>
+    Case changes work on the selection, or on the word under the caret, and rewrite one text
+    node at a time so a bold word stays bold. Invisible characters and the highlight on other
+    occurrences of a selected word are decorations: never in the HTML, never in the JSON, and
+    cached per block so keeping them on while writing costs the paragraph being written.
+  </p>
+
+  <h2>Direction, line height, and a line that stays put</h2>
+  <pre><code>import &#123; lineHeight, textDirection, typewriter &#125; from '@matrajs/core'
+
+createEditor(&#123; extensions: [...starterKit, textDirection(), lineHeight(), typewriter(&#123; position: 0.4 &#125;)] as const &#125;)
+
+editor.commands.setTextDirection('rtl')   // stored · unset it and the text decides again
+editor.commands.setLineHeight(1.6)        // a checked style, round-tripped through HTML
+editor.commands.toggleTypewriter()</code></pre>
+  <p>
+    A block whose first strong character is Arabic, Hebrew, Syriac, Thaana or NKo is drawn right
+    to left with nothing stored, the way <code>dir="auto"</code> would. Typewriter scrolling keeps
+    the caret's line at a fixed height on screen while the editor has focus, measured in the next
+    animation frame rather than in the input path.
+  </p>
+
+  <h2>Snippets, hashtags, key names</h2>
+  <pre><code>import &#123; hashtag, hashtagsIn, kbd, snippets &#125; from '@matrajs/core'
+
+createEditor(&#123;
+  extensions: [
+    ...starterKit,
+    kbd,
+    hashtag(),
+    snippets([
+      &#123; trigger: 'sig', content: '— Nahim' &#125;,
+      &#123; trigger: 'tbl', content: &#123; type: 'table', content: [/* rows */] &#125; &#125;,
+    ], &#123; prefix: ';' &#125;),
+  ] as const,
+&#125;)
+
+hashtagsIn(editor.getJSON())     // ['matra', 'release'] · works on saved JSON too
+editor.commands.toggleKbd()      // Mod-Alt-K</code></pre>
+  <p>
+    A snippet fires on the trigger typed as a whole word and a space; text keeps the space, a
+    block stands on its own. A hashtag is a node, like a mention, so it cannot be half-deleted
+    into <code>#mat</code> and the document can be asked for its tags without anyone parsing prose.
+  </p>
+
+  <h2>Any embed, sandboxed</h2>
+  <pre><code>import &#123; embed, embedCSS &#125; from '@matrajs/core'
+
+createEditor(&#123; extensions: [...starterKit, embed(&#123; allow: ['player.vimeo.com', /^https:\/\/www\.figma\.com\//] &#125;)] as const &#125;)
+
+editor.commands.insertEmbed('https://player.vimeo.com/video/1', &#123; aspect: '4/3' &#125;)</code></pre>
+  <p>
+    The allowlist is checked when a command sets the address, when HTML is parsed, and again
+    when the node renders, because a document loaded from JSON skipped the first two. Every
+    frame is sandboxed and only <code>https:</code> passes. Left off, a short list of well-known players
+    and tools applies.
+  </p>
 </Docs>

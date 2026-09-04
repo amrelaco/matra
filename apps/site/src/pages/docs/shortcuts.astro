@@ -12,6 +12,8 @@ const groups = [
       ['Mod-E', 'Inline code'],
       ['Mod-Shift-X', 'Strikethrough'],
       ['Mod-Shift-H', 'Highlight'],
+      ['Mod-\\', 'Clear formatting · every mark off, back to a paragraph'],
+      ['Mod-Alt-K', 'A key name, as <kbd> · kbd extension'],
     ],
   ],
   [
@@ -30,6 +32,11 @@ const groups = [
       ['Mod-Shift-9', 'Ordered list'],
       ['Mod-Shift-7', 'Task list'],
       ['Mod-Enter', 'Tick or untick a task'],
+      [
+        'Tab · Shift-Tab',
+        'Nest and lift a list item · next and previous table cell · indent a paragraph',
+      ],
+      ['Enter', 'In a toggle’s summary, into its content'],
       ['Tab', 'Indent the list item'],
       ['Shift-Tab', 'Outdent it'],
       ['Enter', 'Split the item'],
@@ -43,6 +50,13 @@ const groups = [
       ['↑ ↓', 'Move through it'],
       ['Enter or Tab', 'Take the highlighted entry'],
       ['Escape', 'Close it and keep what was typed'],
+    ],
+  ],
+  [
+    'Completion',
+    [
+      ['Tab', 'Take the ghost text, when there is some · ghostText extension'],
+      ['Escape', 'Dismiss it'],
     ],
   ],
   [
@@ -66,6 +80,12 @@ const rules = [
   ['-- ', 'An em dash.'],
   ['... ', 'An ellipsis.'],
   ['-> ', 'An arrow. Also <-, (c), (tm), +/-.'],
+  ['{{name}}', 'A template field · field extension.'],
+  ['#word ', 'A hashtag node · hashtag extension.'],
+  ['$x^2$ ', 'An inline formula. $$…$$ on a line of its own for display · math extensions.'],
+  ['sig ', 'Whatever the application declared · snippets extension.'],
+  [':tada:', 'An emoji · emoji extension.'],
+  ['https://… ', 'A link · autolink extension.'],
 ]
 ---
 

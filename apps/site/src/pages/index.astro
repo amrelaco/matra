@@ -30,6 +30,7 @@ import Logo from '../components/Logo.astro'
 import Nav from '../components/Nav.astro'
 import Toolbar from '../components/Toolbar.astro'
 import Window from '../components/Window.astro'
+import facts from '../data/facts.json'
 import sizes from '../data/sizes.json'
 import Base from '../layouts/Base.astro'
 
@@ -328,10 +329,20 @@ const groups = [
   ],
   [
     'Writing',
-    ['placeholder', 'characterCount', 'textAlign', 'typography', 'markdown'],
+    [
+      'placeholder',
+      'characterCount',
+      'textAlign',
+      'typography',
+      'markdown',
+      'search',
+      'autosave',
+    ],
     '@matrajs/core',
   ],
-  ['Menus', ['suggestion', 'mention'], '@matrajs/core'],
+  ['Templates', ['locked', 'field', 'snippets'], '@matrajs/core'],
+  ['Layout', ['columns', 'pageBreak', 'embed', 'footnotes', 'math'], '@matrajs/core'],
+  ['Menus', ['suggestion', 'mention', 'bubbleMenu', 'ghostText', 'dictation'], '@matrajs/core'],
   ['AI', ['streaming edits', 'position markers'], '@matrajs/ai'],
   ['Collaborate', ['authority', 'rebasing', 'remote cursors'], '@matrajs/collab'],
   ['History', ['snapshots', 'block diff', 'word diff', 'restore'], '@matrajs/versions'],
@@ -343,7 +354,7 @@ const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
 
 <Base
   title="Matra · the editor you are already using"
-  description="A headless rich text editor framework. 24 kB gzipped, zero dependencies, measured against Tiptap, Lexical and Slate in one browser. Every word on this page is running it."
+  description={`A headless rich text editor framework. ${ourSize} kB gzipped, zero dependencies, measured against Tiptap, Lexical and Slate in one browser. Every word on this page is running it.`}
 >
   <Nav />
 
@@ -376,7 +387,7 @@ const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
       <ul class="proof boxed-top bleed">
         <li><b>{ourSize} kB</b><span>gzipped, with the starter kit</span></li>
         <li><b>0</b><span>runtime dependencies</span></li>
-        <li><b>439</b><span>tests, 68 adversarial</span></li>
+        <li><b>{facts.tests}</b><span>tests, {facts.adversarial} adversarial</span></li>
         <li><b>MIT</b><span>core, permanently</span></li>
       </ul>
     </div>
@@ -420,7 +431,7 @@ const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
       <p class="lede">
         None of these is a theme or a preset. Each is <span class="mono">createEditor</span> with
         a different array of extensions and different CSS around it. All five are live, and all five
-        share one 24 kB download.
+        share one {ourSize} kB download.
       </p>
     </div>
   </section>
