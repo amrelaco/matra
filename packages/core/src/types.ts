@@ -177,6 +177,14 @@ export interface NodeDef<C extends CommandMap = CommandMap> {
    * it is a document that renders as something nobody typed.
    */
   marks?: string
+  /**
+   * The text inside is code: every space and line break is meaningful.
+   *
+   * HTML collapses runs of whitespace, and so does the parser — except inside
+   * a node that says this, where a pasted function keeps its indentation and
+   * its line breaks. `<pre>` is treated the same way whatever node it becomes.
+   */
+  code?: boolean
   parseDOM?: ParseRule[]
   toDOM?: (node: DocNode) => DomOutput
   /**
@@ -207,12 +215,80 @@ export interface MarkDef<C extends CommandMap = CommandMap> {
   priority?: number
 }
 
+/**
+ * An attribute one extension adds to nodes another extension defined.
+ *
+ * Alignment belongs on a paragraph and a heading, but the paragraph does not
+ * know about alignment and should not have to. Declaring the attribute here
+ * puts it in the schema of every type named, renders it onto the element, and
+ * reads it back on parse — without the paragraph changing.
+ */
+export interface GlobalAttrSpec {
+  default?: unknown
+  /**
+   * What to put on the element for a value. Returning null renders nothing.
+   * Left off, the value is written to `data-<attribute-name>`.
+   */
+  render?: (value: unknown) => Record<string, string | number | null | undefined> | null
+  /** Read the value back off a parsed element. Left off, `data-<name>` is read. */
+  parse?: (dom: Element) => unknown
+}
+
+export interface AttributesSpec {
+  /** Node or mark names the attribute is added to. */
+  types: readonly string[]
+  attrs: Record<string, GlobalAttrSpec>
+}
+
+/** What an extension may be handed from the clipboard or a drop. */
+export interface PasteData {
+  html: string | null
+  text: string | null
+  files: readonly File[]
+}
+
+export interface DropData extends PasteData {
+  /** Where the drop landed, or null when the point was outside the text. */
+  pos: Pos | null
+}
+
 export interface ExtensionDef<C extends CommandMap = CommandMap, S = unknown> {
   kind: 'extension'
   name: string
   commands?: C
   keys?: Record<string, keyof C | Command<never[]>>
   inputRules?: InputRule[]
+  /** Attributes to add to nodes and marks defined elsewhere. */
+  attributes?: readonly AttributesSpec[]
+  /**
+   * Claim a paste before the editor parses it.
+   *
+   * Return true to say it was handled: the clipboard is then left alone.
+   * Handlers run in extension order, highest priority first.
+   */
+  handlePaste?(ctx: Ctx, data: PasteData): boolean
+  /** Claim a drop the same way. Block drags inside the editor never reach this. */
+  handleDrop?(ctx: Ctx, data: DropData): boolean
+  /**
+   * Veto a change before it lands.
+   *
+   * Called once the change is built and before anything sees it: `ctx.doc` is
+   * the document as it would be, and the engine still holds the one it is
+   * now. Return false and the document, the selection and the undo history
+   * stay exactly as they were — which is how a locked block refuses a
+   * keystroke, a paste and a drag alike, because all three are changes.
+   * `editor.can` asks the same question, so a button greys out rather than
+   * doing nothing.
+   */
+  filterChange?(ctx: Ctx): boolean
+  /**
+   * Render nodes defined elsewhere with your own DOM.
+   *
+   * Resize handles belong on an image, and the image should not have to know
+   * about them. Keyed by node name; an entry here wins over the node's own
+   * `nodeView`.
+   */
+  nodeViews?: Record<string, NodeViewFactory>
   /**
    * Decorations to draw over the document.
    *

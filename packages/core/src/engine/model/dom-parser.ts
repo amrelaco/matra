@@ -4,9 +4,64 @@ import type { Node } from './node'
 import { Schema } from './schema'
 import type { NodeType, ParseRule } from './schema'
 
+/**
+ * A rule's selector, read once.
+ *
+ * `p`, `h[1-6]`, `a[href]`, `ul[data-type="taskList"]`, `span.mention` — the
+ * small subset rules actually use. Attribute-value selectors matter more than
+ * they look: they are how one tag carries two node types — a
+ * `<ul data-type="taskList">` is a checklist and a bare `<ul>` is a bulleted
+ * one, and without the value the specific rule can never win.
+ *
+ * Matching used to run three regular expressions over the selector string for
+ * every element against every rule, which on a pasted page of two thousand
+ * paragraphs was several hundred thousand regex executions to say `p` is `p`.
+ */
+interface Selector {
+  /** Lower-case tag, or null for any tag. */
+  tag: string | null
+  attr?: string
+  value?: string
+  className?: string
+}
+
 interface CompiledRule extends ParseRule {
   owner: NodeType | MarkType
   kind: 'node' | 'mark'
+  selector: Selector
+  /** Position in priority order, so two lists can be merged in it. */
+  order: number
+}
+
+function compileSelector(selector: string): Selector {
+  if (selector === '*') return { tag: null }
+
+  const withValue = /^([\w-]+)?\[([\w-]+)\s*=\s*["']?([^\]"']*)["']?\]$/.exec(selector)
+  if (withValue) {
+    return {
+      tag: withValue[1] ?? null,
+      attr: withValue[2] as string,
+      value: withValue[3] ?? '',
+    }
+  }
+
+  const presence = /^([\w-]+)?\[([\w-]+)\]$/.exec(selector)
+  if (presence) return { tag: presence[1] ?? null, attr: presence[2] as string }
+
+  const withClass = /^([\w-]+)?\.([\w-]+)$/.exec(selector)
+  if (withClass) return { tag: withClass[1] ?? null, className: withClass[2] as string }
+
+  return { tag: selector }
+}
+
+function matches(element: Element, selector: Selector): boolean {
+  if (selector.className !== undefined) return element.classList.contains(selector.className)
+  if (selector.attr !== undefined) {
+    if (selector.value !== undefined)
+      return element.getAttribute(selector.attr) === selector.value
+    return element.hasAttribute(selector.attr)
+  }
+  return true
 }
 
 /**
@@ -17,24 +72,49 @@ interface CompiledRule extends ParseRule {
  * text inside, which is what makes pasting from a word processor survive.
  */
 export class DOMParser {
-  private readonly tagRules: CompiledRule[]
+  /** Tag rules by the tag they name, each list in priority order. */
+  private readonly byTag = new Map<string, CompiledRule[]>()
+  /** Tag rules that name no tag — `*`, `[data-x]` — checked for every element. */
+  private readonly anyTag: CompiledRule[] = []
   private readonly styleRules: CompiledRule[]
 
   constructor(readonly schema: Schema) {
-    const rules: CompiledRule[] = []
+    const rules: Array<Omit<CompiledRule, 'order'>> = []
     for (const type of Object.values(schema.nodes)) {
       for (const rule of type.spec.parseDOM ?? []) {
-        rules.push({ ...rule, owner: type, kind: 'node' })
+        rules.push({
+          ...rule,
+          owner: type,
+          kind: 'node',
+          selector: compileSelector(rule.tag ?? '*'),
+        })
       }
     }
     for (const type of Object.values(schema.marks)) {
       for (const rule of (type.spec.parseDOM ?? []) as ParseRule[]) {
-        rules.push({ ...rule, owner: type, kind: 'mark' })
+        rules.push({
+          ...rule,
+          owner: type,
+          kind: 'mark',
+          selector: compileSelector(rule.tag ?? '*'),
+        })
       }
     }
     rules.sort((a, b) => (b.priority ?? 50) - (a.priority ?? 50))
-    this.tagRules = rules.filter((rule) => rule.tag !== undefined)
-    this.styleRules = rules.filter((rule) => rule.style !== undefined)
+    const ordered = rules.map((rule, order): CompiledRule => ({ ...rule, order }))
+
+    for (const rule of ordered) {
+      if (rule.tag === undefined) continue
+      const tag = rule.selector.tag
+      if (tag === null) {
+        this.anyTag.push(rule)
+        continue
+      }
+      const list = this.byTag.get(tag) ?? []
+      list.push(rule)
+      this.byTag.set(tag, list)
+    }
+    this.styleRules = ordered.filter((rule) => rule.style !== undefined)
   }
 
   static fromSchema(schema: Schema): DOMParser {
@@ -98,26 +178,32 @@ export class DOMParser {
    * a stack frame. Past this depth the content is discarded rather than
    * followed — five thousand nested blockquotes are an attack, not a document.
    */
+  /**
+   * @param literal  whitespace is content: inside a `<pre>`, or a node that
+   *   says its text is code. Nothing is collapsed and nothing is trimmed.
+   */
   private parseChildren(
     dom: globalThis.Node,
     marks: readonly Mark[],
     depth = 0,
     parent: NodeType | null = null,
+    literal = false,
   ): Fragment {
     if (depth > Schema.MAX_DEPTH) return Fragment.empty
-    const children = Array.from(dom.childNodes)
     const out: Node[] = []
 
-    for (const child of children) {
+    for (let child = dom.firstChild; child; child = child.nextSibling) {
       // The newline and indentation between two block tags is how the source
       // was formatted, not something anybody typed. Left in, each run becomes
       // its own paragraph, and a document written across several lines gains a
       // blank paragraph between every pair of blocks.
-      if (child.nodeType === 3 && isBlank(child.nodeValue) && nextToBlock(child)) continue
-      out.push(...this.parseOne(child, marks, depth + 1, parent))
+      if (!literal && child.nodeType === 3 && isBlank(child.nodeValue) && nextToBlock(child))
+        continue
+      const nodes = this.parseOne(child, marks, depth + 1, parent, literal)
+      for (let i = 0; i < nodes.length; i++) out.push(nodes[i] as Node)
     }
 
-    return Fragment.from(trimEdges(out))
+    return Fragment.from(literal ? out : trimEdges(out))
   }
 
   private parseOne(
@@ -125,26 +211,28 @@ export class DOMParser {
     marks: readonly Mark[],
     depth = 0,
     parent: NodeType | null = null,
-  ): Node[] {
+    literal = false,
+  ): readonly Node[] {
     // Scaffolding the view puts in empty blocks so they have height. Reading it
     // back would turn every empty paragraph into one containing a hard break.
-    if (dom.nodeType === 1 && (dom as Element).hasAttribute('data-matra-filler')) return []
+    if (dom.nodeType === 1 && (dom as Element).hasAttribute('data-matra-filler')) return NONE
     if (dom.nodeType === 3) {
-      const text = normaliseWhitespace(dom.nodeValue ?? '')
-      return text ? [this.schema.text(text, marks)] : []
+      const raw = dom.nodeValue ?? ''
+      const text = literal ? raw : normaliseWhitespace(raw)
+      return text ? [this.schema.text(text, marks)] : NONE
     }
-    if (dom.nodeType !== 1) return []
+    if (dom.nodeType !== 1) return NONE
 
     const element = dom as Element
     const matched = this.matchElement(element)
 
-    if (matched?.ignore) return []
+    if (matched?.ignore) return NONE
 
     if (matched?.kind === 'mark') {
       const type = matched.owner as MarkType
       const attrs = this.attrsFor(matched, element)
       if (attrs === false) {
-        return this.parseChildren(element, marks, depth, parent).content.slice()
+        return this.parseChildren(element, marks, depth, parent, literal).content
       }
       // The node this text is landing in may not accept the mark. A code block
       // says it accepts none — so the `<code>` inside a `<pre>` is the fence's
@@ -152,44 +240,71 @@ export class DOMParser {
       // `<pre><code><code>` on the way back out.
       const carried =
         parent && !parent.allowsMarkType(type) ? marks : type.create(attrs).addToSet(marks)
-      return this.parseChildren(element, carried, depth, parent).content.slice()
+      return this.parseChildren(element, carried, depth, parent, literal).content
     }
 
     if (matched?.kind === 'node') {
       const type = matched.owner as NodeType
       const attrs = this.attrsFor(matched, element)
       if (attrs === false) {
-        return this.parseChildren(element, marks, depth, parent).content.slice()
+        return this.parseChildren(element, marks, depth, parent, literal).content
       }
       // Marks this node will not accept are dropped at its border rather than
       // carried in and rendered back out.
       const inherited = marks.filter((mark) => type.allowsMarkType(mark.type))
+      const inner = literal || type.spec.code === true || element.tagName === 'PRE'
       const content = type.isLeaf
         ? Fragment.empty
-        : this.fitContent(type, this.parseChildren(element, inherited, depth, type))
+        : this.fitContent(type, this.parseChildren(element, inherited, depth, type, inner))
       const node = type.createAndFill(attrs, content)
-      return node ? [node] : []
+      return node ? [node] : NONE
     }
 
     // Inline styles can carry marks even when the tag means nothing.
     const styleMarks = this.marksFromStyle(element, marks).filter(
       (mark) => !parent || parent.allowsMarkType(mark.type),
     )
-    return this.parseChildren(element, styleMarks, depth, parent).content.slice()
+    return this.parseChildren(
+      element,
+      styleMarks,
+      depth,
+      parent,
+      literal || element.tagName === 'PRE',
+    ).content
   }
 
+  /**
+   * The highest-priority rule this element matches.
+   *
+   * Two lists — the rules for this tag and the rules for any tag — each already
+   * in priority order, walked together so the first hit is the overall winner.
+   */
   private matchElement(element: Element): CompiledRule | null {
-    const tag = element.tagName.toLowerCase()
-    for (const rule of this.tagRules) {
-      if (!rule.tag) continue
-      if (matchesSelector(element, rule.tag, tag)) return rule
+    const forTag = this.byTag.get(element.tagName.toLowerCase())
+    const anyTag = this.anyTag
+    if (!forTag && !anyTag.length) return null
+    let i = 0
+    let j = 0
+    for (;;) {
+      const a = forTag ? forTag[i] : undefined
+      const b = anyTag[j]
+      if (!a && !b) return null
+      let next: CompiledRule
+      if (!b || (a && a.order < b.order)) {
+        next = a as CompiledRule
+        i++
+      } else {
+        next = b
+        j++
+      }
+      if (matches(element, next.selector)) return next
     }
-    return null
   }
 
   private marksFromStyle(element: Element, marks: readonly Mark[]): readonly Mark[] {
+    if (!this.styleRules.length || !element.hasAttribute('style')) return marks
     const style = (element as HTMLElement).style
-    if (!style || !this.styleRules.length) return marks
+    if (!style) return marks
     let out = marks
     for (const rule of this.styleRules) {
       if (!rule.style) continue
@@ -212,38 +327,7 @@ export class DOMParser {
   }
 }
 
-/** `p`, `h[1-6]`, `a[href]` — the small selector subset rules actually use. */
-/**
- * The selector subset parse rules actually use.
- *
- * `tag`, `*`, `tag[attr]`, `tag[attr="value"]` and `tag.class`. Attribute-value
- * selectors matter more than they look: they are how one tag carries two node
- * types — a `<ul data-type="taskList">` is a checklist and a bare `<ul>` is a
- * bulleted one, and without the value the specific rule can never win.
- */
-function matchesSelector(element: Element, selector: string, tag: string): boolean {
-  if (selector === '*') return true
-
-  const withValue = /^([\w-]+)?\[([\w-]+)\s*=\s*["']?([^\]"']*)["']?\]$/.exec(selector)
-  if (withValue) {
-    if (withValue[1] && tag !== withValue[1]) return false
-    return element.getAttribute(withValue[2] as string) === withValue[3]
-  }
-
-  const presence = /^([\w-]+)?\[([\w-]+)\]$/.exec(selector)
-  if (presence) {
-    if (presence[1] && tag !== presence[1]) return false
-    return element.hasAttribute(presence[2] as string)
-  }
-
-  const withClass = /^([\w-]+)?\.([\w-]+)$/.exec(selector)
-  if (withClass) {
-    if (withClass[1] && tag !== withClass[1]) return false
-    return element.classList.contains(withClass[2] as string)
-  }
-
-  return tag === selector
-}
+const NONE: readonly Node[] = []
 
 /** Collapse runs of whitespace the way HTML rendering does. */
 function normaliseWhitespace(text: string): string {
@@ -267,6 +351,7 @@ const BLOCK_TAGS = new Set([
   'ASIDE',
   'BLOCKQUOTE',
   'DD',
+  'DETAILS',
   'DIV',
   'DL',
   'DT',
@@ -290,6 +375,7 @@ const BLOCK_TAGS = new Set([
   'P',
   'PRE',
   'SECTION',
+  'SUMMARY',
   'TABLE',
   'TBODY',
   'TD',
@@ -313,7 +399,7 @@ function isBlockElement(node: globalThis.Node | null): boolean {
  */
 function trimEdges(nodes: Node[]): Node[] {
   if (nodes.length === 0) return nodes
-  const out = [...nodes]
+  const out = nodes
 
   const first = out[0] as Node
   if (first.isText) {

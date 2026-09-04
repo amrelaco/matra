@@ -1,6 +1,12 @@
 import type { Node } from '../model/node'
 import type { ResolvedPos } from '../model/resolved-pos'
-import type { Mapping } from '../transform/step-map'
+import type { MapResult } from '../transform/step-map'
+
+/** Anything a position can be moved through: one step's map, or a run of them. */
+export interface Mappable {
+  map(pos: number, assoc?: -1 | 1): number
+  mapResult(pos: number, assoc?: -1 | 1): MapResult
+}
 
 /**
  * Where the user is.
@@ -45,38 +51,55 @@ export abstract class Selection {
     return this.anchor <= this.head ? this.$head : this.$anchor
   }
 
-  abstract map(doc: Node, mapping: Mapping): Selection
+  abstract map(doc: Node, mapping: Mappable): Selection
   abstract eq(other: Selection): boolean
 
   /** The nearest valid text position at or after `pos`. */
   static nearestTextPos(doc: Node, pos: number, bias: -1 | 1 = 1): number {
-    const limit = doc.content.size
-    const clamped = Math.max(0, Math.min(limit, pos))
-    if (canHoldText(doc, clamped)) return clamped
-    for (let distance = 1; distance <= limit; distance++) {
-      const forward = clamped + distance * bias
-      if (forward >= 0 && forward <= limit && canHoldText(doc, forward)) return forward
-      const back = clamped - distance * bias
-      if (back >= 0 && back <= limit && canHoldText(doc, back)) return back
-    }
-    return 0
+    return nearestText(doc, pos, bias).pos
   }
 }
 
-function canHoldText(doc: Node, pos: number): boolean {
+/**
+ * The nearest position text can occupy, already resolved.
+ *
+ * Nearly every caret lands where it was asked to, and resolving is the whole
+ * cost of placing one — so the resolution made to check the position is the
+ * one handed back, rather than thrown away and made again.
+ */
+function nearestText(doc: Node, pos: number, bias: -1 | 1): ResolvedPos {
+  const limit = doc.content.size
+  const clamped = Math.max(0, Math.min(limit, pos))
+  const direct = textPos(doc, clamped)
+  if (direct) return direct
+  for (let distance = 1; distance <= limit; distance++) {
+    const forward = clamped + distance * bias
+    if (forward >= 0 && forward <= limit) {
+      const hit = textPos(doc, forward)
+      if (hit) return hit
+    }
+    const back = clamped - distance * bias
+    if (back >= 0 && back <= limit) {
+      const hit = textPos(doc, back)
+      if (hit) return hit
+    }
+  }
+  return doc.resolve(0)
+}
+
+function textPos(doc: Node, pos: number): ResolvedPos | null {
   try {
-    return doc.resolve(pos).parent.isTextblock
+    const $pos = doc.resolve(pos)
+    return $pos.parent.isTextblock ? $pos : null
   } catch {
-    return false
+    return null
   }
 }
 
 /** A range of text, which is what a caret or a highlight is. */
 export class TextSelection extends Selection {
-  map(doc: Node, mapping: Mapping): Selection {
-    const anchor = Selection.nearestTextPos(doc, mapping.map(this.anchor))
-    const head = Selection.nearestTextPos(doc, mapping.map(this.head))
-    return TextSelection.create(doc, anchor, head)
+  map(doc: Node, mapping: Mappable): Selection {
+    return TextSelection.create(doc, mapping.map(this.anchor), mapping.map(this.head))
   }
 
   eq(other: Selection): boolean {
@@ -86,8 +109,8 @@ export class TextSelection extends Selection {
   }
 
   static create(doc: Node, anchor: number, head: number = anchor): TextSelection {
-    const $anchor = doc.resolve(Selection.nearestTextPos(doc, anchor))
-    const $head = doc.resolve(Selection.nearestTextPos(doc, head))
+    const $anchor = nearestText(doc, anchor, 1)
+    const $head = head === anchor ? $anchor : nearestText(doc, head, 1)
     return new TextSelection($anchor, $head)
   }
 
@@ -110,7 +133,7 @@ export class NodeSelection extends Selection {
     this.node = node
   }
 
-  map(doc: Node, mapping: Mapping): Selection {
+  map(doc: Node, mapping: Mappable): Selection {
     const pos = mapping.mapResult(this.anchor, 1)
     // If the node went away, fall back to a caret rather than pointing at nothing.
     if (pos.deleted) return TextSelection.create(doc, Selection.nearestTextPos(doc, pos.pos))

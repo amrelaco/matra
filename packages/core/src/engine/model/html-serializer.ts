@@ -2,7 +2,8 @@ import type { Fragment } from './fragment'
 import type { Mark } from './mark'
 import type { Node } from './node'
 import { isSafeAttrName, isSafeAttrValue } from './safe-attrs'
-import type { DOMOutputSpec, Schema } from './schema'
+import type { DOMOutputSpec } from './schema'
+import type { Schema } from './schema'
 
 /**
  * Document → HTML, with no DOM.
@@ -36,24 +37,38 @@ const VOID = new Set([
   'wbr',
 ])
 
+const NEEDS_TEXT_ESCAPE = /[&<> ]/
+const TEXT_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  ' ': '&nbsp;',
+}
+const NEEDS_ATTR_ESCAPE = /[&" ]/
+const ATTR_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '"': '&quot;',
+  ' ': '&nbsp;',
+}
+
 /**
  * What a browser writes when it serializes a text node.
  *
  * Quotes are left alone — they are only special inside an attribute — and a
  * non-breaking space becomes an entity rather than a byte that looks exactly
- * like a normal space in every editor and diff.
+ * like a normal space in every editor and diff. Most text contains none of
+ * these, and a text that needs no escaping is returned as it came rather than
+ * being run through four replacements to prove it.
  */
 function escapeText(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/ /g, '&nbsp;')
+  if (!NEEDS_TEXT_ESCAPE.test(text)) return text
+  return text.replace(/[&<> ]/g, (char) => TEXT_ESCAPES[char] as string)
 }
 
 /** Inside an attribute the quote matters and the angle brackets do not. */
 function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/ /g, '&nbsp;')
+  if (!NEEDS_ATTR_ESCAPE.test(value)) return value
+  return value.replace(/[&" ]/g, (char) => ATTR_ESCAPES[char] as string)
 }
 
 /** Markup around a content hole: `open` + content + `close`. */
@@ -73,33 +88,39 @@ export class HTMLSerializer {
 
   serializeFragment(fragment: Fragment): string {
     let out = ''
+    const children = fragment.content
 
     // Adjacent text sharing a mark stays inside one element, exactly as the DOM
     // serializer does it — otherwise the same document renders as
     // <strong>a</strong><strong>b</strong> here and <strong>ab</strong> there.
-    let openMarks: Mark[] = []
+    const openMarks: Mark[] = []
     const closers: string[] = []
 
-    for (const child of fragment) {
-      let keep = 0
-      while (
-        keep < openMarks.length &&
-        keep < child.marks.length &&
-        (openMarks[keep] as Mark).eq(child.marks[keep] as Mark)
-      ) {
-        keep++
-      }
-      while (closers.length > keep) out += closers.pop() as string
-      openMarks = openMarks.slice(0, keep)
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index] as Node
+      const marks = child.marks
+      if (openMarks.length !== 0 || marks.length !== 0) {
+        let keep = 0
+        while (
+          keep < openMarks.length &&
+          keep < marks.length &&
+          (openMarks[keep] as Mark).eq(marks[keep] as Mark)
+        ) {
+          keep++
+        }
+        while (closers.length > keep) out += closers.pop() as string
+        openMarks.length = keep
 
-      for (const mark of child.marks.slice(keep)) {
-        const spec = this.schema.marks[mark.type.name]?.spec
-        const rendered = spec?.toDOM
-          ? this.render(spec.toDOM(mark) as DOMOutputSpec)
-          : { open: '<span>', close: '</span>', hole: false }
-        out += rendered.open
-        closers.push(rendered.close)
-        openMarks.push(mark)
+        for (let m = keep; m < marks.length; m++) {
+          const mark = marks[m] as Mark
+          const spec = mark.type.spec
+          const rendered = spec.toDOM
+            ? this.render(spec.toDOM(mark) as DOMOutputSpec)
+            : { open: '<span>', close: '</span>', hole: false }
+          out += rendered.open
+          closers.push(rendered.close)
+          openMarks.push(mark)
+        }
       }
 
       out += this.serializeNode(child)
@@ -116,7 +137,14 @@ export class HTMLSerializer {
     if (!spec.toDOM) {
       throw new Error(`Matra: node "${node.type.name}" has no toDOM, so it cannot be rendered`)
     }
-    const { open, close, hole } = this.render(spec.toDOM(node))
+    const out = spec.toDOM(node)
+    // `['p', 0]` is what most blocks render as, once per block on the page.
+    if (Array.isArray(out) && out.length === 2 && typeof out[0] === 'string' && out[1] === 0) {
+      const tag = out[0]
+      if (node.type.isLeaf) return `<${tag}>${closeTag(tag)}`
+      return `<${tag}>${this.serializeFragment(node.content)}${closeTag(tag)}`
+    }
+    const { open, close, hole } = this.render(out)
 
     // A node without a declared hole renders empty, which is what the DOM
     // serializer does: it only descends when `toDOM` said where to descend to.
@@ -128,25 +156,36 @@ export class HTMLSerializer {
     if (typeof spec === 'string')
       return { open: `<${spec}>`, close: closeTag(spec), hole: false }
 
-    const [tag, ...rest] = spec
+    // Indexed rather than destructured, for the same reason the renderer is:
+    // `[tag, ...rest]` and `rest.slice()` are two arrays per element, and
+    // there is one element per node in the document.
+    const tag = spec[0] as string
     let hole = false
-    let start = 0
+    let start = 1
     let open = ''
     // Children that come after the hole close around the content.
     let after = ''
 
-    const first = rest[0]
+    const first = spec[1]
     if (first && typeof first === 'object' && !Array.isArray(first)) {
       open = `<${tag}${attributes(tag, first as Record<string, unknown>)}>`
-      start = 1
+      start = 2
     } else {
       open = `<${tag}>`
     }
 
-    for (const child of rest.slice(start)) {
+    for (let i = start; i < spec.length; i++) {
+      const child = spec[i]
       if (child === 0) {
         if (hole) throw new Error(`Matra: "${tag}" declares two content holes`)
         hole = true
+        continue
+      }
+      if (typeof child === 'string') {
+        // Text among the children, the way a mention writes its label.
+        const text = escapeText(child)
+        if (hole) after += text
+        else open += text
         continue
       }
       const rendered = this.render(child as DOMOutputSpec)
@@ -193,7 +232,8 @@ function attributes(tag: string, attrs: Record<string, unknown>): string {
   const upper = tag.toUpperCase()
   const kept = new Map<string, string>()
 
-  for (const [name, value] of Object.entries(attrs)) {
+  for (const name in attrs) {
+    const value = attrs[name]
     if (value === null || value === undefined || value === false) continue
     if (!isSafeAttrName(name)) continue
     const text = String(value)

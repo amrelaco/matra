@@ -12,7 +12,7 @@ export interface TextContext {
 }
 
 /**
- * Input rule matching — ours, not ProseMirror's.
+ * Input rule matching — the Matra engine's own.
  *
  * A rule fires when its pattern matches the text immediately before the caret,
  * including the character just typed. The matched span is handed to the handler

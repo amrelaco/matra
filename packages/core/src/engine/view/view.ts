@@ -1,12 +1,14 @@
 import { DOMParser } from '../model/dom-parser'
+import { Fragment } from '../model/fragment'
 import type { Node } from '../model/node'
 import type { Schema } from '../model/schema'
 import type { Selection } from '../state/selection'
 import type { EditorState } from '../state/state'
 import type { Transaction } from '../state/transaction'
-import type { Mapping } from '../transform/step-map'
+import { insertPasted } from '../transform/insert'
+import { Mapping } from '../transform/step-map'
 import { DecorationSet } from './decoration'
-import { DropCursor, blockDropTarget } from './drag'
+import { DropCursor, blockDropTarget, blockIndexAt } from './drag'
 import { type InputHandlers, type InputIntent, applyIntent } from './input'
 import type { NodeViewFactory } from './node-view'
 import { Renderer } from './render'
@@ -70,7 +72,7 @@ export class EditorView {
     this.dom.setAttribute('role', 'textbox')
     this.dom.setAttribute('aria-multiline', 'true')
 
-    this.render()
+    this.render(this.collectDecorations())
     this.listen()
   }
 
@@ -85,27 +87,52 @@ export class EditorView {
     // being rebuilt from the document on every keystroke.
     if (mapping && docChanged) {
       this.renderer.map.shift(mapping)
-      this.dirty = touchedSpan(mapping)
+      this.absorb(mapping)
     }
     this.stateValue = state
     if (this.destroyed) return
     // Never redraw mid-composition: it would tear the candidate window down.
     if (this.composing) return
+    // Asked once per update. Every extension that decorates is consulted, and
+    // this used to ask them twice per keystroke — once to decide whether to
+    // redraw and once more to redraw.
+    const decorations = this.collectDecorations()
     // Decorations can change without the document changing — a selection-driven
     // highlight, or a remote cursor moving.
-    if (docChanged || this.decorationsChanged()) this.render()
+    if (docChanged || !this.lastDecorations.eq(decorations)) this.render(decorations)
+    this.lastDecorations = decorations
     this.syncSelection()
   }
 
   private lastDecorations = DecorationSet.empty
-  /** The document span this update touched, in new coordinates. */
+  /** The document span the pending updates touched, in new coordinates. */
   private dirty: { from: number; to: number } | null = null
+  /**
+   * Every change since the last render, as one mapping.
+   *
+   * Usually one transaction. During a composition renders are held back, and a
+   * remote step or a streamed chunk arriving then must not be forgotten when
+   * the next render narrows to the span of the last change alone.
+   */
+  private pending: Mapping | null = null
 
-  private decorationsChanged(): boolean {
-    const next = this.options.decorations?.() ?? DecorationSet.empty
-    if (this.lastDecorations.eq(next)) return false
-    this.lastDecorations = next
-    return true
+  private absorb(mapping: Mapping): void {
+    const span = touchedSpan(mapping)
+    if (span) {
+      this.dirty = this.dirty
+        ? { from: Math.min(this.dirty.from, span.from), to: Math.max(this.dirty.to, span.to) }
+        : span
+    }
+    if (!this.pending) this.pending = mapping
+    else {
+      const combined = new Mapping([...this.pending.maps])
+      combined.appendMapping(mapping)
+      this.pending = combined
+    }
+  }
+
+  private collectDecorations(): DecorationSet {
+    return this.options.decorations?.() ?? DecorationSet.empty
   }
 
   focus(): void {
@@ -140,9 +167,13 @@ export class EditorView {
   }
 
   private onDragOver(event: DragEvent): void {
-    if (!this.dragged) return
-    // Preventing the default is what makes an element a drop target at all.
+    // Preventing the default is what makes an element a drop target at all —
+    // for a block being moved, and for a file or text arriving from outside.
     event.preventDefault()
+    if (!this.dragged) {
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+      return
+    }
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
     const target = blockDropTarget(this.dom, this.stateValue.doc, event.clientY)
     if (target) this.dropCursor?.show(target.rect)
@@ -150,7 +181,10 @@ export class EditorView {
 
   private onDrop(event: DragEvent): void {
     const dragged = this.dragged
-    if (!dragged) return
+    if (!dragged) {
+      this.onExternalDrop(event)
+      return
+    }
     event.preventDefault()
     const target = blockDropTarget(this.dom, this.stateValue.doc, event.clientY)
     this.endDrag()
@@ -160,6 +194,28 @@ export class EditorView {
     this.options.moveBlock?.(dragged.from, target.pos)
   }
 
+  /**
+   * Something from outside landed on the editor: a file, text, a piece of a
+   * web page. Left to the browser it would be written into the DOM behind the
+   * document's back and lost on the next redraw, so it is taken like a paste,
+   * at the point it was dropped.
+   */
+  private onExternalDrop(event: DragEvent): void {
+    const transfer = event.dataTransfer
+    if (!transfer) return
+    const files = Array.from(transfer.files ?? [])
+    const html = transfer.getData('text/html') || null
+    const text = transfer.getData('text/plain') || null
+    if (!files.length && !html && !text) return
+    event.preventDefault()
+
+    const pos = this.posAtPoint(event.clientX, event.clientY)
+    if (this.options.handlers?.onDrop?.({ html, text, files, pos })) return
+    if (!html && !text) return
+    const at = pos ?? this.stateValue.selection.from
+    this.insertContent(html, text, at, at)
+  }
+
   private endDrag(): void {
     this.dragged = null
     this.dropCursor?.hide()
@@ -167,16 +223,39 @@ export class EditorView {
 
   /** The top-level block whose box contains this y, as a document range. */
   private blockAt(y: number): { from: number; to: number } | null {
-    const children = Array.from(this.dom.children) as HTMLElement[]
-    let found: { from: number; to: number } | null = null
-    this.stateValue.doc.content.forEach((child, offset, index) => {
-      if (found) return
-      const dom = children[index]
-      if (!dom) return
-      const box = dom.getBoundingClientRect()
-      if (y >= box.top && y <= box.bottom) found = { from: offset, to: offset + child.nodeSize }
-    })
-    return found
+    const index = blockIndexAt(this.dom.children, y)
+    const content = this.stateValue.doc.content
+    if (index < 0 || index >= content.childCount) return null
+    const from = content.offsetAt(index)
+    return { from, to: from + content.child(index).nodeSize }
+  }
+
+  /** The document position under a point on screen, if it is inside the text. */
+  private posAtPoint(x: number, y: number): number | null {
+    const doc = this.dom.ownerDocument as Document & {
+      caretPositionFromPoint?: (
+        x: number,
+        y: number,
+      ) => { offsetNode: globalThis.Node; offset: number } | null
+      caretRangeFromPoint?: (x: number, y: number) => Range | null
+    }
+    let node: globalThis.Node | null = null
+    let offset = 0
+    if (typeof doc.caretPositionFromPoint === 'function') {
+      const caret = doc.caretPositionFromPoint(x, y)
+      if (caret) {
+        node = caret.offsetNode
+        offset = caret.offset
+      }
+    } else if (typeof doc.caretRangeFromPoint === 'function') {
+      const range = doc.caretRangeFromPoint(x, y)
+      if (range) {
+        node = range.startContainer
+        offset = range.startOffset
+      }
+    }
+    if (!node || !this.dom.contains(node)) return null
+    return this.renderer.map.posFromDOM(this.dom, node, offset)
   }
 
   destroy(): void {
@@ -189,14 +268,28 @@ export class EditorView {
     this.dom.removeAttribute('contenteditable')
   }
 
-  private render(): void {
-    this.renderer.render(
-      this.stateValue.doc,
-      this.dom,
-      this.options.decorations?.() ?? DecorationSet.empty,
-      this.dirty,
-    )
+  private render(decorations: DecorationSet): void {
+    this.renderer.render(this.stateValue.doc, this.dom, decorations, this.dirty, this.pending)
     this.dirty = null
+    this.pending = null
+  }
+
+  /**
+   * Put the DOM back to what the document says, whatever the browser did.
+   *
+   * A change read back from the DOM — an IME's composed text, mostly — can
+   * be refused by a filter, and then the screen shows text the document does
+   * not hold. Redrawing the whole document is the honest fix: what is on
+   * screen is what would be saved.
+   */
+  restore(): void {
+    if (this.destroyed || this.composing) return
+    this.dirty = null
+    this.pending = null
+    const decorations = this.collectDecorations()
+    this.render(decorations)
+    this.lastDecorations = decorations
+    this.syncSelection()
   }
 
   private syncSelection(): void {
@@ -289,33 +382,74 @@ export class EditorView {
   }
 
   private onPaste(event: ClipboardEvent): void {
-    const html = event.clipboardData?.getData('text/html') ?? null
-    const text = event.clipboardData?.getData('text/plain') ?? null
-    if (this.options.handlers?.onPaste?.(html, text)) {
+    const clipboard = event.clipboardData
+    const html = clipboard?.getData('text/html') || null
+    const text = clipboard?.getData('text/plain') || null
+    const files = Array.from(clipboard?.files ?? [])
+    if (this.options.handlers?.onPaste?.({ html, text, files })) {
       event.preventDefault()
       return
     }
-    if (!html && !text) return
+    if (!html && !text) {
+      // Files nobody claimed. The browser has nothing sensible to do with them
+      // in an editable element either, so the paste is cancelled rather than
+      // left to become whatever the platform decides an image pastes as.
+      if (files.length) event.preventDefault()
+      return
+    }
 
     event.preventDefault()
     const range = this.currentRange()
     if (!range) return
+    this.insertContent(html, text, range.from, range.to)
+  }
 
-    const container = this.dom.ownerDocument.createElement('div')
-    if (html) container.innerHTML = html
-    else container.textContent = text
-
-    const fragment = this.parser.parseFragment(container)
+  /** Parse pasted or dropped content and put it in the document. */
+  private insertContent(
+    html: string | null,
+    text: string | null,
+    from: number,
+    to: number,
+  ): void {
     const tr = this.stateValue.tr
-    tr.replaceWith(range.from, range.to, fragment)
-    tr.selectAt(range.from + fragment.size)
+    let landing: number | null = null
+    if (html) {
+      const container = this.dom.ownerDocument.createElement('div')
+      container.innerHTML = html
+      landing = insertPasted(tr, from, to, this.parser.parseFragment(container))
+    }
+    if (landing === null && text) {
+      landing = insertPasted(tr, from, to, this.textFragment(from, text))
+    }
+    if (landing === null) return
+    tr.selectAt(landing)
     this.options.dispatchTransaction(tr)
   }
 
   /**
-   * After an IME finishes, the DOM holds text the model has not seen. Read the
-   * affected block back rather than trying to reconstruct the keystrokes.
+   * Plain text as the editor would hold it.
+   *
+   * Lines become blocks like the one the caret is in, so three lines pasted
+   * from a text file are three paragraphs and not one with the breaks
+   * collapsed into spaces. Inside a block that holds code the line breaks are
+   * content, and the text goes in as it is.
    */
+  private textFragment(at: number, text: string): Fragment {
+    const doc = this.stateValue.doc
+    const normalised = text.replace(/\r\n?/g, '\n')
+    const parent = doc.resolve(at).parent
+    if (!normalised.includes('\n') || (parent.isTextblock && parent.type.spec.code)) {
+      return Fragment.from(this.schema.text(normalised))
+    }
+    const type = parent.isTextblock ? parent.type : this.schema.nodes.paragraph
+    if (!type) return Fragment.from(this.schema.text(normalised.replace(/\n/g, ' ')))
+    return Fragment.from(
+      normalised
+        .split('\n')
+        .map((line) => type.create(null, line ? this.schema.text(line) : null)),
+    )
+  }
+
   /** The top-level block the selection sits in, and where it starts. */
   private blockUnderSelection(): { dom: HTMLElement; index: number } | null {
     const selection = this.dom.ownerDocument.getSelection()
@@ -389,8 +523,7 @@ export class EditorView {
     // means the IME did something structural, and that needs the full path.
     if (replacement.type !== existing.type) return false
 
-    let from = 0
-    for (let i = 0; i < local.index; i++) from += doc.content.child(i).nodeSize
+    const from = doc.content.offsetAt(local.index)
 
     const tr = this.stateValue.tr
     tr.replaceWith(from, from + existing.nodeSize, replacement)

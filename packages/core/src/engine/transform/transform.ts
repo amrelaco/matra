@@ -4,7 +4,7 @@ import type { Node } from '../model/node'
 import type { NodeRange } from '../model/resolved-pos'
 import type { NodeType } from '../model/schema'
 import { Slice } from './slice'
-import { AddMarkStep, RemoveMarkStep, ReplaceStep, type Step } from './step'
+import { AddMarkStep, AttrStep, RemoveMarkStep, ReplaceStep, type Step } from './step'
 import { Mapping } from './step-map'
 import { type Wrapper, canSplit } from './structure'
 
@@ -112,8 +112,7 @@ export class Transform {
     attrs?: Record<string, unknown> | null,
   ): this {
     const targets: Array<{ pos: number; node: Node }> = []
-    this.doc.descendants((node, pos) => {
-      if (pos + node.nodeSize <= from || pos >= to) return undefined
+    this.doc.nodesBetween(from, to, (node, pos) => {
       if (!node.isTextblock) return undefined
       // Same type with different attributes still needs rewriting — that is
       // how alignment and heading levels change.
@@ -121,9 +120,9 @@ export class Transform {
       const sameAttrs =
         attrs === undefined ||
         Object.entries(attrs ?? {}).every(([key, value]) => node.attrs[key] === value)
-      if (sameType && sameAttrs) return undefined
-      targets.push({ pos, node })
-      return undefined
+      if (!sameType || !sameAttrs) targets.push({ pos, node })
+      // A textblock holds no other blocks, so there is nothing below it to see.
+      return false
     })
 
     // Later first, so earlier positions stay valid as we go.
@@ -147,10 +146,8 @@ export class Transform {
    */
   setNodeAttrs(pos: number, attrs: Record<string, unknown>): this {
     const node = this.doc.resolve(pos).nodeAfter
-    if (!node) return this
-    const merged = { ...node.attrs, ...attrs }
-    const replacement = node.type.create(merged, node.content, node.marks)
-    return this.replaceWith(pos, pos + node.nodeSize, replacement)
+    if (!node || node.isText) return this
+    return this.step(new AttrStep(pos, { ...node.attrs, ...attrs }))
   }
 
   /** Split the textblock at `pos` into two of the same type. */

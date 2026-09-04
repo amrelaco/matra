@@ -127,6 +127,65 @@ export class ReplaceStep extends Step {
   }
 }
 
+/**
+ * Change a node's attributes and nothing else.
+ *
+ * Done as a replacement, this was a deletion and an insertion of the same
+ * size, and every position inside the node — the caret, a marker, a
+ * decoration — was mapped to the end of it: aligning a paragraph sent the
+ * caret to the end of the paragraph. The content is untouched, so the map
+ * says so: the span is reported as changed, which the view needs in order to
+ * redraw it, and every position inside it maps to itself.
+ */
+export class AttrStep extends Step {
+  /** Learned when the step is applied; the map is asked for afterwards. */
+  private size = 0
+
+  constructor(
+    readonly pos: number,
+    readonly attrs: Record<string, unknown>,
+  ) {
+    super()
+  }
+
+  apply(doc: Node): StepResult {
+    const node =
+      this.pos >= 0 && this.pos < doc.content.size ? doc.resolve(this.pos).nodeAfter : null
+    if (!node || node.isText) return fail(`no node at ${this.pos} to change the attributes of`)
+    let replaced: Node
+    try {
+      replaced = node.type.create(this.attrs, node.content, node.marks)
+    } catch (error) {
+      return fail(String(error instanceof Error ? error.message : error))
+    }
+    this.size = node.nodeSize
+    return ok(replaceNodeAt(doc, this.pos + 1, replaced))
+  }
+
+  getMap(): StepMap {
+    return new StepMap([this.pos, this.size, this.size], false, true)
+  }
+
+  map(mapping: Mapping): Step | null {
+    const mapped = mapping.mapResult(this.pos, 1)
+    // The node this meant is gone, so there is nothing to change.
+    if (mapped.deleted || mapped.deletedAfter) return null
+    return new AttrStep(mapped.pos, this.attrs)
+  }
+
+  /**
+   * @param doc the document as it was *before* this step ran
+   */
+  invert(doc: Node): Step {
+    const node = doc.resolve(this.pos).nodeAfter
+    return new AttrStep(this.pos, node ? { ...node.attrs } : {})
+  }
+
+  toJSON(): Record<string, unknown> {
+    return { stepType: 'attr', pos: this.pos, attrs: { ...this.attrs } }
+  }
+}
+
 /** Add a mark across a range. */
 export class AddMarkStep extends Step {
   constructor(
@@ -321,7 +380,14 @@ function replaceNodeAt(doc: Node, contentStart: number, node: Node): Node {
   return replaceNodeAt(doc, $at.start(), parent.copy(content))
 }
 
-/** Apply `fn` to every text node touched by the range. */
+/**
+ * Apply `fn` to every text node touched by the range.
+ *
+ * Only the children the range reaches are visited, and only the ones that
+ * actually changed are swapped into their parent. Marking one word used to
+ * rebuild every level of the document from its first child to its last, so a
+ * comment on a sentence cost the length of the book it was in.
+ */
 function mapTextRange(
   doc: Node,
   from: number,
@@ -330,29 +396,65 @@ function mapTextRange(
 ): Node {
   const rebuild = (node: Node, start: number): Node => {
     if (node.isText) return node
-    const children: Node[] = []
-    for (const [child, offset] of node.content.entries()) {
-      const childStart = start + offset
-      const childEnd = childStart + child.nodeSize
-      if (childEnd <= from || childStart >= to) {
-        children.push(child)
-        continue
-      }
-      if (child.isText) {
+    const fragment = node.content
+    const content = fragment.content
+    const localFrom = Math.max(0, from - start)
+    const localTo = Math.min(fragment.size, to - start)
+    if (localTo <= localFrom) return node
+
+    if (node.isTextblock) {
+      // Inline content: text may split at the range's edges and merge again
+      // with what is beside it, so the run is rebuilt in canonical form.
+      const children: Node[] = []
+      let offset = 0
+      let changed = false
+      for (let i = 0; i < content.length; i++) {
+        const child = content[i] as Node
+        const childStart = start + offset
+        const childEnd = childStart + child.nodeSize
+        offset += child.nodeSize
+        if (childEnd <= from || childStart >= to || !child.isText) {
+          children.push(child)
+          continue
+        }
         const text = child.text ?? ''
-        const localFrom = Math.max(0, from - childStart)
-        const localTo = Math.min(text.length, to - childStart)
-        const head = text.slice(0, localFrom)
-        const middle = text.slice(localFrom, localTo)
-        const tail = text.slice(localTo)
+        const cutFrom = Math.max(0, from - childStart)
+        const cutTo = Math.min(text.length, to - childStart)
+        const head = text.slice(0, cutFrom)
+        const middle = text.slice(cutFrom, cutTo)
+        const tail = text.slice(cutTo)
         if (head) children.push(child.withText(head))
-        if (middle) children.push(fn(child.withText(middle), node))
+        if (middle) {
+          const mapped = fn(child.withText(middle), node)
+          if (mapped !== child) changed = true
+          children.push(mapped)
+        }
         if (tail) children.push(child.withText(tail))
-        continue
+        if (head || tail) changed = true
       }
-      children.push(rebuild(child, childStart + 1))
+      return changed ? node.copy(Fragment.from(children)) : node
     }
-    return node.copy(Fragment.from(children))
+
+    const begin = fragment.findIndex(localFrom)
+    let index = begin.index
+    let offset = begin.offset
+    let first = -1
+    const replaced: Node[] = []
+    for (; index < content.length && offset < localTo; index++) {
+      const child = content[index] as Node
+      const next = rebuild(child, start + offset + 1)
+      if (next !== child) {
+        if (first === -1) first = index
+        // Children between the first change and this one were unchanged, but
+        // sit inside the replaced run, so they are carried across as they are.
+        while (replaced.length < index - first)
+          replaced.push(content[first + replaced.length] as Node)
+        replaced.push(next)
+      }
+      offset += child.nodeSize
+    }
+    if (first === -1) return node
+    return node.copy(fragment.replaceRange(first, first + replaced.length, replaced))
   }
   return rebuild(doc, 0)
 }
@@ -366,6 +468,15 @@ function mapTextRange(
  * not take the editor down.
  */
 export function stepFromJSON(schema: Schema, json: Record<string, unknown>): Step | null {
+  if (json.stepType === 'attr') {
+    const pos = Number(json.pos)
+    const attrs = json.attrs
+    if (!Number.isFinite(pos) || !attrs || typeof attrs !== 'object' || Array.isArray(attrs)) {
+      return null
+    }
+    return new AttrStep(pos, { ...(attrs as Record<string, unknown>) })
+  }
+
   const from = Number(json.from)
   const to = Number(json.to)
   if (!Number.isFinite(from) || !Number.isFinite(to)) return null

@@ -27,58 +27,50 @@ export interface NodeSpec {
   listItem?: boolean
   /** Space-separated mark names allowed inside; `_` all, `''` none. */
   marks?: string
+  /** Whitespace inside is literal · see NodeDef.code. */
+  code?: boolean
   attrs?: Record<string, { default?: unknown; required?: boolean }>
   toDOM?: (node: Node) => DOMOutputSpec
   parseDOM?: ParseRule[]
 }
 
+/**
+ * A node type.
+ *
+ * The classification flags are computed once here rather than derived on every
+ * read. `nodeSize` asks `isLeaf` for every node it measures and selection
+ * placement asks `isTextblock` for every position it tries, and the old
+ * getters answered by splitting a string or mapping an array each time.
+ */
 export class NodeType implements MatchableType {
   /** Filled in by the schema once every type exists. */
   contentMatch: ContentMatch = ContentMatch.empty
   markSet: MarkType[] | null = null
+  /** Set by the schema after content expressions compile. */
+  isTextblock = false
+
+  readonly name: string
+  readonly groups: readonly string[]
+  /** A type is fillable when it can be created without supplying attributes. */
+  readonly fillable: boolean
+  readonly isText: boolean
+  readonly isInline: boolean
+  readonly isBlock: boolean
+  readonly isLeaf: boolean
+  readonly isAtom: boolean
 
   constructor(
     readonly spec: NodeSpec,
     readonly schema: Schema,
-  ) {}
-
-  get name(): string {
-    return this.spec.name
-  }
-
-  get groups(): string[] {
-    return this.spec.group ? this.spec.group.split(/\s+/) : []
-  }
-
-  /** A type is fillable when it can be created without supplying attributes. */
-  get fillable(): boolean {
-    return !Object.values(this.spec.attrs ?? {}).some((attr) => attr.required)
-  }
-
-  get isText(): boolean {
-    return this.name === 'text'
-  }
-
-  get isInline(): boolean {
-    return this.isText || this.spec.inline === true
-  }
-
-  get isBlock(): boolean {
-    return !this.isInline
-  }
-
-  get isLeaf(): boolean {
-    return this.spec.content === undefined || this.spec.content === ''
-  }
-
-  get isTextblock(): boolean {
-    return (
-      this.isBlock && !this.isLeaf && this.contentMatch.allowed.some((t) => t.name === 'text')
-    )
-  }
-
-  get isAtom(): boolean {
-    return this.isLeaf || this.spec.atom === true
+  ) {
+    this.name = spec.name
+    this.groups = spec.group ? spec.group.split(/\s+/) : []
+    this.fillable = !Object.values(spec.attrs ?? {}).some((attr) => attr.required)
+    this.isText = spec.name === 'text'
+    this.isInline = this.isText || spec.inline === true
+    this.isBlock = !this.isInline
+    this.isLeaf = spec.content === undefined || spec.content === ''
+    this.isAtom = this.isLeaf || spec.atom === true
   }
 
   allowsMarkType(type: MarkType): boolean {
@@ -102,9 +94,11 @@ export class NodeType implements MatchableType {
 
   /** True when `content` satisfies this type's content expression. */
   validContent(content: Fragment): boolean {
-    const types: MatchableType[] = []
-    for (const child of content) types.push(child.type)
-    const match = this.contentMatch.matchTypes(types)
+    let match: ContentMatch | null = this.contentMatch
+    const children = content.content
+    for (let i = 0; i < children.length && match; i++) {
+      match = match.matchType((children[i] as Node).type)
+    }
     return match?.validEnd === true
   }
 
@@ -119,10 +113,11 @@ export class NodeType implements MatchableType {
     content?: Fragment | Node | readonly Node[] | null,
   ): Node | null {
     const start = Fragment.from(content)
-    const types: MatchableType[] = []
-    for (const child of start) types.push(child.type)
-
-    const match = this.contentMatch.matchTypes(types)
+    let match: ContentMatch | null = this.contentMatch
+    const children = start.content
+    for (let i = 0; i < children.length && match; i++) {
+      match = match.matchType((children[i] as Node).type)
+    }
     if (!match) return null
     if (match.validEnd) return this.create(attrs, start)
 
@@ -173,11 +168,16 @@ export class Schema {
 
     // Content expressions are compiled once every type exists, so a type can
     // refer to any other regardless of declaration order.
-    for (const type of Object.values(this.nodes)) {
+    const types = Object.values(this.nodes)
+    for (const type of types) {
       type.contentMatch = ContentMatch.parse(type.spec.content ?? '', (name) =>
         this.resolveTypes(name),
       )
       type.markSet = this.resolveMarks(type.spec.marks)
+    }
+    for (const type of types) {
+      type.isTextblock =
+        type.isBlock && !type.isLeaf && type.contentMatch.allowed.some((t) => t.name === 'text')
     }
   }
 
@@ -215,7 +215,7 @@ export class Schema {
   text(text: string, marks: readonly Mark[] = Mark.none): Node {
     const type = this.nodes.text
     if (!type) throw new Error('Matra: no "text" node')
-    return new Node(type, {}, Fragment.empty, marks, text)
+    return new Node(type, NO_TEXT_ATTRS, Fragment.empty, marks, text)
   }
 
   mark(name: string, attrs?: Record<string, unknown> | null): Mark {
@@ -257,3 +257,6 @@ export class Schema {
     return this.node(value.type, value.attrs, content, marks)
   }
 }
+
+/** Text nodes have no attributes; one shared, frozen object says so. */
+const NO_TEXT_ATTRS: Record<string, unknown> = Object.freeze({})

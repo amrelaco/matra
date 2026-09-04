@@ -1,6 +1,15 @@
 import type { Node } from './node'
 
 /**
+ * Runs shorter than this are searched by walking them.
+ *
+ * A prefix index costs an allocation and pays back in log time, which only
+ * beats a straight walk once the run is long enough to notice. The children of
+ * a paragraph are few; the children of a document are not.
+ */
+const INDEX_FROM = 24
+
+/**
  * An ordered run of nodes.
  *
  * Fragments are immutable and cache their size, because position arithmetic
@@ -8,6 +17,18 @@ import type { Node } from './node'
  */
 export class Fragment {
   readonly size: number
+
+  /**
+   * Where each child ends, for long runs.
+   *
+   * Resolving a position used to walk the run from the start, adding sizes
+   * until it passed the position. Every keystroke resolves a dozen positions,
+   * so on a two-thousand-block document a keystroke near the end cost twelve
+   * walks of two thousand children — twelve times what the same keystroke cost
+   * at the top. Built on first use, carried across `replaceChild` by shifting
+   * the tail, and never built for the short runs inside a paragraph.
+   */
+  private ends: Uint32Array | null = null
 
   /**
    * `size` is passed only where the caller already knows it.
@@ -25,7 +46,7 @@ export class Fragment {
       return
     }
     let total = 0
-    for (const child of content) total += child.nodeSize
+    for (let i = 0; i < content.length; i++) total += (content[i] as Node).nodeSize
     this.size = total
   }
 
@@ -73,7 +94,24 @@ export class Fragment {
   }
 
   forEach(fn: (node: Node, offset: number, index: number) => void): void {
-    for (const [node, offset, index] of this.entries()) fn(node, offset, index)
+    const content = this.content
+    let offset = 0
+    for (let index = 0; index < content.length; index++) {
+      const node = content[index] as Node
+      fn(node, offset, index)
+      offset += node.nodeSize
+    }
+  }
+
+  /** The offset at which child `index` starts. */
+  offsetAt(index: number): number {
+    if (index <= 0) return 0
+    if (index >= this.content.length) return this.size
+    if (this.content.length >= INDEX_FROM)
+      return (this.ends ?? this.buildEnds())[index - 1] as number
+    let offset = 0
+    for (let i = 0; i < index; i++) offset += (this.content[i] as Node).nodeSize
+    return offset
   }
 
   append(other: Fragment): Fragment {
@@ -104,7 +142,46 @@ export class Fragment {
     const next = this.content.slice()
     next[index] = node
     if (old.isText || node.isText) return Fragment.from(next)
-    return new Fragment(next, this.size - old.nodeSize + node.nodeSize)
+    const delta = node.nodeSize - old.nodeSize
+    const out = new Fragment(next, this.size + delta)
+    // The index survives the swap: everything after the child moved by the
+    // same amount, which is one addition each rather than a size lookup each.
+    if (this.ends) {
+      const ends = this.ends.slice()
+      if (delta !== 0)
+        for (let i = index; i < ends.length; i++) ends[i] = (ends[i] as number) + delta
+      out.ends = ends
+    }
+    return out
+  }
+
+  /**
+   * The same run with the children in `[start, end)` replaced.
+   *
+   * What a mark change does to a block: it touches a run of children in the
+   * middle and leaves both ends alone. Text on either side of the run may join
+   * with what arrives, so text takes the canonical route; block children never
+   * merge, so the array is spliced and the size adjusted.
+   */
+  replaceRange(start: number, end: number, nodes: readonly Node[]): Fragment {
+    const content = this.content
+    let textInvolved = false
+    for (let i = start; i < end && !textInvolved; i++)
+      textInvolved = (content[i] as Node).isText
+    for (let i = 0; i < nodes.length && !textInvolved; i++)
+      textInvolved = (nodes[i] as Node).isText
+    if (textInvolved || (start > 0 && (content[start - 1] as Node).isText)) {
+      return Fragment.from([...content.slice(0, start), ...nodes, ...content.slice(end)])
+    }
+    if (end < content.length && (content[end] as Node).isText) {
+      return Fragment.from([...content.slice(0, start), ...nodes, ...content.slice(end)])
+    }
+    let size = this.size
+    for (let i = start; i < end; i++) size -= (content[i] as Node).nodeSize
+    for (let i = 0; i < nodes.length; i++) size += (nodes[i] as Node).nodeSize
+    const next = content.slice()
+    next.splice(start, end - start, ...nodes)
+    return next.length ? new Fragment(next, size) : Fragment.empty
   }
 
   /** The index and offset of the child containing `pos`. */
@@ -114,16 +191,41 @@ export class Fragment {
     if (pos > this.size || pos < 0) {
       throw new RangeError(`Matra: position ${pos} outside fragment of size ${this.size}`)
     }
+    const content = this.content
+    if (content.length >= INDEX_FROM) {
+      const ends = this.ends ?? this.buildEnds()
+      // First child whose end is past the position. A position landing exactly
+      // on a boundary belongs to the child that starts there, which is the one
+      // whose end is strictly greater.
+      let low = 0
+      let high = content.length - 1
+      while (low < high) {
+        const mid = (low + high) >>> 1
+        if ((ends[mid] as number) > pos) high = mid
+        else low = mid + 1
+      }
+      return { index: low, offset: low === 0 ? 0 : (ends[low - 1] as number) }
+    }
     let offset = 0
-    for (let index = 0; index < this.content.length; index++) {
-      const child = this.content[index] as Node
+    for (let index = 0; index < content.length; index++) {
+      const child = content[index] as Node
       const end = offset + child.nodeSize
-      // A position landing exactly on a boundary belongs to the child that
-      // starts there, not the one that ends there.
       if (end > pos) return { index, offset }
       offset = end
     }
-    return { index: this.content.length, offset: this.size }
+    return { index: content.length, offset: this.size }
+  }
+
+  private buildEnds(): Uint32Array {
+    const content = this.content
+    const ends = new Uint32Array(content.length)
+    let offset = 0
+    for (let i = 0; i < content.length; i++) {
+      offset += (content[i] as Node).nodeSize
+      ends[i] = offset
+    }
+    this.ends = ends
+    return ends
   }
 
   /** The slice between two positions, splitting text nodes as needed. */
@@ -131,10 +233,20 @@ export class Fragment {
     if (from === 0 && to === this.size) return this
     const out: Node[] = []
     if (to <= from) return Fragment.empty
-    let offset = 0
-    for (const child of this.content) {
+    const content = this.content
+    // Start at the first child the cut reaches rather than at zero: cutting the
+    // tail off a long run should not cost the head of it.
+    const first =
+      from <= 0
+        ? { index: 0, offset: 0 }
+        : from < this.size
+          ? this.findIndex(from)
+          : { index: content.length, offset: this.size }
+    let offset = first.offset
+    for (let i = first.index; i < content.length && offset < to; i++) {
+      const child = content[i] as Node
       const end = offset + child.nodeSize
-      if (end > from && offset < to) {
+      if (end > from) {
         if (child.isText) {
           const start = Math.max(0, from - offset)
           const stop = Math.min(child.text?.length ?? 0, to - offset)

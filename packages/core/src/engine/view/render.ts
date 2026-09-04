@@ -3,9 +3,18 @@ import type { Mark } from '../model/mark'
 import type { Node } from '../model/node'
 import { finalizeElement, setSafeAttribute } from '../model/safe-attrs'
 import type { DOMOutputSpec, Schema } from '../model/schema'
-import { type Decoration, DecorationSet } from './decoration'
+import type { Mapping } from '../transform/step-map'
+import {
+  type Decoration,
+  DecorationSet,
+  changedSpan,
+  findIn,
+  sameDecoration,
+} from './decoration'
 import { DOMMap } from './dom-map'
 import { type NodeViewHost, NodeViewManager } from './node-view'
+
+const NO_DECORATIONS: readonly Decoration[] = []
 
 /**
  * Document → DOM, patched rather than rebuilt.
@@ -44,16 +53,40 @@ export class Renderer {
     this.nodeViews = new NodeViewManager(host)
   }
 
+  /**
+   * @param dirty    the span the edit touched, in the new document's coordinates
+   * @param mapping  the edit itself, so last render's decorations can be moved
+   *   into the new coordinates before being compared with this render's
+   */
   render(
     doc: Node,
     target: HTMLElement,
     decorations = DecorationSet.empty,
     dirty: { from: number; to: number } | null = null,
+    mapping: Mapping | null = null,
   ): void {
-    // A span is only safe to trust when the decorations are the same as last
-    // time. A remote cursor moving is a change no step accounts for, and
-    // skipping past it would leave it undrawn.
-    this.dirty = dirty && decorations.eq(this.previousDecorations) ? dirty : null
+    // Last render's decorations, where they would be now. A search hit after
+    // the caret sits one further along after a keystroke; that is the same
+    // hit, not a changed one, and comparing raw positions said otherwise —
+    // which threw the narrowed window away on every keystroke while any
+    // decoration was on screen.
+    const previous =
+      mapping && this.previousDecorations.size
+        ? this.previousDecorations.map(mapping)
+        : this.previousDecorations
+    const decorationsSame = decorations.eq(previous)
+    if (decorationsSame) {
+      this.dirty = dirty
+    } else {
+      // Where the decorations differ is one more span the render has to
+      // visit. Outside it, and outside the edit, nothing on screen changed.
+      const span = changedSpan(previous, decorations)
+      if (!span) this.dirty = dirty
+      else if (!dirty) this.dirty = span
+      else
+        this.dirty = { from: Math.min(dirty.from, span.from), to: Math.max(dirty.to, span.to) }
+    }
+    this.previousDecorations = previous
     this.decorations = decorations
     const canPatch = this.previous !== null && this.root === target
     // Enough edits have piled up that replaying them for a cold entry costs
@@ -77,7 +110,7 @@ export class Renderer {
       // tree, each one something the browser has to account for; a fragment is
       // one.
       const holder = document.createDocumentFragment()
-      this.buildFragment(doc.content, holder, 0)
+      this.buildFragment(doc.content, holder, 0, decorations.items)
       target.replaceChildren(holder)
     } else {
       this.patchFragment(target, this.previous as Node, doc, 0)
@@ -113,10 +146,21 @@ export class Renderer {
    * stack was three arrays per child for marks no block has, and the two
    * decoration filters were two more per text node for a document nobody had
    * decorated.
+   *
+   * @param scope  the decorations that could touch this run. Narrowed on the
+   *   way down, so a paragraph rebuilt in a document with five hundred search
+   *   hits looks at the hits inside it rather than at all five hundred for
+   *   each of its text nodes.
    */
-  private buildFragment(fragment: Fragment, target: globalThis.Node, start: number): void {
+  private buildFragment(
+    fragment: Fragment,
+    target: globalThis.Node,
+    start: number,
+    scope: readonly Decoration[],
+  ): void {
     const children = fragment.content
-    const decorated = this.decorations.size > 0
+    const local = scope.length ? findIn(scope, start, start + fragment.size) : NO_DECORATIONS
+    const decorated = local.length > 0
     const openMarks: Mark[] = []
     const openTargets: globalThis.Node[] = [target]
     let offset = 0
@@ -140,8 +184,8 @@ export class Renderer {
 
         for (let m = keep; m < child.marks.length; m++) {
           const mark = child.marks[m] as Mark
-          const spec = this.schema.marks[mark.type.name]?.spec
-          const rendered = spec?.toDOM
+          const spec = mark.type.spec
+          const rendered = spec.toDOM
             ? renderSpec(spec.toDOM(mark) as DOMOutputSpec)
             : { dom: document.createElement('span'), hole: null }
           ;(openTargets[openTargets.length - 1] as globalThis.Node).appendChild(rendered.dom)
@@ -152,27 +196,33 @@ export class Renderer {
       }
 
       const pos = start + offset
-      if (decorated) this.insertWidgets(parent, pos)
+      if (decorated) this.insertWidgets(parent, pos, local)
 
       if (child.isText) {
         if (decorated) {
-          for (const piece of this.buildDecoratedText(child, pos)) parent.appendChild(piece)
+          for (const piece of this.buildDecoratedText(child, pos, local))
+            parent.appendChild(piece)
         } else {
           parent.appendChild(document.createTextNode(child.text ?? ''))
         }
       } else {
-        const dom = this.buildNode(child, pos)
-        parent.appendChild(decorated ? this.decorate(dom, child, pos) : dom)
+        const dom = this.buildNode(child, pos, local)
+        parent.appendChild(decorated ? this.decorate(dom, child, pos, local) : dom)
       }
       offset += child.nodeSize
     }
 
     // Widgets sitting at the very end of the fragment.
-    if (decorated) this.insertWidgets(target, start + fragment.size)
+    if (decorated) this.insertWidgets(target, start + fragment.size, local)
   }
 
-  private insertWidgets(target: globalThis.Node, pos: number): void {
-    for (const item of this.decorations.items) {
+  private insertWidgets(
+    target: globalThis.Node,
+    pos: number,
+    scope: readonly Decoration[],
+  ): void {
+    for (let i = 0; i < scope.length; i++) {
+      const item = scope[i] as Decoration
       if (item.type !== 'widget' || item.pos !== pos) continue
       target.appendChild(this.buildWidget(item))
     }
@@ -194,21 +244,27 @@ export class Renderer {
    * the text is cut at every boundary and each piece wrapped in whatever covers
    * exactly it.
    */
-  private buildDecoratedText(node: Node, pos: number): globalThis.Node[] {
+  private buildDecoratedText(
+    node: Node,
+    pos: number,
+    scope: readonly Decoration[],
+  ): globalThis.Node[] {
     const text = node.text ?? ''
     const end = pos + text.length
-    const inline = this.decorations.items.filter(
-      (item): item is Extract<Decoration, { type: 'inline' }> =>
-        item.type === 'inline' && item.to > pos && item.from < end,
-    )
+    const inline: Extract<Decoration, { type: 'inline' }>[] = []
     // A widget *inside* this text — a remote caret between two letters. The
     // boundaries of the fragment are handled by the caller; these are the ones
     // that would otherwise have nowhere to go, and a caret sitting mid-word is
     // the ordinary case, not the exotic one.
-    const widgets = this.decorations.items.filter(
-      (item): item is Extract<Decoration, { type: 'widget' }> =>
-        item.type === 'widget' && item.pos > pos && item.pos < end,
-    )
+    const widgets: Extract<Decoration, { type: 'widget' }>[] = []
+    for (let i = 0; i < scope.length; i++) {
+      const item = scope[i] as Decoration
+      if (item.type === 'inline') {
+        if (item.to > pos && item.from < end) inline.push(item)
+      } else if (item.type === 'widget') {
+        if (item.pos > pos && item.pos < end) widgets.push(item)
+      }
+    }
     if (!inline.length && !widgets.length) return [document.createTextNode(text)]
 
     const points = new Set<number>([0, text.length])
@@ -243,27 +299,30 @@ export class Renderer {
   }
 
   /** Wrap or annotate a rendered node according to the decorations over it. */
-  private decorate(dom: globalThis.Node, node: Node, pos: number): globalThis.Node {
-    if (!this.decorations.size) return dom
+  private decorate(
+    dom: globalThis.Node,
+    node: Node,
+    pos: number,
+    scope: readonly Decoration[],
+  ): globalThis.Node {
     const end = pos + node.nodeSize
-    const result = dom
-
-    for (const item of this.decorations.items) {
+    for (let i = 0; i < scope.length; i++) {
+      const item = scope[i] as Decoration
       if (item.type !== 'node') continue
       if (item.to <= pos || item.from >= end) continue
       if (dom.nodeType === 1) applyAttrs(dom as HTMLElement, item.attrs)
     }
-    return result
+    return dom
   }
 
-  private buildNode(node: Node, pos: number): globalThis.Node {
+  private buildNode(node: Node, pos: number, scope: readonly Decoration[]): globalThis.Node {
     if (node.isText) return document.createTextNode(node.text ?? '')
 
     const view = this.nodeViews.create(node, pos)
     if (view) {
       if (view.contentDOM && !node.type.isLeaf) {
         this.map.record(view.contentDOM, pos + 1)
-        this.buildFragment(node.content, view.contentDOM, pos + 1)
+        this.buildFragment(node.content, view.contentDOM, pos + 1, scope)
       } else {
         this.map.recordAtom(view.dom)
       }
@@ -288,7 +347,7 @@ export class Renderer {
     ) {
       const simple = document.createElement(out[0])
       this.map.record(simple, pos + 1)
-      this.buildFragment(node.content, simple, pos + 1)
+      this.buildFragment(node.content, simple, pos + 1, scope)
       fillEmptyTextblock(simple, node)
       return simple
     }
@@ -296,7 +355,7 @@ export class Renderer {
     if (hole && !node.type.isLeaf) {
       if (hole !== dom) this.holes.set(dom, hole as HTMLElement)
       this.map.record(hole, pos + 1)
-      this.buildFragment(node.content, hole, pos + 1)
+      this.buildFragment(node.content, hole, pos + 1, scope)
       fillEmptyTextblock(hole as HTMLElement, node)
     } else {
       // A break, a rule, an image, a mention: one position, no insides. Said
@@ -328,20 +387,34 @@ export class Renderer {
     // the fragment, so a textblock's inside is rebuilt whole. Everything above
     // that is patched.
     if (newParent.isTextblock) {
+      const contentEnd = contentStart + newChildren.size
       const decorationsChanged = !sameOver(
         this.previousDecorations,
         this.decorations,
         contentStart,
-        contentStart + newChildren.size,
+        contentEnd,
       )
-      if (!oldChildren.eq(newChildren) || decorationsChanged) {
-        this.nodeViews.destroyWithin(target)
-        target.replaceChildren()
-        this.buildFragment(newChildren, target, contentStart)
-        fillEmptyTextblock(target, newParent)
-      } else {
+      if (oldChildren.eq(newChildren) && !decorationsChanged) {
         this.recordWithin(newChildren, target, contentStart)
+        return
       }
+      // Typing changes the text and nothing else: the same runs of text with
+      // the same marks, one of them a character longer. The elements on
+      // screen already have the right shape, so their text is updated in
+      // place rather than the block being torn down and built again — which
+      // is fewer nodes for the browser to create, and a change the caret and
+      // an in-progress composition can survive.
+      if (
+        !decorationsChanged &&
+        !findIn(this.decorations.items, contentStart, contentEnd).length &&
+        this.patchText(target, oldChildren, newChildren)
+      ) {
+        return
+      }
+      this.nodeViews.destroyWithin(target)
+      target.replaceChildren()
+      this.buildFragment(newChildren, target, contentStart, this.decorations.items)
+      fillEmptyTextblock(target, newParent)
       return
     }
 
@@ -399,7 +472,7 @@ export class Renderer {
       }
 
       if (!oldChild || !dom) {
-        target.appendChild(this.buildNode(newChild, contentStart + offset))
+        target.appendChild(this.buildDecorated(newChild, contentStart + offset))
         offset += newChild.nodeSize
         continue
       }
@@ -449,8 +522,20 @@ export class Renderer {
       // a checkbox used to tear the item's DOM out and build it again — which
       // made `update` a hook that could never fire for the thing it exists for,
       // and cost a rebuild per tick on a list with a hundred items.
+      //
+      // A node decoration is written onto the element itself, and patching
+      // the inside leaves the outside as it was — so a focus class that moved
+      // to the next block stayed on this one too. When what is drawn on the
+      // element changed, the element is built again.
       const owned = dom.nodeType === 1 && this.nodeViews.owns(dom)
-      const patchable = owned ? oldChild.type === newChild.type : oldChild.sameMarkup(newChild)
+      const patchable =
+        (owned ? oldChild.type === newChild.type : oldChild.sameMarkup(newChild)) &&
+        sameNodeDecorations(
+          this.previousDecorations,
+          this.decorations,
+          contentStart + offset,
+          contentStart + offset + newChild.nodeSize,
+        )
 
       if (patchable && !newChild.isText && dom.nodeType === 1) {
         const updated = this.nodeViews.update(dom, newChild, contentStart + offset)
@@ -469,10 +554,63 @@ export class Renderer {
       }
 
       this.nodeViews.destroyWithin(dom)
-      const replacement = this.buildNode(newChild, contentStart + offset)
+      const replacement = this.buildDecorated(newChild, contentStart + offset)
       target.replaceChild(replacement, dom)
       offset += newChild.nodeSize
     }
+  }
+
+  /**
+   * A node built during a patch, with whatever is drawn on it.
+   *
+   * `buildFragment` decorates each child it builds; a child rebuilt on its own
+   * by the patch loop has to be decorated here, or a focus class never reaches
+   * the block that just gained the caret.
+   */
+  private buildDecorated(node: Node, pos: number): globalThis.Node {
+    const scope = this.decorations.size
+      ? findIn(this.decorations.items, pos, pos + node.nodeSize)
+      : NO_DECORATIONS
+    const dom = this.buildNode(node, pos, scope)
+    return scope.length ? this.decorate(dom, node, pos, scope) : dom
+  }
+
+  /**
+   * Update the text of a block whose shape did not change.
+   *
+   * Only when every child on both sides is text and each pair carries the
+   * same marks: then the elements on screen line up with the new run one for
+   * one, and the text nodes inside them — found in document order — are the
+   * new run's text nodes. Checked before anything is written, because a mark
+   * whose `toDOM` puts text of its own in the element would throw the count
+   * off, and finding that out halfway through a write would leave the block
+   * half old and half new.
+   */
+  private patchText(
+    target: HTMLElement,
+    oldChildren: Fragment,
+    newChildren: Fragment,
+  ): boolean {
+    const before = oldChildren.content
+    const after = newChildren.content
+    if (before.length !== after.length || after.length === 0) return false
+    for (let i = 0; i < after.length; i++) {
+      const was = before[i] as Node
+      const now = after[i] as Node
+      if (was.text === undefined || now.text === undefined) return false
+      if (was !== now && !was.sameMarkup(now)) return false
+    }
+
+    // First pass: the text nodes on screen are the old run, in order.
+    const texts: Text[] = []
+    if (!collectText(target, texts, before) || texts.length !== before.length) return false
+    // Second pass: write.
+    for (let i = 0; i < after.length; i++) {
+      const node = texts[i] as Text
+      const text = (after[i] as Node).text as string
+      if (node.nodeValue !== text) node.nodeValue = text
+    }
+    return true
   }
 
   /**
@@ -539,13 +677,41 @@ export class Renderer {
   }
 
   private recordWithin(fragment: Fragment, target: HTMLElement, start: number): void {
-    let index = 0
-    for (const [child, offset] of fragment.entries()) {
-      const dom = target.childNodes[index]
+    const children = fragment.content
+    const nodes = target.childNodes
+    let offset = 0
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index] as Node
+      const dom = nodes[index]
       if (dom) this.recordNode(child, dom, start + offset)
-      index++
+      offset += child.nodeSize
     }
   }
+}
+
+/**
+ * Every text node under `dom`, in order, checked against the run it should
+ * show. False the moment anything is out of place: a text node that says
+ * something the model does not, a widget, a filler.
+ */
+function collectText(dom: globalThis.Node, out: Text[], expected: readonly Node[]): boolean {
+  for (let child = dom.firstChild; child; child = child.nextSibling) {
+    if (child.nodeType === 3) {
+      const index = out.length
+      if (index >= expected.length) return false
+      if (child.nodeValue !== (expected[index] as Node).text) return false
+      out.push(child as Text)
+    } else if (child.nodeType === 1) {
+      const element = child as Element
+      if (
+        element.hasAttribute('data-matra-widget') ||
+        element.hasAttribute('data-matra-filler')
+      )
+        return false
+      if (!collectText(child, out, expected)) return false
+    }
+  }
+  return true
 }
 
 function applyAttrs(dom: HTMLElement, attrs: Record<string, string>): void {
@@ -563,35 +729,34 @@ function applyAttrs(dom: HTMLElement, attrs: Record<string, string>): void {
   finalizeElement(dom)
 }
 
+/** Do two sets put the same attributes on the element covering this range? */
+function sameNodeDecorations(
+  a: DecorationSet,
+  b: DecorationSet,
+  from: number,
+  to: number,
+): boolean {
+  if (a === b || (!a.size && !b.size)) return true
+  const left = a.find(from, to).filter((item) => item.type === 'node')
+  const right = b.find(from, to).filter((item) => item.type === 'node')
+  if (left.length !== right.length) return false
+  for (let i = 0; i < left.length; i++) {
+    if (!sameDecoration(left[i] as Decoration, right[i] as Decoration)) return false
+  }
+  return true
+}
+
 /** Do two sets draw the same thing over this range? */
 function sameOver(a: DecorationSet, b: DecorationSet, from: number, to: number): boolean {
+  if (a === b) return true
+  if (!a.size && !b.size) return true
   const left = a.find(from, to)
   const right = b.find(from, to)
   if (left.length !== right.length) return false
-  return left.every((item, index) => {
-    const other = right[index] as Decoration
-    if (item.type !== other.type) return false
-    if (item.type === 'widget' || other.type === 'widget') {
-      return (
-        item.type === 'widget' &&
-        other.type === 'widget' &&
-        item.pos === other.pos &&
-        item.key === other.key
-      )
-    }
-    // Position is not the whole of a decoration. A cursor that changes colour
-    // in place, or a highlight that swaps its class, sits at the same offsets
-    // and still has to be redrawn.
-    return (
-      item.from === other.from && item.to === other.to && sameAttrs(item.attrs, other.attrs)
-    )
-  })
-}
-
-function sameAttrs(a: Record<string, string>, b: Record<string, string>): boolean {
-  const keys = Object.keys(a)
-  if (keys.length !== Object.keys(b).length) return false
-  return keys.every((key) => a[key] === b[key])
+  for (let i = 0; i < left.length; i++) {
+    if (!sameDecoration(left[i] as Decoration, right[i] as Decoration)) return false
+  }
+  return true
 }
 
 export function renderSpec(spec: DOMOutputSpec): {
@@ -620,6 +785,13 @@ export function renderSpec(spec: DOMOutputSpec): {
     const child = spec[i]
     if (child === 0) {
       hole = dom
+      continue
+    }
+    if (typeof child === 'string') {
+      // A string among the children is text, the way a mention writes its
+      // label. Only the first entry of a spec names a tag; reading a label as
+      // one asked the browser for an element called "@Nahim", which it refuses.
+      dom.appendChild(document.createTextNode(child))
       continue
     }
     const rendered = renderSpec(child as DOMOutputSpec)

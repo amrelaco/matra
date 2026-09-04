@@ -1,6 +1,7 @@
 export { Slice } from './slice'
 export {
   AddMarkStep,
+  AttrStep,
   rebaseSteps,
   RemoveMarkStep,
   ReplaceStep,
@@ -11,3 +12,4 @@ export {
 export { Mapping, type MapResult, StepMap } from './step-map'
 export { canSplit, findWrapping, liftTarget, type Wrapper } from './structure'
 export { Transform } from './transform'
+export { insertBlocks, insertPasted } from './insert'

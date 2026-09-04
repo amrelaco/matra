@@ -7,7 +7,7 @@ import type { Transaction } from './state/transaction'
 import { liftTarget } from './transform/structure'
 
 /**
- * List editing — ours.
+ * List editing — the Matra engine's own.
  *
  * These work on the transaction the command is already building, so a list
  * change lands in the same undo step as whatever prompted it.

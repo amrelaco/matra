@@ -1,5 +1,5 @@
 /**
- * Content expressions — ours.
+ * Content expressions — the Matra engine's own.
  *
  * A node's `content` is a small language: `paragraph block*`, `(text | image)+`,
  * `heading{1,3}`. This module parses it, compiles it to a deterministic
@@ -257,8 +257,13 @@ export class ContentMatch {
 
   /** The match state after `type`, or null when `type` may not appear here. */
   matchType(type: MatchableType): ContentMatch | null {
-    for (const entry of this.next) {
-      if (entry.type.name === type.name) return entry.match
+    const next = this.next
+    for (let i = 0; i < next.length; i++) {
+      const entry = next[i] as { type: MatchableType; match: ContentMatch }
+      // Identity first: within one schema the type objects are the same ones
+      // the expression was compiled against, so the name is only compared for
+      // a type built elsewhere.
+      if (entry.type === type || entry.type.name === type.name) return entry.match
     }
     return null
   }

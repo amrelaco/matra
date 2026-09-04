@@ -3,7 +3,14 @@ import type { Step } from './transform/step'
 import type { Transform } from './transform/transform'
 
 export interface HistoryEntry {
-  /** Steps that undo the change, in the order they must be applied. */
+  /**
+   * Steps that undo the change, newest last.
+   *
+   * Stored in the order the changes were made and replayed from the end, so
+   * that merging one more keystroke into an entry is an append rather than a
+   * copy of everything typed so far. It used to be prepended: the twentieth
+   * character of a word copied nineteen steps to add its own.
+   */
   steps: Step[]
   /** Selection to restore, as raw positions. */
   selection: { anchor: number; head: number }
@@ -19,7 +26,7 @@ export interface HistoryOptions {
 }
 
 /**
- * Undo/redo — ours, not ProseMirror's.
+ * Undo/redo — the Matra engine's own.
  *
  * Each applied transaction is inverted step by step against the document it
  * started from, and the inverse is pushed onto the undo stack. Typing is
@@ -87,8 +94,8 @@ export class History {
     // character later, which is a guarantee that holds only until somebody
     // keeps typing.
     if (!isolate && previous && !previous.sealed && now - previous.time < this.groupMs) {
-      // Merge: the older inverse must run last to rewind in the right order.
-      previous.steps = [...inverted, ...previous.steps]
+      // Merge: replay runs from the end, so the newest inverse goes last.
+      for (const step of inverted) previous.steps.push(step)
       previous.time = now
     } else {
       this.undoStack.push({ steps: inverted, selection, time: now, sealed: isolate })
@@ -119,10 +126,14 @@ export class History {
   }
 }
 
-/** Invert every step of a transform against the document it was applied to. */
+/**
+ * Invert every step of a transform against the document it was applied to.
+ *
+ * In the order the steps were made · rewinding applies them from the end.
+ */
 function invert(tr: Transform): Step[] {
   const inverted: Step[] = []
-  for (let i = tr.steps.length - 1; i >= 0; i--) {
+  for (let i = 0; i < tr.steps.length; i++) {
     const step = tr.steps[i]
     const doc = tr.docs[i]
     if (step && doc) inverted.push(step.invert(doc))

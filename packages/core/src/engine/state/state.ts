@@ -19,6 +19,9 @@ export interface EditorStateConfig {
  * what makes undo, collaboration and time travel tractable.
  */
 export class EditorState {
+  /** Whether any plugin keeps state, so a state without one skips the reduce. */
+  private readonly reduces: boolean
+
   private constructor(
     readonly schema: Schema,
     readonly doc: Node,
@@ -26,7 +29,9 @@ export class EditorState {
     readonly storedMarks: readonly Mark[] | null,
     readonly plugins: readonly Plugin[],
     private readonly pluginValues: ReadonlyMap<string, unknown>,
-  ) {}
+  ) {
+    this.reduces = plugins.some((plugin) => plugin.spec.state !== undefined)
+  }
 
   static create(config: EditorStateConfig): EditorState {
     const doc = config.doc ?? emptyDoc(config.schema)
@@ -56,20 +61,35 @@ export class EditorState {
    *
    * Returns the same state when a filter vetoes, so callers can compare by
    * identity to know whether anything happened.
+   *
+   * The transaction's selection is taken as it is. A transaction moves its
+   * own selection through every step as the step lands, so it already sits in
+   * the coordinates of the new document — mapping it through the whole
+   * mapping again here moved it twice, and `insert` left the caret one place
+   * past the text it had just typed.
    */
   apply(tr: Transaction): EditorState {
     for (const plugin of this.plugins) {
       if (plugin.spec.filterTransaction?.(tr, this) === false) return this
     }
 
-    const selection = tr.selectionSet
-      ? tr.selection
-      : tr.selection.map(tr.doc, tr.mapping.slice(0))
+    const storedMarks = tr.storedMarksSet ? tr.storedMarks : null
+    if (!this.reduces) {
+      return new EditorState(
+        this.schema,
+        tr.doc,
+        tr.selection,
+        storedMarks,
+        this.plugins,
+        this.pluginValues,
+      )
+    }
+
     const next = new EditorState(
       this.schema,
       tr.doc,
-      selection,
-      tr.storedMarksSet ? tr.storedMarks : null,
+      tr.selection,
+      storedMarks,
       this.plugins,
       this.pluginValues,
     )
@@ -83,14 +103,7 @@ export class EditorState {
       )
     }
 
-    return new EditorState(
-      this.schema,
-      tr.doc,
-      selection,
-      next.storedMarks,
-      this.plugins,
-      values,
-    )
+    return new EditorState(this.schema, tr.doc, tr.selection, storedMarks, this.plugins, values)
   }
 
   /** Marks the next typed character would carry. */

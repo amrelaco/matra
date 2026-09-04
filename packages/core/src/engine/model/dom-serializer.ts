@@ -75,24 +75,30 @@ export class DOMSerializer {
   private render(spec: DOMOutputSpec): { dom: globalThis.Node; hole: globalThis.Node | null } {
     if (typeof spec === 'string') return { dom: document.createElement(spec), hole: null }
 
-    const [tag, ...rest] = spec
+    const tag = spec[0] as string
     const dom = document.createElement(tag)
     let hole: globalThis.Node | null = null
-    let start = 0
+    let start = 1
 
-    const first = rest[0]
+    const first = spec[1]
     if (first && typeof first === 'object' && !Array.isArray(first)) {
       for (const [name, value] of Object.entries(first as Record<string, unknown>)) {
         setSafeAttribute(dom, name, value)
       }
       finalizeElement(dom)
-      start = 1
+      start = 2
     }
 
-    for (const child of rest.slice(start)) {
+    for (let i = start; i < spec.length; i++) {
+      const child = spec[i]
       if (child === 0) {
         if (hole) throw new Error(`Matra: "${tag}" declares two content holes`)
         hole = dom
+        continue
+      }
+      if (typeof child === 'string') {
+        // Text among the children, the way a mention writes its label.
+        dom.appendChild(document.createTextNode(child))
         continue
       }
       const rendered = this.render(child as DOMOutputSpec)

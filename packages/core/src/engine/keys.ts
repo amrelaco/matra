@@ -1,5 +1,5 @@
 /**
- * Key binding matching — ours, not ProseMirror's.
+ * Key binding matching — the Matra engine's own.
  *
  * Bindings are written the way every editor writes them: `Mod-b`, `Shift-Enter`,
  * `Mod-Alt-1`. `Mod` is Cmd on Apple platforms and Ctrl everywhere else.

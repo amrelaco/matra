@@ -1,5 +1,6 @@
 import type { Mark } from '../model/mark'
 import type { Node } from '../model/node'
+import type { StepMap } from '../transform/step-map'
 import { Transform } from '../transform/transform'
 import type { Selection } from './selection'
 import { TextSelection } from './selection'
@@ -15,7 +16,12 @@ import type { EditorState } from './state'
 export class Transaction extends Transform {
   private selectionValue: Selection
   private storedMarksValue: readonly Mark[] | null
-  private readonly meta = new Map<string, unknown>()
+  /**
+   * Built on first write. Most transactions carry no metadata — every
+   * keystroke and every caret move is one — and a Map per transaction was an
+   * allocation to hold nothing.
+   */
+  private meta: Map<string, unknown> | null = null
 
   /** True once something set the selection explicitly. */
   selectionSet = false
@@ -63,34 +69,40 @@ export class Transaction extends Transform {
   }
 
   setMeta(key: string, value: unknown): this {
+    if (!this.meta) this.meta = new Map()
     this.meta.set(key, value)
     this.metaSet = true
     return this
   }
 
   getMeta(key: string): unknown {
-    return this.meta.get(key)
+    return this.meta?.get(key)
   }
 
   /** Keep the selection sensible as the document moves under it. */
   override step(step: Parameters<Transform['step']>[0]): this {
-    const before = this.steps.length
     super.step(step)
-    this.remapSelection(before)
+    this.remapSelection()
     return this
   }
 
   override maybeStep(step: Parameters<Transform['maybeStep']>[0]): boolean {
-    const before = this.steps.length
     const applied = super.maybeStep(step)
-    if (applied) this.remapSelection(before)
+    if (applied) this.remapSelection()
     return applied
   }
 
-  private remapSelection(fromStep: number): void {
-    if (this.steps.length === fromStep) return
-    const mapping = this.mapping.slice(fromStep)
-    this.selectionValue = this.selectionValue.map(this.doc, mapping)
+  /**
+   * Move the selection through the step just added.
+   *
+   * Exactly one step landed, so its map is the last one in the mapping and is
+   * applied on its own — slicing the mapping to get at it allocated a Mapping
+   * and an array for every step of every transaction.
+   */
+  private remapSelection(): void {
+    const maps = this.mapping.maps
+    const last = maps[maps.length - 1] as StepMap
+    this.selectionValue = this.selectionValue.map(this.doc, last)
   }
 
   /** Replace the current selection with content, then put the caret after it. */

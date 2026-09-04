@@ -80,9 +80,10 @@ export class Mark {
   }
 
   toJSON(): { type: string; attrs?: Record<string, unknown> } {
-    return Object.keys(this.attrs).length
-      ? { type: this.type.name, attrs: this.attrs }
-      : { type: this.type.name }
+    // Asked once per mark on every text node a document serialises, so the
+    // question is answered without building a key array to count.
+    for (const _key in this.attrs) return { type: this.type.name, attrs: this.attrs }
+    return { type: this.type.name }
   }
 
   static none: readonly Mark[] = []
@@ -94,17 +95,47 @@ export class Mark {
   }
 }
 
+/**
+ * The attributes of a node that declares none.
+ *
+ * One frozen object rather than a fresh `{}` per node: a two-thousand-block
+ * document is two thousand paragraphs, and every one of them used to carry its
+ * own empty object to say it had nothing to carry. Frozen so that a caller who
+ * writes into it finds out, rather than quietly editing every paragraph at once.
+ */
+const NO_ATTRS: Record<string, unknown> = Object.freeze({})
+
+/** The declared attributes, as entries — read once per type, not once per node. */
+const entryCache = new WeakMap<
+  Record<string, { default?: unknown; required?: boolean }>,
+  Array<[string, { default?: unknown; required?: boolean }]>
+>()
+
+function entriesOf(
+  spec: Record<string, { default?: unknown; required?: boolean }>,
+): Array<[string, { default?: unknown; required?: boolean }]> {
+  let entries = entryCache.get(spec)
+  if (!entries) {
+    entries = Object.entries(spec)
+    entryCache.set(spec, entries)
+  }
+  return entries
+}
+
 /** Fill in defaults and reject a missing required attribute loudly. */
 export function resolveAttrs(
   spec: Record<string, { default?: unknown; required?: boolean }> | undefined,
   given: Record<string, unknown> | null | undefined,
   owner: string,
 ): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
   // No declaration means no attributes. Passing unknown keys through is how a
   // node that renders `node.attrs` ends up writing whatever JSON asked for.
-  if (!spec) return out
-  for (const [name, attr] of Object.entries(spec)) {
+  if (!spec) return NO_ATTRS
+  const entries = entriesOf(spec)
+  if (!entries.length) return NO_ATTRS
+  const out: Record<string, unknown> = {}
+  for (let i = 0; i < entries.length; i++) {
+    const [name, attr] = entries[i] as [string, { default?: unknown; required?: boolean }]
     const value = given?.[name]
     if (value !== undefined) {
       out[name] = value
@@ -119,6 +150,7 @@ export function resolveAttrs(
 }
 
 export function sameAttrs(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  if (a === b) return true
   const keys = Object.keys(a)
   if (keys.length !== Object.keys(b).length) return false
   return keys.every((key) => a[key] === b[key])

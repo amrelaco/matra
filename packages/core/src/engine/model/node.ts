@@ -35,8 +35,8 @@ export class Node {
 
   /** Text nodes measure their characters; everything else counts its borders. */
   get nodeSize(): number {
-    if (this.isText) return this.text?.length ?? 0
-    return this.isLeaf ? 1 : 2 + this.content.size
+    if (this.text !== undefined) return this.text.length
+    return this.type.isLeaf ? 1 : 2 + this.content.size
   }
 
   get childCount(): number {
@@ -58,7 +58,8 @@ export class Node {
   get textContent(): string {
     if (this.isText) return this.text ?? ''
     let out = ''
-    for (const child of this.content) out += child.textContent
+    const content = this.content.content
+    for (let i = 0; i < content.length; i++) out += (content[i] as Node).textContent
     return out
   }
 
@@ -103,14 +104,25 @@ export class Node {
     if (this.isText) return (this.text ?? '').slice(from, to)
     let out = ''
     let first = true
-    for (const [child, offset] of this.content.entries()) {
-      const start = offset + 1
-      const end = offset + child.nodeSize - (child.isText ? 0 : 1)
-      if (end <= from || start > to) continue
-      if (child.isText) {
-        out += (child.text ?? '').slice(Math.max(0, from - offset), Math.max(0, to - offset))
+    const content = this.content.content
+    // Start at the child the range reaches: the text of one paragraph near the
+    // end of a long document should not cost a walk from the top.
+    const begin = from > 0 && from < this.content.size ? this.content.findIndex(from) : null
+    let offset = begin ? begin.offset : 0
+    for (let i = begin ? begin.index : 0; i < content.length && offset < to; i++) {
+      const child = content[i] as Node
+      const size = child.nodeSize
+      if (child.text !== undefined) {
+        if (offset + size > from) {
+          out += child.text.slice(Math.max(0, from - offset), Math.max(0, to - offset))
+        }
+        offset += size
         continue
       }
+      const start = offset + 1
+      const end = offset + size - 1
+      offset += size
+      if (end <= from || start > to) continue
       const inner = child.textBetween(
         Math.max(0, from - start),
         Math.min(child.content.size, to - start),
@@ -126,10 +138,46 @@ export class Node {
 
   /** Walk every descendant, depth first, with its absolute position. */
   descendants(fn: (node: Node, pos: number) => boolean | undefined, start = 0): void {
-    for (const [child, offset] of this.content.entries()) {
+    const content = this.content.content
+    let offset = 0
+    for (let i = 0; i < content.length; i++) {
+      const child = content[i] as Node
       const pos = start + offset
-      if (fn(child, pos) === false) continue
-      if (!child.isText) child.descendants(fn, pos + 1)
+      if (fn(child, pos) !== false && child.text === undefined) child.descendants(fn, pos + 1)
+      offset += child.nodeSize
+    }
+  }
+
+  /**
+   * Walk only the descendants a range touches.
+   *
+   * `descendants` visits the whole tree and lets the callback say no to each
+   * node, which means asking about one selected word costs the size of the
+   * document. This jumps to the first child the range reaches and stops at the
+   * last, so the cost is the range plus the depth. `from` and `to` are absolute
+   * positions; `start` is where this node's content begins.
+   */
+  nodesBetween(
+    from: number,
+    to: number,
+    fn: (node: Node, pos: number) => boolean | undefined,
+    start = 0,
+  ): void {
+    const size = this.content.size
+    const localTo = to - start
+    if (localTo <= 0) return
+    const localFrom = Math.max(0, from - start)
+    if (localFrom >= size) return
+    const content = this.content.content
+    const begin = this.content.findIndex(localFrom)
+    let offset = begin.offset
+    for (let i = begin.index; i < content.length && offset < localTo; i++) {
+      const child = content[i] as Node
+      const pos = start + offset
+      if (fn(child, pos) !== false && child.text === undefined && child.content.size) {
+        child.nodesBetween(from, to, fn, pos + 1)
+      }
+      offset += child.nodeSize
     }
   }
 
@@ -157,7 +205,7 @@ export class Node {
 }
 
 /** Does this object have any own enumerable key? Asked without allocating. */
-function hasAny(value: Record<string, unknown>): boolean {
+export function hasAny(value: Record<string, unknown>): boolean {
   for (const _key in value) return true
   return false
 }

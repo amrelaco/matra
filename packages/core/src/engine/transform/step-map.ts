@@ -12,6 +12,8 @@ export interface MapResult {
   pos: number
   /** True when the position was inside a span that no longer exists. */
   deleted: boolean
+  /** True when what stood right after the position was replaced. */
+  deletedAfter: boolean
 }
 
 /**
@@ -24,6 +26,14 @@ export class StepMap {
   constructor(
     readonly ranges: readonly number[],
     readonly inverted = false,
+    /**
+     * The spans changed without moving anything inside them.
+     *
+     * An attribute change is that: the node is redrawn, so the span is
+     * reported to whoever asks what changed, and every position inside it
+     * maps to itself, because the content is exactly where it was.
+     */
+    readonly preserves = false,
   ) {
     if (ranges.length % 3 !== 0) {
       throw new Error('Matra: a step map needs [start, oldSize, newSize] triples')
@@ -66,17 +76,19 @@ export class StepMap {
       const end = start + oldSize
 
       if (pos <= end) {
+        if (this.preserves) return { pos: pos + diff, deleted: false, deletedAfter: false }
         // Inside the replaced span. An empty span has no inside, so assoc
         // decides; otherwise the ends stick and the middle collapses.
         const side = oldSize === 0 ? assoc : pos === start ? -1 : pos === end ? 1 : assoc
         return {
           pos: start + diff + (side < 0 ? 0 : newSize),
           deleted: pos > start && pos < end,
+          deletedAfter: oldSize > 0 && pos < end,
         }
       }
       diff += newSize - oldSize
     }
-    return { pos: pos + diff, deleted: false }
+    return { pos: pos + diff, deleted: false, deletedAfter: false }
   }
 
   map(pos: number, assoc: -1 | 1 = 1): number {
@@ -85,7 +97,7 @@ export class StepMap {
 
   /** The map that undoes this one. */
   invert(): StepMap {
-    return new StepMap(this.ranges, !this.inverted)
+    return new StepMap(this.ranges, !this.inverted, this.preserves)
   }
 
   forEach(
@@ -141,12 +153,14 @@ export class Mapping {
   mapResult(pos: number, assoc: -1 | 1 = 1): MapResult {
     let current = pos
     let deleted = false
+    let deletedAfter = false
     for (const map of this.maps) {
       const result = map.mapResult(current, assoc)
       current = result.pos
       if (result.deleted) deleted = true
+      if (result.deletedAfter) deletedAfter = true
     }
-    return { pos: current, deleted }
+    return { pos: current, deleted, deletedAfter }
   }
 
   map(pos: number, assoc: -1 | 1 = 1): number {

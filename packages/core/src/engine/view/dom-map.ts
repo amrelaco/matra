@@ -139,7 +139,7 @@ export class DOMMap {
         this.nodes.set(contentStart, dom)
         return dom
       }
-      for (const child of Array.from(dom.childNodes)) {
+      for (let child = dom.firstChild; child; child = child.nextSibling) {
         if (child.nodeType === 1) stack.push(child)
       }
     }
@@ -186,9 +186,7 @@ export class DOMMap {
     let found = false
 
     const walk = (dom: globalThis.Node): void => {
-      if (found) return
-      for (const child of Array.from(dom.childNodes)) {
-        if (found) return
+      for (let child = dom.firstChild; child && !found; child = child.nextSibling) {
         if (child === target) {
           total += child.nodeType === 3 ? offset : this.sizeOfChildren(child, offset)
           found = true
@@ -214,20 +212,20 @@ export class DOMMap {
 
   private offsetOfChild(container: globalThis.Node, childIndex: number): number {
     let total = 0
-    const children = Array.from(container.childNodes)
-    for (let i = 0; i < childIndex && i < children.length; i++) {
-      total += this.modelSize(children[i] as globalThis.Node)
+    let index = 0
+    for (
+      let child = container.firstChild;
+      child && index < childIndex;
+      child = child.nextSibling
+    ) {
+      total += this.modelSize(child)
+      index++
     }
     return total
   }
 
   private sizeOfChildren(dom: globalThis.Node, childIndex: number): number {
-    let total = this.borderSize(dom)
-    const children = Array.from(dom.childNodes)
-    for (let i = 0; i < childIndex && i < children.length; i++) {
-      total += this.modelSize(children[i] as globalThis.Node)
-    }
-    return total
+    return this.borderSize(dom) + this.offsetOfChild(dom, childIndex)
   }
 
   /** What one border of this element costs in model positions. */
@@ -247,7 +245,9 @@ export class DOMMap {
     // text, and adding that text up would make a five-letter name cost five.
     if (this.atoms.has(dom)) return 1
     let inner = 0
-    for (const child of Array.from(dom.childNodes)) inner += this.modelSize(child)
+    for (let child = dom.firstChild; child; child = child.nextSibling) {
+      inner += this.modelSize(child)
+    }
     return inner + this.borderSize(dom) * 2
   }
 
@@ -259,7 +259,7 @@ export class DOMMap {
     if (!dom) return null
 
     let remaining = pos - parentStart
-    for (const child of Array.from(dom.childNodes)) {
+    for (let child = dom.firstChild; child; child = child.nextSibling) {
       const size = this.modelSize(child)
       if (remaining <= size) {
         if (child.nodeType === 3) return { node: child, offset: remaining }
@@ -281,7 +281,7 @@ export class DOMMap {
     offset: number,
   ): { node: globalThis.Node; offset: number } | null {
     let remaining = offset
-    for (const child of Array.from(dom.childNodes)) {
+    for (let child = dom.firstChild; child; child = child.nextSibling) {
       const size = this.modelSize(child)
       if (remaining <= size) {
         if (child.nodeType === 3) return { node: child, offset: remaining }
@@ -295,7 +295,7 @@ export class DOMMap {
   private childIndexForOffset(dom: globalThis.Node, offset: number): number {
     let remaining = offset
     let index = 0
-    for (const child of Array.from(dom.childNodes)) {
+    for (let child = dom.firstChild; child; child = child.nextSibling) {
       if (remaining <= 0) break
       remaining -= this.modelSize(child)
       index++

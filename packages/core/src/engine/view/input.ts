@@ -23,13 +23,26 @@ export interface InputIntent {
   to: number
 }
 
+/** What arrived from the clipboard. */
+export interface PasteInput {
+  html: string | null
+  text: string | null
+  files: readonly File[]
+}
+
+/** What arrived by drag from outside the editor, and where it landed. */
+export interface DropInput extends PasteInput {
+  pos: number | null
+}
+
 export interface InputHandlers {
   /** Return true to say the input was handled and should not be applied. */
   onTextInput?(text: string, from: number, to: number): boolean
   onEnter?(): boolean
   onBackspace?(): boolean
   onDelete?(): boolean
-  onPaste?(html: string | null, text: string | null): boolean
+  onPaste?(data: PasteInput): boolean
+  onDrop?(data: DropInput): boolean
 }
 
 /**

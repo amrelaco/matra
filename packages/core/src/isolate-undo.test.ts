@@ -77,8 +77,12 @@ describe('isolateUndo', () => {
     editor.commands.shoutAlone()
     editor.commands.select(1 as Pos)
     editor.commands.insert('a')
+    // The caret follows what it typed: `a` lands before the `!`, and `b`
+    // lands right after `a`. This used to read `a!btext`, because the
+    // selection was mapped through the insertion twice and the caret jumped
+    // a character past its own text.
     editor.commands.insert('b')
-    expect(editor.getText()).toBe('a!btext')
+    expect(editor.getText()).toBe('ab!text')
 
     // The two plain inserts are still one entry between them.
     editor.commands.undo()
