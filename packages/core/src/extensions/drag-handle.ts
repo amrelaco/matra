@@ -58,8 +58,34 @@ export function dragHandle(options: DragHandleOptions = {}): ExtensionDef {
       const dom = view?.dom
       if (!dom) return
       root = dom
-      const ownerDocument = dom.ownerDocument
-      handle = build(ownerDocument)
+      // Built on the first move, not at mount: an editor mounted before its
+      // element is in the page — Solid hands a ref an element cloned from a
+      // template, which belongs to no page yet — has no body to put it in.
+      // By the time a mouse moves over it, it is on screen.
+      const ensure = (): HTMLElement => {
+        if (handle) return handle
+        handle = build(dom.ownerDocument)
+        // Dragging the handle drags the block it points at: the mousedown
+        // moves the selection into that block first, so the view's dragstart
+        // finds it.
+        handle.addEventListener('mousedown', () =>
+          target?.scrollIntoView?.({ block: 'nearest' }),
+        )
+        handle.addEventListener('dragstart', (event) => {
+          // Forward the drag to the editor, which owns the document logic.
+          if (!target) return
+          const forwarded = new MouseEvent('dragstart', {
+            clientY: targetTop(target),
+            bubbles: true,
+          })
+          Object.defineProperty(forwarded, 'dataTransfer', { value: event.dataTransfer })
+          dom.dispatchEvent(forwarded)
+        })
+        return handle
+      }
+
+      // In a page already: made now, so it is there before the first move.
+      if (dom.ownerDocument.body) ensure()
 
       const onMove = (event: MouseEvent) => {
         const block = blockUnder(dom, event.clientY)
@@ -67,32 +93,17 @@ export function dragHandle(options: DragHandleOptions = {}): ExtensionDef {
         // Still over the same block: the handle is already where it should
         // be, and measuring it again on every pixel of movement is what made
         // moving the mouse over a long document feel heavy.
-        if (block === target && handle?.style.display === 'block') return
+        if (block === target && ensure().style.display === 'block') return
         target = block
-        place(block, ownerDocument)
+        place(block, dom.ownerDocument)
       }
       const onLeave = (event: MouseEvent) => {
         // Moving onto the handle itself is not leaving.
         if (event.relatedTarget === handle) return
         if (handle) handle.style.display = 'none'
       }
-      // Dragging the handle drags the block it points at: the mousedown moves
-      // the selection into that block first, so the view's dragstart finds it.
-      const onHandleDown = () => target?.scrollIntoView?.({ block: 'nearest' })
-
       dom.addEventListener('mousemove', onMove)
       dom.addEventListener('mouseleave', onLeave)
-      handle.addEventListener('mousedown', onHandleDown)
-      handle.addEventListener('dragstart', (event) => {
-        // Forward the drag to the editor, which owns the document logic.
-        if (!target) return
-        const forwarded = new MouseEvent('dragstart', {
-          clientY: targetTop(target),
-          bubbles: true,
-        })
-        Object.defineProperty(forwarded, 'dataTransfer', { value: event.dataTransfer })
-        dom.dispatchEvent(forwarded)
-      })
 
       cleanups.push(() => dom.removeEventListener('mousemove', onMove))
       cleanups.push(() => dom.removeEventListener('mouseleave', onLeave))

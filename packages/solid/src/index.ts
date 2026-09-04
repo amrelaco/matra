@@ -1,5 +1,5 @@
 import { type AnyDef, type Editor, type EditorOptions, createEditor } from '@matrajs/core'
-import { type Accessor, createSignal, onCleanup } from 'solid-js'
+import { type Accessor, createSignal, onCleanup, onMount } from 'solid-js'
 
 /**
  * Solid bindings.
@@ -58,11 +58,21 @@ export function createMatra<const T extends readonly AnyDef[]>(
     editor.destroy()
   })
 
-  const mount = (element: HTMLElement) => {
+  // A ref runs when the element is made, before it is in the page — cloned
+  // from a template, it does not even belong to the page's document yet. The
+  // editor listens on that document for selection changes and puts its drag
+  // handle in its body, so it is mounted once the element is in place.
+  let element: HTMLElement | null = null
+  const attach = () => {
     // Guarded, because a ref can run twice under a hot reload and two views on
     // one element is two carets fighting over it.
-    if (!editor.unsafe.view) editor.mount(element)
+    if (element?.isConnected && !editor.unsafe.view) editor.mount(element)
   }
+  const mount = (target: HTMLElement) => {
+    element = target
+    attach()
+  }
+  onMount(attach)
 
   const state: Accessor<Editor<T>> = () => {
     version()
