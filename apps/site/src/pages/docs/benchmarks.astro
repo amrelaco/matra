@@ -10,12 +10,12 @@ import Docs from '../../layouts/Docs.astro'
  * different amount of patience.
  */
 const rows = [
-  ['Read a document in, 2,000 ¶', '—', '8.3', '15.6', '77.6', '—'],
-  ['Write it back as HTML, 2,000 ¶', '—', '1.5', '3.6', '7.1', '—'],
-  ['One keystroke, 200 ¶', '—', '0.127', '0.275', '0.197', '—'],
-  ['One keystroke, 2,000 ¶', '—', '0.847', '1.188', '1.160', '—'],
-  ['Put an editor on screen, 200 ¶', '1.1', '2.0', '4.3', '3.2', '8.0'],
-  ['Put an editor on screen, 2,000 ¶', '10.9', '22.1', '37.7', '26.0', '93.0'],
+  ['Read a document in, 2,000 ¶', '—', '2.2', '8.1', '35.8', '—'],
+  ['Write it back as HTML, 2,000 ¶', '—', '0.3', '1.7', '5.3', '—'],
+  ['One keystroke, 200 ¶', '—', '0.073', '0.158', '0.102', '—'],
+  ['One keystroke, 2,000 ¶', '—', '0.480', '0.622', '0.547', '—'],
+  ['Put an editor on screen, 200 ¶', '1.0', '1.2', '4.6', '2.3', '5.0'],
+  ['Put an editor on screen, 2,000 ¶', '12.2', '14.6', '34.1', '21.6', '50.2'],
 ]
 
 /** The keystroke row, before and after the work described further down. */
@@ -51,7 +51,10 @@ const sizes = [
 
   <h2>Method</h2>
   <ul>
-    <li>WebKit, one page, one run · all four editors mounted side by side.</li>
+    <li>
+      Chrome 152, one page, one run · all four editors mounted side by side · Matra 1.0.1,
+      Tiptap 3.31, Lexical 0.50, Slate 0.126, on 2026-09-05.
+    </li>
     <li>Median of seven samples, after five warm-up rounds.</li>
     <li>A forced layout read every round, so the DOM work is really done.</li>
     <li>Each published figure is the median of three such runs.</li>

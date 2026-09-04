@@ -180,7 +180,7 @@ const MD_TOOLS = [
 /**
  * Four editors, one browser, one run.
  *
- * Measured in WebKit with all four mounted in the same page, each figure the
+ * Measured in Chrome 152 with all four mounted in the same page, each figure the
  * median of three runs of a median of seven samples. `null` is not a zero: it
  * is an operation that could not be measured the same way for that editor.
  *
@@ -197,10 +197,10 @@ const MD_TOOLS = [
 const RIVALS = ['Matra', 'Tiptap', 'Lexical', 'Slate']
 
 const speed = [
-  { op: 'Read a document in', size: '2,000 paragraphs', ms: [8.3, 15.6, 77.6, null] },
-  { op: 'Write it back out as HTML', size: '2,000 paragraphs', ms: [1.5, 3.6, 7.1, null] },
-  { op: 'One keystroke', size: '2,000 paragraphs', ms: [0.847, 1.188, 1.16, null] },
-  { op: 'One keystroke', size: '200 paragraphs', ms: [0.127, 0.275, 0.197, null] },
+  { op: 'Read a document in', size: '2,000 paragraphs', ms: [2.2, 8.1, 35.8, null] },
+  { op: 'Write it back out as HTML', size: '2,000 paragraphs', ms: [0.3, 1.7, 5.3, null] },
+  { op: 'One keystroke', size: '2,000 paragraphs', ms: [0.48, 0.622, 0.547, null] },
+  { op: 'One keystroke', size: '200 paragraphs', ms: [0.073, 0.158, 0.102, null] },
   // `floor` is the same paragraphs built by hand, with no editor in the page at
   // all. It is not drawn here — the chart is for deciding whether to look
   // further, and a fifth bar that is not a competitor gets in the way of that.
@@ -209,14 +209,14 @@ const speed = [
   {
     op: 'Put an editor on screen',
     size: '200 paragraphs',
-    ms: [2.0, 4.3, 3.2, 8.0],
-    floor: 1.1,
+    ms: [1.2, 4.6, 2.3, 5.0],
+    floor: 1.0,
   },
   {
     op: 'Put an editor on screen',
     size: '2,000 paragraphs',
-    ms: [22.1, 37.7, 26.0, 93.0],
-    floor: 10.9,
+    ms: [14.6, 34.1, 21.6, 50.2],
+    floor: 12.2,
   },
 ]
 

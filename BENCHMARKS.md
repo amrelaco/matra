@@ -22,21 +22,22 @@ every one of those is on the runtime side of this file.
 
 ## Speed, in a browser
 
-Four editors mounted in the same page, in the same run, in WebKit. Each cell is
-the median of three runs of a median of seven samples. Milliseconds, lower is
-better. `bench/browser` builds and runs this.
+Four editors mounted in the same page, in the same run, in Chrome 152 on
+2026-09-05 — Matra 1.0.1 against Tiptap 3.31, Lexical 0.50 and Slate 0.126.
+Each cell is the median of three runs of a median of seven samples.
+Milliseconds, lower is better. `bench/browser` builds and runs this.
 
 **No editor** is the same paragraphs built by hand into a `contenteditable`
 div, with nothing else in the page — the floor none of these can go under.
 
 | operation | No editor | Matra | Tiptap | Lexical | Slate |
 |---|---|---|---|---|---|
-| parse a document, 2000 ¶ | — | **8.3** | 15.6 | 77.6 | — |
-| `getHTML()`, 2000 ¶ | — | **1.5** | 3.6 | 7.1 | — |
-| keystroke, 200 ¶ | — | **0.127** | 0.275 | 0.197 | — |
-| keystroke, 2000 ¶ | — | **0.847** | 1.188 | 1.160 | — |
-| mount + first render, 200 ¶ | 1.1 | **2.0** | 4.3 | 3.2 | 8.0 |
-| mount + first render, 2000 ¶ | 10.9 | **22.1** | 37.7 | 26.0 | 93.0 |
+| parse a document, 2000 ¶ | — | **2.2** | 8.1 | 35.8 | — |
+| `getHTML()`, 2000 ¶ | — | **0.3** | 1.7 | 5.3 | — |
+| keystroke, 200 ¶ | — | **0.073** | 0.158 | 0.102 | — |
+| keystroke, 2000 ¶ | — | **0.480** | 0.622 | 0.547 | — |
+| mount + first render, 200 ¶ | 1.0 | **1.2** | 4.6 | 2.3 | 5.0 |
+| mount + first render, 2000 ¶ | 12.2 | **14.6** | 34.1 | 21.6 | 50.2 |
 
 **Absolute milliseconds only mean anything within one run.** Same harness, same
 browser, a different day: Lexical parsed the same document in 34.7 ms one week
