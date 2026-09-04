@@ -67,6 +67,26 @@ export class Transform {
     return this.replaceWith(pos, pos, content)
   }
 
+  /**
+   * Replace a range with content that keeps runs of the old content in place.
+   *
+   * `kept` is `[oldFrom, oldTo, newFrom]` triples, in document order: each
+   * says a run of the old range stands in the new content, whole, starting
+   * at `newFrom`. Everything between the runs is tokens that were removed
+   * or added, and the step's map says exactly that, so a caret, a marker or
+   * a collaborator's position inside a paragraph that becomes a heading —
+   * or a list item, or a quote — stays on the same character.
+   */
+  rebuild(
+    from: number,
+    to: number,
+    content: Node | readonly Node[] | Fragment,
+    kept: readonly number[],
+  ): this {
+    const slice = new Slice(Fragment.from(content))
+    return this.step(new ReplaceStep(from, to, slice, keepRanges(from, to, slice.size, kept)))
+  }
+
   addMark(from: number, to: number, mark: Mark): this {
     return this.step(new AddMarkStep(from, to, mark))
   }
@@ -88,7 +108,8 @@ export class Transform {
       const wrapper = wrappers[i] as Wrapper
       content = Fragment.from([wrapper.type.create(wrapper.attrs, content)])
     }
-    return this.replaceWith(range.start, range.end, content)
+    const { start, end } = range
+    return this.rebuild(start, end, content, [start, end, start + wrappers.length])
   }
 
   /** Remove the wrapper a range sits in. */
@@ -101,7 +122,11 @@ export class Transform {
       covered.push(range.parent.child(i))
     }
     void target
-    return this.replaceWith(parentStart, parentEnd, Fragment.from(covered))
+    return this.rebuild(parentStart, parentEnd, Fragment.from(covered), [
+      parentStart + 1,
+      parentEnd - 1,
+      parentStart,
+    ])
   }
 
   /** Change the type of every textblock touched by a range. */
@@ -126,9 +151,9 @@ export class Transform {
     })
 
     // Later first, so earlier positions stay valid as we go.
-    for (const target of targets.reverse()) {
-      const replacement = type.create(attrs, target.node.content)
-      this.replaceWith(target.pos, target.pos + target.node.nodeSize, replacement)
+    for (const { pos, node } of targets.reverse()) {
+      const end = pos + node.nodeSize
+      this.rebuild(pos, end, type.create(attrs, node.content), [pos + 1, end - 1, pos + 1])
     }
     return this
   }
@@ -157,7 +182,14 @@ export class Transform {
     const block = $pos.parent
     const first = block.copy(block.content.cut(0, $pos.parentOffset))
     const second = block.copy(block.content.cut($pos.parentOffset))
-    return this.replaceWith($pos.start() - 1, $pos.end() + 1, Fragment.from([first, second]))
+    const start = $pos.start()
+    const end = $pos.end()
+    return this.rebuild(
+      start - 1,
+      end + 1,
+      [first, second],
+      [start, pos, start, pos, end, pos + 2],
+    )
   }
 
   /** Every step inverted, in the order that would rewind this transform. */
@@ -170,4 +202,35 @@ export class Transform {
     }
     return out
   }
+}
+
+/**
+ * The map triples for a rebuild, from the runs it keeps.
+ *
+ * Between one kept run and the next lie the tokens that changed: the old
+ * ones are the span, the new ones its replacement. Runs have to come in
+ * document order on both sides — content that moves past other content is
+ * a move, not a rebuild, and the plain map is the true one for it.
+ */
+function keepRanges(
+  from: number,
+  to: number,
+  size: number,
+  kept: readonly number[],
+): number[] | null {
+  const out: number[] = []
+  let oldPos = from
+  let newPos = from
+  const span = (oldEnd: number, newEnd: number) => {
+    if (oldEnd < oldPos || newEnd < newPos) return false
+    if (oldEnd > oldPos || newEnd > newPos) out.push(oldPos, oldEnd - oldPos, newEnd - newPos)
+    return true
+  }
+  for (let i = 0; i < kept.length; i += 3) {
+    const [oldFrom, oldTo, newFrom] = [kept[i], kept[i + 1], kept[i + 2]] as number[]
+    if (!span(oldFrom as number, newFrom as number)) return null
+    oldPos = oldTo as number
+    newPos = (newFrom as number) + ((oldTo as number) - (oldFrom as number))
+  }
+  return span(to, from + size) ? out : null
 }

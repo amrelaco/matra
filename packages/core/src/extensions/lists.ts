@@ -1,6 +1,16 @@
-import { liftListItem, sinkListItem, splitListItem } from '../engine/list-commands'
+import { liftListItem, sinkListItem, splitListItem, toggleList } from '../engine/list-commands'
 import { engine } from '../internal'
 import type { Command, NodeDef } from '../types'
+
+/** The list button, for a list of `list` made of `item`. */
+export const listToggle =
+  (list: string, item: string): Command =>
+  (ctx) => {
+    const { state, tr } = engine(ctx)
+    const listType = state.schema.nodes[list]
+    const itemType = state.schema.nodes[item]
+    return !!listType && !!itemType && toggleList(tr, listType, itemType)
+  }
 
 /** List editing works on the transaction the command is already building. */
 const runList =
@@ -45,8 +55,7 @@ export const bulletList = {
   parseDOM: [{ tag: 'ul' }],
   toDOM: () => ['ul', 0],
   commands: {
-    toggleBulletList: (ctx) =>
-      ctx.inNode('bulletList') ? ctx.lift() : ctx.wrapIn('bulletList'),
+    toggleBulletList: /* @__PURE__ */ listToggle('bulletList', 'listItem'),
   },
   keys: { 'Mod-Shift-8': 'toggleBulletList' },
   inputRules: [
@@ -74,8 +83,7 @@ export const orderedList = {
     return ['ol', start === 1 ? {} : { start }, 0]
   },
   commands: {
-    toggleOrderedList: (ctx) =>
-      ctx.inNode('orderedList') ? ctx.lift() : ctx.wrapIn('orderedList'),
+    toggleOrderedList: /* @__PURE__ */ listToggle('orderedList', 'listItem'),
   },
   keys: { 'Mod-Shift-9': 'toggleOrderedList' },
   inputRules: [

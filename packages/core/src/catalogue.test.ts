@@ -20,8 +20,11 @@ function everything(): AnyDef[] {
   const seen = new Set<string>()
   const add = (def: AnyDef) => {
     // A kit hands back the same nodes its parts do; one of each is the editor.
-    if (seen.has(def.name)) return
-    seen.add(def.name)
+    // By kind as well as name: a node and the extension that drives it may
+    // share a name, and `footnotes` is both.
+    const key = `${def.kind}:${def.name}`
+    if (seen.has(key)) return
+    seen.add(key)
     defs.push(def)
   }
   const skip = new Set(['core', 'starterKit', 'tableKit', 'detailsKit', 'columnsKit'])

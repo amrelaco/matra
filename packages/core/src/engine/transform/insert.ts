@@ -1,6 +1,7 @@
 import { Fragment } from '../model/fragment'
 import type { Node } from '../model/node'
 import type { ResolvedPos } from '../model/resolved-pos'
+import { accepts } from './structure'
 import type { Transform } from './transform'
 
 /** Runs of inline nodes become textblocks like `like`, so a mixed list is all blocks. */
@@ -91,13 +92,7 @@ function place(
 
   const start = $from.before(depth)
   const end = $from.after(depth)
-  const grand = $from.node(depth - 1)
-  const grandStart = $from.start(depth - 1)
-  const replaced = grand.content
-    .cut(0, start - grandStart)
-    .append(Fragment.from(out))
-    .append(grand.content.cut(end - grandStart))
-  if (!grand.type.validContent(replaced)) return null
+  if (!accepts($from.node(depth - 1), $from.start(depth - 1), start, end, out)) return null
   tr.replaceWith(start, end, out)
   return start + landing
 }

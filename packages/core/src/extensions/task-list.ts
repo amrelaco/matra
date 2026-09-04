@@ -1,6 +1,7 @@
 import { liftListItem, sinkListItem, splitListItem } from '../engine/list-commands'
 import { engine } from '../internal'
 import type { Command, NodeDef, Pos } from '../types'
+import { listToggle } from './lists'
 
 /**
  * A checklist.
@@ -20,7 +21,7 @@ export const taskList = {
   parseDOM: [{ tag: 'ul[data-type="taskList"]' }],
   toDOM: () => ['ul', { 'data-type': 'taskList', class: 'matra-task-list' }, 0],
   commands: {
-    toggleTaskList: (ctx) => (ctx.inNode('taskList') ? ctx.lift() : ctx.wrapIn('taskList')),
+    toggleTaskList: /* @__PURE__ */ listToggle('taskList', 'taskItem'),
   },
   keys: { 'Mod-Shift-7': 'toggleTaskList' },
   inputRules: [

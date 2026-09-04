@@ -27,11 +27,10 @@ export function findWrapping(
   const content = Fragment.from(covered)
 
   // Would the parent even accept this type where the children are now?
-  const replaced = range.parent.content
-    .cut(0, range.start - range.$from.start(range.depth))
-    .append(Fragment.from([type.create(attrs)]))
-    .append(range.parent.content.cut(range.end - range.$from.start(range.depth)))
-  if (!range.parent.type.validContent(replaced)) return null
+  const { parent, start, end } = range
+  if (!accepts(parent, range.$from.start(range.depth), start, end, [type.create(attrs)])) {
+    return null
+  }
 
   if (type.validContent(content)) return [{ type, attrs }]
 
@@ -66,12 +65,34 @@ export function liftTarget(range: NodeRange): number | null {
 
   const parentStart = $from.start(range.depth) - 1
   const grandStart = $from.start(range.depth - 1)
-  const replaced = grandparent.content
-    .cut(0, parentStart - grandStart)
-    .append(Fragment.from(covered))
-    .append(grandparent.content.cut(parentStart - grandStart + parent.nodeSize))
+  const fits = accepts(
+    grandparent,
+    grandStart,
+    parentStart,
+    parentStart + parent.nodeSize,
+    covered,
+  )
+  return fits ? range.depth - 1 : null
+}
 
-  return grandparent.type.validContent(replaced) ? range.depth - 1 : null
+/**
+ * Would `parent` still hold valid content with `nodes` where `from`..`to` is?
+ *
+ * The question every structural change asks before it moves anything, with
+ * `parentStart` the position of the parent's first child.
+ */
+export function accepts(
+  parent: Node,
+  parentStart: number,
+  from: number,
+  to: number,
+  nodes: readonly Node[] | Fragment,
+): boolean {
+  const content = parent.content
+    .cut(0, from - parentStart)
+    .append(Fragment.from(nodes))
+    .append(parent.content.cut(to - parentStart))
+  return parent.type.validContent(content)
 }
 
 /** Whether a block can be split at `pos`. */

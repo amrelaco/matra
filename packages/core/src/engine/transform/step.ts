@@ -45,12 +45,25 @@ export function rebaseSteps(steps: readonly Step[], over: Mapping): Step[] {
   return out
 }
 
-/** Replace everything between two positions with a slice. */
+/**
+ * Replace everything between two positions with a slice.
+ *
+ * A replacement that rebuilds structure — a paragraph made a heading, a run
+ * of blocks wrapped in a list, an item nested under the one above — keeps
+ * nearly all of what it replaces exactly where it was, and only its tokens
+ * move. Told nothing, the map treats the whole range as gone and sends every
+ * position inside it to the end: the caret jumped to the end of a paragraph
+ * that was turned into a heading, and a selection that had just been
+ * turned into a list could not be bolded next, because there was no
+ * selection left. `ranges` is the finer story, as `[start, oldSize, newSize]`
+ * triples over the old document, and the map tells it when it is there.
+ */
 export class ReplaceStep extends Step {
   constructor(
     readonly from: number,
     readonly to: number,
     readonly slice: Slice,
+    readonly ranges: readonly number[] | null = null,
   ) {
     super()
     if (from > to) throw new RangeError(`Matra: replace step with from ${from} after to ${to}`)
@@ -65,7 +78,7 @@ export class ReplaceStep extends Step {
   }
 
   getMap(): StepMap {
-    return new StepMap([this.from, this.to - this.from, this.slice.size])
+    return new StepMap(this.ranges ?? [this.from, this.to - this.from, this.slice.size])
   }
 
   map(mapping: Mapping): Step | null {
@@ -81,7 +94,9 @@ export class ReplaceStep extends Step {
     const wasRange = this.to > this.from
     if (wasRange && from.pos >= to.pos && (from.deleted || to.deleted)) return null
 
-    return new ReplaceStep(Math.min(from.pos, to.pos), Math.max(from.pos, to.pos), this.slice)
+    const start = Math.min(from.pos, to.pos)
+    const end = Math.max(from.pos, to.pos)
+    return new ReplaceStep(start, end, this.slice, mapRanges(this.ranges, mapping, start, end))
   }
 
   /**
@@ -90,10 +105,11 @@ export class ReplaceStep extends Step {
   invert(doc: Node): Step {
     const $from = doc.resolve(this.from)
     const $to = doc.resolve(this.to)
+    const ranges = invertRanges(this.ranges)
 
     if ($from.parent === $to.parent) {
       const removed = $from.parent.content.cut($from.parentOffset, $to.parentOffset)
-      return new ReplaceStep(this.from, this.from + this.slice.size, new Slice(removed))
+      return new ReplaceStep(this.from, this.from + this.slice.size, new Slice(removed), ranges)
     }
 
     // Across blocks the step rebuilt a whole region, so undoing it means
@@ -110,11 +126,12 @@ export class ReplaceStep extends Step {
       sharedStart + regionStart,
       sharedStart + regionStart + rebuiltSize,
       new Slice(original),
+      ranges,
     )
   }
 
   toJSON(): Record<string, unknown> {
-    return {
+    const json: Record<string, unknown> = {
       stepType: 'replace',
       from: this.from,
       to: this.to,
@@ -124,7 +141,53 @@ export class ReplaceStep extends Step {
         openEnd: this.slice.openEnd,
       },
     }
+    // A client that does not know the field applies the same replacement
+    // and maps the old, coarser way — the documents still agree.
+    if (this.ranges) json.ranges = [...this.ranges]
+    return json
   }
+}
+
+/** The triples that describe undoing `ranges`: each span the other way round. */
+function invertRanges(ranges: readonly number[] | null): number[] | null {
+  if (!ranges) return null
+  const out: number[] = []
+  let diff = 0
+  for (let i = 0; i < ranges.length; i += 3) {
+    const [start, oldSize, newSize] = [ranges[i], ranges[i + 1], ranges[i + 2]] as number[]
+    out.push((start as number) + diff, newSize as number, oldSize as number)
+    diff += (newSize as number) - (oldSize as number)
+  }
+  return out
+}
+
+/**
+ * Bring `ranges` through changes made underneath the step, or give up.
+ *
+ * Each span's start leans forward and its end leans back, like the step's
+ * own range. A span that ends before it starts, or that has left the step's
+ * range, means the other changes cut through the structure this step was
+ * built on; the plain map is then the honest one.
+ */
+function mapRanges(
+  ranges: readonly number[] | null,
+  mapping: Mapping,
+  from: number,
+  to: number,
+): number[] | null {
+  if (!ranges) return null
+  const out: number[] = []
+  let last = from
+  for (let i = 0; i < ranges.length; i += 3) {
+    const oldSize = ranges[i + 1] as number
+    const start = mapping.map(ranges[i] as number, 1)
+    const end = mapping.map((ranges[i] as number) + oldSize, -1)
+    // Tokens that were there and are not now were deleted underneath.
+    if (start < last || end < start || end > to || (oldSize > 0 && end === start)) return null
+    out.push(start, end - start, ranges[i + 2] as number)
+    last = end
+  }
+  return out
 }
 
 /**
@@ -487,10 +550,17 @@ export function stepFromJSON(schema: Schema, json: Record<string, unknown>): Ste
         | { content?: unknown[]; openStart?: number; openEnd?: number }
         | undefined
       const content = (slice?.content ?? []).map((node) => schema.nodeFromJSON(node))
+      const ranges =
+        Array.isArray(json.ranges) &&
+        json.ranges.length % 3 === 0 &&
+        json.ranges.every((n) => Number.isFinite(n))
+          ? (json.ranges as number[])
+          : null
       return new ReplaceStep(
         from,
         to,
         new Slice(Fragment.from(content), slice?.openStart ?? 0, slice?.openEnd ?? 0),
+        ranges,
       )
     }
     case 'addMark':

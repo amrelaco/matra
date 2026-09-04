@@ -192,7 +192,7 @@ function joinBackward(state: EditorState, $from: ResolvedPos): Transaction | nul
     // does nothing at all — the list keeps you and the only escape is Enter.
     const out = state.tr
     out.selectAt($from.pos)
-    if (escapeList(state, out, $from, depth - 1) && out.docChanged) return out
+    if (escapeList(out, $from, depth - 1) && out.docChanged) return out
   }
 
   // An empty block inside a wrapper — the empty list item you cannot get rid
