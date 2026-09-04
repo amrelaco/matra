@@ -25,6 +25,9 @@ pnpm build       # tsup, all packages
 
 CI runs those plus `pnpm size`, `pnpm bench:check`, `pnpm links`,
 `pnpm wiring`, `pnpm packaging`, `pnpm facts --check` and, in its own job,
+`pnpm exercise` — every extension driven through the built package: every
+command run, every input rule typed, paste pasted, in a DOM.
+
 `pnpm install:matrix` — every package packed and installed with plain npm
 into a fresh React, Vue, Svelte, Solid and vanilla Vite app, built and run.
 Running the first four locally catches almost everything. Run the benchmark

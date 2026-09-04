@@ -19,7 +19,8 @@
     "packaging": "node scripts/packaging.mjs",
     "wiring": "node scripts/wiring.mjs",
     "facts": "node scripts/facts.mjs",
-    "install:matrix": "node scripts/install-matrix.mjs"
+    "install:matrix": "node scripts/install-matrix.mjs",
+    "exercise": "node scripts/exercise.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
