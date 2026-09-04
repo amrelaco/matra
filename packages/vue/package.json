@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/vue",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Vue 3 bindings for Matra \u2014 useEditor, useEditorState, useEditorFocus and EditorContent.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",

@@ -1,6 +1,6 @@
 {
   "name": "@matrajs/mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The Matra documentation as a Model Context Protocol server, so any AI tool can read it. Zero dependencies.",
   "license": "MIT",
   "author": "Nahim Hossain Shohan",

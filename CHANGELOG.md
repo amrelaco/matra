@@ -2,6 +2,22 @@
 
 All packages share one version number and are released together.
 
+## 1.0.2 — 2026-09-05
+
+**Solid mounts.** A Solid ref runs when its element is made, before it is in
+the page — and an element cloned from a template does not even belong to the
+page's document yet. The editor was mounted on it anyway, so the drag handle
+had no body to go in and the mount threw. `createMatra` now mounts once the
+element is in place, and the drag handle is built on the first mouse move
+when there is no body to put it in at mount. Found by running the install
+matrix's Solid app in a real Chrome: happy-dom gives cloned elements a
+document, so the DOM checks had passed.
+
+**The browser benchmark, rerun.** Matra 1.0.1 against Tiptap 3.31, Lexical
+0.50 and Slate 0.126 in Chrome 152, all four mounted in one page, the median
+of three runs. Matra leads every row; the tables in `BENCHMARKS.md`, on the
+landing page and on the benchmarks page carry the new figures.
+
 ## 1.0.1 — 2026-09-05
 
 Three bugs a person meets in the first minute, found by driving every
