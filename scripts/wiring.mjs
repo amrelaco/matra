@@ -123,7 +123,7 @@ try {
   const isDefinition = (value) =>
     value && typeof value === 'object' && 'kind' in value && 'name' in value
   const FACTORY =
-    /^(placeholder|characterCount|textAlign|suggestion|uniqueId|dragHandle|tableOfContents|mention)$/
+    /^(placeholder|characterCount|textAlign|suggestion|uniqueId|dragHandle|tableOfContents|mention|search|autolink|codeHighlight|emoji|focus|trailingNode|indent|fileHandler|locked|ghostText|dictation|smartPaste|bubbleMenu|floatingMenu|imageResize|invisibleCharacters|lineHeight|hashtag|snippets|embed|mathInline|mathBlock|selectionHighlight|textDirection|typewriter|autosave)$/
 
   const exported = new Set(
     Object.entries(core)
@@ -140,7 +140,10 @@ try {
   const table = page.slice(page.indexOf('const directory:'), page.indexOf('const inPackage'))
   // Helpers are functions rather than extensions, and are listed after them.
   const extensionsOnly = table.slice(0, table.indexOf("group: 'Helpers'"))
-  const rows = new Set([...extensionsOnly.matchAll(/\{\s*name: '([^']+)'/g)].map((m) => m[1]))
+  // A row starts its line: `{ name: 'x' }` inside a `use` string is an example, not a row.
+  const rows = new Set(
+    [...extensionsOnly.matchAll(/(?:^|\n)\s*\{\s*name: '([^']+)'/g)].map((m) => m[1]),
+  )
   listed = rows.size
 
   for (const name of exported) {

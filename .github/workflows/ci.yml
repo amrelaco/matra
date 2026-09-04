@@ -35,7 +35,13 @@ jobs:
         run: pnpm typecheck
 
       - name: Tests
-        run: pnpm test
+        run: pnpm exec vitest run --reporter=default --reporter=json --outputFile=.vitest.json
+
+      # The landing page prints how many tests there are. A number typed into
+      # a page stops being true quietly; this one is written by a script from
+      # the run above, and a committed file that disagrees with it fails here.
+      - name: The counts the site prints are current
+        run: node scripts/facts.mjs --check --from .vitest.json
 
       - name: Build
         run: pnpm build
@@ -72,6 +78,25 @@ jobs:
       # shared CI vCPU mean nothing next to a laptop's.
       - name: Performance ratchet
         run: node bench/bench.mjs --check
+
+  # The packages, installed the way a user installs them. `packaging.mjs`
+  # loads the builds in place; this packs every package to a tarball, installs
+  # it with plain npm — which does not rewrite `workspace:` ranges, and so
+  # catches a manifest pnpm would have quietly fixed — into a fresh Vite app
+  # for each framework, builds the app, and runs the built bundle in a DOM.
+  install:
+    name: Installs in every framework
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: node scripts/install-matrix.mjs
 
   # Every binding advertises a peer range, and the workspace only ever installs
   # one point in it — so `react: ^18 || ^19` was a promise nothing checked. Each

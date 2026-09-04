@@ -17,7 +17,19 @@ import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 
-const BUDGET_KB = 26
+/*
+ * 26 through 0.16. Raised to 30 at 1.0, when the engine learned to add one
+ * extension's attributes to another's nodes, take pastes and drops from
+ * extensions, let an extension refuse a change or render another's node,
+ * accept a file or text dropped from outside, put a block into the middle of
+ * a paragraph, paste paragraphs into a paragraph and lines of text as lines,
+ * change a node's attributes without moving what is inside it, compare
+ * decorations after mapping them, patch a paragraph's text in place, find
+ * positions by bisection and share a compiled schema between editors. Every
+ * rung is measured, and the figure printed on the site is the one measured
+ * here.
+ */
+const BUDGET_KB = 30
 const OUT = 'apps/site/src/data/sizes.json'
 const CHECK = process.argv.includes('--check')
 
