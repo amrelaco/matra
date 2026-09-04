@@ -1,0 +1,43 @@
+{
+  "name": "@matrajs/mcp",
+  "version": "1.0.0",
+  "description": "The Matra documentation as a Model Context Protocol server, so any AI tool can read it. Zero dependencies.",
+  "license": "MIT",
+  "author": "Nahim Hossain Shohan",
+  "homepage": "https://matrajs.com/docs/mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amrelaco/matra.git",
+    "directory": "packages/mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/amrelaco/matra/issues"
+  },
+  "keywords": ["mcp", "model-context-protocol", "docs", "matra", "editor", "ai"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "matra-mcp": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "docs", "README.md"],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node ../../scripts/docs-bundle.mjs && tsup",
+    "clean": "rm -rf dist"
+  }
+}
