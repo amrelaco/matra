@@ -9,6 +9,7 @@ import {
   DecorationSet,
   changedSpan,
   findIn,
+  sameAttrs,
   sameDecoration,
 } from './decoration'
 import { DOMMap } from './dom-map'
@@ -45,6 +46,22 @@ export class Renderer {
    * on the way out of `buildNode`, which is the only place the pairing is known.
    */
   private readonly holes = new WeakMap<globalThis.Node, HTMLElement>()
+  /**
+   * What each element on screen was drawn with.
+   *
+   * Whether an element can be patched rather than built again depends on
+   * whether the decorations over it changed, and that used to be asked of
+   * last render's set mapped through the edit. A node decoration whose whole
+   * range the edit replaced maps to nothing and drops out of that set, so
+   * the element it was drawn on looked undecorated on both sides of the
+   * comparison, was patched, and kept its class: the focus class stayed on a
+   * paragraph after `setContent` had put the caret in another one. What was
+   * actually drawn is kept here and compared with what should be drawn now:
+   * on each element, the node decorations written onto it, and in each
+   * element that holds content, the decorations drawn inside it.
+   */
+  private readonly drawnOn = new WeakMap<globalThis.Node, readonly Decoration[]>()
+  private readonly drawnIn = new WeakMap<globalThis.Node, readonly Decoration[]>()
 
   constructor(
     private readonly schema: Schema,
@@ -161,6 +178,8 @@ export class Renderer {
     const children = fragment.content
     const local = scope.length ? findIn(scope, start, start + fragment.size) : NO_DECORATIONS
     const decorated = local.length > 0
+    if (decorated) this.drawnIn.set(target, local)
+    else this.drawnIn.delete(target)
     const openMarks: Mark[] = []
     const openTargets: globalThis.Node[] = [target]
     let offset = 0
@@ -306,12 +325,15 @@ export class Renderer {
     scope: readonly Decoration[],
   ): globalThis.Node {
     const end = pos + node.nodeSize
+    const applied: Decoration[] = []
     for (let i = 0; i < scope.length; i++) {
       const item = scope[i] as Decoration
       if (item.type !== 'node') continue
       if (item.to <= pos || item.from >= end) continue
       if (dom.nodeType === 1) applyAttrs(dom as HTMLElement, item.attrs)
+      applied.push(item)
     }
+    if (applied.length) this.drawnOn.set(dom, applied)
     return dom
   }
 
@@ -388,12 +410,10 @@ export class Renderer {
     // that is patched.
     if (newParent.isTextblock) {
       const contentEnd = contentStart + newChildren.size
-      const decorationsChanged = !sameOver(
-        this.previousDecorations,
-        this.decorations,
-        contentStart,
-        contentEnd,
-      )
+      const now = findIn(this.decorations.items, contentStart, contentEnd)
+      const decorationsChanged =
+        !sameOver(this.previousDecorations, this.decorations, contentStart, contentEnd) ||
+        !sameShape(this.drawnIn.get(target), now)
       if (oldChildren.eq(newChildren) && !decorationsChanged) {
         this.recordWithin(newChildren, target, contentStart)
         return
@@ -406,7 +426,7 @@ export class Renderer {
       // an in-progress composition can survive.
       if (
         !decorationsChanged &&
-        !findIn(this.decorations.items, contentStart, contentEnd).length &&
+        !now.length &&
         this.patchText(target, oldChildren, newChildren)
       ) {
         return
@@ -530,11 +550,13 @@ export class Renderer {
       const owned = dom.nodeType === 1 && this.nodeViews.owns(dom)
       const patchable =
         (owned ? oldChild.type === newChild.type : oldChild.sameMarkup(newChild)) &&
-        sameNodeDecorations(
-          this.previousDecorations,
-          this.decorations,
-          contentStart + offset,
-          contentStart + offset + newChild.nodeSize,
+        sameShape(
+          this.drawnOn.get(dom),
+          nodeDecorationsOver(
+            this.decorations.items,
+            contentStart + offset,
+            contentStart + offset + newChild.nodeSize,
+          ),
         )
 
       if (patchable && !newChild.isText && dom.nodeType === 1) {
@@ -729,19 +751,39 @@ function applyAttrs(dom: HTMLElement, attrs: Record<string, string>): void {
   finalizeElement(dom)
 }
 
-/** Do two sets put the same attributes on the element covering this range? */
-function sameNodeDecorations(
-  a: DecorationSet,
-  b: DecorationSet,
+/** The node decorations that would be drawn on an element covering this range. */
+function nodeDecorationsOver(
+  items: readonly Decoration[],
   from: number,
   to: number,
+): readonly Decoration[] {
+  if (!items.length) return NO_DECORATIONS
+  const out: Decoration[] = []
+  for (const item of findIn(items, from, to)) if (item.type === 'node') out.push(item)
+  return out
+}
+
+/**
+ * Would these two lists draw the same thing, wherever they sit?
+ *
+ * Positions are left out on purpose: the first list is what an element was
+ * drawn with, in the coordinates of that render, and the second is what it
+ * should show now. Whether a highlight moved along with its text is not
+ * the question; whether the same highlights are there is.
+ */
+function sameShape(
+  drawn: readonly Decoration[] | undefined,
+  now: readonly Decoration[],
 ): boolean {
-  if (a === b || (!a.size && !b.size)) return true
-  const left = a.find(from, to).filter((item) => item.type === 'node')
-  const right = b.find(from, to).filter((item) => item.type === 'node')
-  if (left.length !== right.length) return false
+  const left = drawn ?? NO_DECORATIONS
+  if (left.length !== now.length) return false
   for (let i = 0; i < left.length; i++) {
-    if (!sameDecoration(left[i] as Decoration, right[i] as Decoration)) return false
+    const a = left[i] as Decoration
+    const b = now[i] as Decoration
+    if (a.type !== b.type) return false
+    if (a.type === 'widget') {
+      if (a.key === undefined || a.key !== (b as typeof a).key) return false
+    } else if (!sameAttrs(a.attrs, (b as typeof a).attrs)) return false
   }
   return true
 }

@@ -132,9 +132,14 @@ export function sameDecoration(a: Decoration, b: Decoration): boolean {
   }
   if (a.type === 'widget' || b.type === 'widget') return false
   if (a.from !== b.from || a.to !== b.to) return false
-  const keys = Object.keys(a.attrs)
-  if (keys.length !== Object.keys(b.attrs).length) return false
-  return keys.every((key) => a.attrs[key] === b.attrs[key])
+  return sameAttrs(a.attrs, b.attrs)
+}
+
+/** The same attributes, value for value. */
+export function sameAttrs(a: Record<string, string>, b: Record<string, string>): boolean {
+  const keys = Object.keys(a)
+  if (keys.length !== Object.keys(b).length) return false
+  return keys.every((key) => a[key] === b[key])
 }
 
 /**
