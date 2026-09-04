@@ -9,11 +9,16 @@ minified, gzipped:
 
 | | minified | gzipped |
 |---|---|---|
-| **Matra** | 77.8 kB | **25 kB** |
+| **Matra** | 92.2 kB | **30 kB** |
 | Tiptap 3.30 | 370.5 kB | 117.2 kB |
 
-**4.8× smaller.** Matra has no runtime dependencies; Tiptap brings ProseMirror,
-which is 51 packages in `node_modules`.
+**3.9× smaller.** Matra has no runtime dependencies; Tiptap brings ProseMirror,
+which is 51 packages in `node_modules`. The figure was 25 kB at 0.16; 1.0
+spent 3.6 kB on the engine doing more — attributes one extension adds to
+another's nodes, paste and drop hooks, files and text dropped from outside,
+blocks inserted into the middle of a paragraph, decorations compared after
+mapping, paragraphs patched in place, positions found by bisection — and
+every one of those is on the runtime side of this file.
 
 ## Speed, in a browser
 
@@ -116,6 +121,75 @@ happy-dom, same document. Useful for the parts that never touch a DOM:
 |---|---|---|---|
 | create + parse a document | **0.70** | 21.62 | 31× faster |
 | `getJSON()` | **0.16** | 0.11 | 1.5× slower |
+
+## 1.0, in Node
+
+The ratchet's own figures, before and after, in the calibrated units
+`bench/bench.mjs` prints — the same machine, the same run, the floor of three
+passes each:
+
+| figure | 0.16 | 1.0 | |
+|---|---|---|---|
+| create editor, 50 ¶ | 17.5 | **3.7** | 4.7× |
+| setContent JSON, 2000 ¶ | 127.2 | **80.4** | 1.6× |
+| `getHTML()`, 2000 ¶ | 89.6 | **30.3** | 3.0× |
+| `getJSON()`, 2000 ¶ | 11.3 | **9.7** | 1.2× |
+| `getText()`, 2000 ¶ | 27.6 | **7.5** | 3.7× |
+| insert one character | 2.73 | **0.22** | 12× |
+| toggle bold over a range | 4.46 | **0.26** | 17× |
+| keystroke, mounted, 500 ¶ | 5.04 | **2.17** | 2.3× |
+
+And the ones the ratchet did not measure, in microseconds, because they are
+where the time actually went:
+
+| operation, 2000 ¶ | 0.16 | 1.0 | |
+|---|---|---|---|
+| keystroke at the **end** of the document, mounted | 180 | **34** | 5.3× |
+| keystroke at the start, mounted | 77 | **48** | 1.6× |
+| toggle bold on a word near the end | 453 | **20** | 23× |
+| `isActive('bold')` + `isActive('heading')` | 1.47 | **0.12** | 12× |
+| `createEditor`, empty | 85 | **16** | 5.3× |
+| parse 2000 ¶ of HTML with marks (ms) | 77 | **55** | 1.4× |
+
+What was costing it:
+
+- **Every position was found by walking.** Resolving a position walked the
+  document's children from the first, adding sizes until it passed the point,
+  and a keystroke resolves a dozen positions. Typing at the end of a
+  two-thousand-block document cost twelve times what typing at the top did,
+  and the benchmark only ever typed at the top. A fragment past twenty-four
+  children now keeps a prefix index and bisects it.
+- **A mark on one word rebuilt the whole document.** Asking "is this bold"
+  visited every node in the document to find the ones in the selection, and
+  applying the mark rebuilt every level from the first child to the last.
+  Both now walk only what the range touches, and only the children that
+  changed are swapped into their parent.
+- **`toDOM` was handed a full JSON serialisation of the node.** Rendering a
+  paragraph serialised its text; rendering the document serialised the
+  document, once per level, so that a function returning `['p', 0]` could read
+  an attribute. It now gets an object that carries the type and the attributes
+  and builds the rest on demand.
+- **Every command built a fresh object of twenty closures**, and every
+  `isActive` started a transaction to answer a question about the state. The
+  context is a class now and the transaction starts on first write, so
+  asking is free.
+- **The character counter re-serialised the document on every click.**
+  Any extension reading `ctx.doc` in its reducer paid for the whole document
+  on every transaction, caret moves included. The counter reads the engine's
+  text and only when the document changed; `ctx.doc` is cached per document
+  within a command.
+- **The drag handle asked the browser for every block's rectangle on every
+  mouse move.** Blocks stack, so the one under the pointer is found by
+  bisection: eleven rectangles on a two-thousand-block page, not two thousand.
+- **The undo history copied the whole entry to add each keystroke to it.**
+  Inverses are appended and replayed from the end.
+- **Every keystroke wrote the browser selection**, even when it was already
+  where it was about to be put, and every write came straight back as a
+  `selectionchange` event to be read and found identical.
+- **A decoration anywhere threw the narrowed redraw away.** Last render's
+  decorations are now mapped through the edit before being compared, so a
+  search hit that merely moved is the same hit, and only the span where the
+  decorations really differ is added to what gets redrawn.
 
 ## Where the time went, the first time
 

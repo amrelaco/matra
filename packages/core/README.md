@@ -29,10 +29,28 @@ excluded from semver.
 range through every edit made since it was taken — the reason a three-second-late
 AI response lands on the right words instead of corrupting the paragraph.
 
+## In the box
+
+Seventy-nine extensions, every one importable on its own and none of them in
+your bundle unless you pass it: the starter kit, text style, tables with row
+and column commands, task lists, callouts, collapsible toggles, YouTube and
+sandboxed embeds, search and replace, autolink, emoji, indent, clear
+formatting, code highlighting, a drag handle, comments, mentions, slash
+menus, bubble and floating menus, Markdown in and out, a table of contents,
+unique ids, a file handler, image resizing, locked blocks, template fields
+with a mail merge that needs no editor, snippets, columns, page breaks, line
+height, text direction, footnotes, math, text case, invisible characters,
+selection highlight, typewriter scrolling, autosave, smart paste, hashtags,
+ghost-text completion and dictation. The directory with the line you would
+write for each is at https://matrajs.com/extensions.
+
 ## Companions
 
-- `@matrajs/react` — `useEditor`, `useEditorState`, `EditorContent`
+- `@matrajs/react`, `@matrajs/vue`, `@matrajs/svelte`, `@matrajs/solid` — bindings, each one thin
 - `@matrajs/ai` — streaming edits that survive concurrent typing
+- `@matrajs/collab` — authority, rebasing and remote cursors
+- `@matrajs/versions` — snapshots, a real diff, restore as one undo step
+- `@matrajs/mcp` — this documentation as an MCP server, for any AI tool
 
 - Docs: https://matrajs.com
 - Source: https://github.com/amrelaco/matra

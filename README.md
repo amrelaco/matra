@@ -76,10 +76,10 @@ pnpm add @matrajs/core
 | `buildSchema(extensions)` | The schema alone, for validating a document with no view and no DOM. |
 | `pos(…)`, `range(…)` | Constructors for the two position types. |
 | `starterKit` | Seventeen extensions in one array — document, paragraph, text, heading, blockquote, code block, bullet/ordered/list item, horizontal rule, hard break, bold, italic, strike, code, link, history. |
-| 38 named extensions | Every entry in [Extensions](#extensions), each importable on its own. |
-| Helpers | `tableOfContents(doc)`, `assignIds(doc)`, `commentRanges(doc)`, `activeSuggestion(editor)` — plain functions over a document, not extensions. |
+| 79 named extensions | Every entry in [Extensions](#extensions), each importable on its own. |
+| Helpers | `tableOfContents(doc)`, `assignIds(doc)`, `commentRanges(doc)`, `activeSuggestion(editor)`, `searchEmoji(query)`, `youtubeId(url)`, `normalizeUrl(text)`, `fieldsIn(doc)`, `fillFieldsIn(doc, values)`, `hashtagsIn(doc)`, `parseDelimited(text)`, `dictationSupported()` — plain functions, not extensions. |
 | `toMarkdown`, `fromMarkdown` | Pure string work, so they run in Node, in a worker and at the edge. |
-| `…CSS` helpers | `placeholderCSS`, `commentCSS`, `taskListCSS`, `dragHandleCSS`, `suggestionCSS` — stylesheets to paste into an app rather than a stylesheet to import. |
+| `…CSS` helpers | `placeholderCSS`, `commentCSS`, `taskListCSS`, `dragHandleCSS`, `suggestionCSS`, `searchCSS`, `lockedCSS`, `fieldsCSS`, `columnsCSS`, `footnotesCSS` and the rest — stylesheets to paste into an app rather than a stylesheet to import. |
 
 **`EditorOptions`**
 
@@ -111,7 +111,25 @@ pnpm add @matrajs/core
 | `unsafe` | `{ view, state, schema }` | Excluded from semver. Needing it means the public API has a gap — open an issue. |
 
 **Core commands**, present whatever you pass: `select`, `insert`, `replace`,
-`remove`, `moveBlock`, `focus`.
+`remove`, `moveBlock`, `focus`. `insert` and `replace` accept blocks at a
+caret inside a paragraph and split the paragraph around them, which is what
+a rule or a table asked for at the caret means.
+
+**What an extension may declare**, beyond commands, keys and input rules:
+
+| Field | On | What it does |
+|---|---|---|
+| `attributes` | extension | Add attributes to nodes and marks defined elsewhere · `[{ types: ['paragraph', 'heading'], attrs: { indent: { default: 0, render, parse } } }]`. How `textAlign`, `indent` and `uniqueId` work without the paragraph knowing about them. |
+| `handlePaste(ctx, { html, text, files })` | extension | Claim a paste before the editor parses it. Return `true` to keep it. |
+| `handleDrop(ctx, { html, text, files, pos })` | extension | The same for something dropped from outside. Block drags inside the editor never reach it. |
+| `filterChange(ctx)` | extension | Veto a change before it lands. Return `false` and the document, the selection and the undo history stay as they were · how `locked()` refuses a keystroke, a paste and a drag alike. `editor.can` asks it too. |
+| `nodeViews` | extension | Render nodes defined elsewhere with your own DOM · `{ image: ({ node, getPos, editor }) => … }`. How `imageResize()` puts a handle on the stock image. |
+| `decorations(ctx)` | extension | Draw over the document · highlights, widgets, a class on the current block. |
+| `state` | extension | Reduced on every transaction · read with `editor.extensionState(name)`. |
+| `code` | node | Whitespace inside is literal, so a pasted function keeps its line breaks. |
+| `listItem` | node | Enter splits, Tab nests, Backspace at the start lifts. |
+| `marks` | node | Which marks the text may carry · `''` for none. |
+| `nodeView` | node | Render with your own DOM and keep it across edits. |
 
 ---
 
@@ -424,17 +442,24 @@ pnpm bench:check # the performance ratchet, against the recorded baseline
 pnpm links       # no dead internal links on the site
 pnpm packaging   # every built package imports and requires (run after build)
 pnpm wiring      # every script on the site finds the markup it asks for
+pnpm install:matrix  # pack every package, npm-install it into fresh Vite apps for each framework, build and run them
+pnpm facts       # the counts the site prints — tests, adversarial tests, extensions
 ```
 
 ## Status
 
-0.16 — the engine is ours end to end. Document model, transforms, position
+1.0 — the Matra engine, end to end. Document model, transforms, position
 mapping, editor state and the editable view are written from scratch, with
-**zero runtime dependencies**. 580 tests, 68 of them adversarial.
+**zero runtime dependencies**. 779 tests, 68 of them adversarial, and every
+package is installed with plain npm into a fresh React, Vue, Svelte, Solid
+and vanilla Vite app and built there before a release (`pnpm install:matrix`).
 
-An app on the starter kit bundles **25 kB gzipped**, because nothing arrives
-that the editor does not use. The whole ladder, from an empty extension array
-upwards, is measured by `pnpm size` and checked in CI.
+An app on the starter kit bundles **30 kB gzipped**, because nothing arrives
+that the editor does not use — seventy-nine extensions ship in the package
+and none of them is in the bundle until it is in the array. The whole ladder,
+from an empty extension array upwards, is measured by `pnpm size` and checked
+in CI. It was 25 kB at 0.16; what the five kilobytes bought is listed in
+[CHANGELOG.md](./CHANGELOG.md).
 
 Drag and drop landed in 0.9.0: blocks drag with a handle, a line shows where
 they will land, and the move is one undo step.
@@ -449,22 +474,67 @@ Everything in the box, and everything free unless marked.
 
 | | | |
 |---|---|---|
-| **Text** | bold, italic, strike, code, underline, highlight, subscript, superscript, link | |
-| **Blocks** | paragraph, heading, blockquote, code block, horizontal rule, hard break, image | |
+| **Text** | bold, italic, strike, code, underline, highlight, subscript, superscript, link, **text style**, **kbd** | colour, background, font family and size, as one mark |
+| **Blocks** | paragraph, heading, blockquote, code block, horizontal rule, hard break, image, **callout**, **details** | a Notion callout and a collapsible toggle |
+| **Embeds** | **YouTube**, **any embed page** in a sandboxed frame, **image resize** with a handle | allowlisted hosts only; the width lands in the HTML |
+| **Templates** | **locked blocks**, **fields**, **snippets** | a contract with fixed clauses, a mail merge with no editor, words that expand as typed |
+| **Layout** | **columns**, **page break**, **line height**, **text direction** | two to six columns, a real break in print, right-to-left detected from the text |
+| **Scholarly** | **footnotes**, **math** inline and display | numbered by position; KaTeX or MathJax plug in, or the source shows |
 | **Lists** | bulleted, ordered, **task lists** with real checkboxes | |
-| **Tables** | insert, delete, header rows, colspan and rowspan | |
-| **Writing** | placeholder, character count, text align, **typography** | smart quotes, dashes, arrows |
-| **Structure** | **table of contents**, **unique block ids** | Tiptap charges for both |
+| **Tables** | insert, delete, header rows, colspan and rowspan, **add and remove rows and columns, Tab between cells** | spanning cells widen rather than split |
+| **Writing** | placeholder, character count, text align, **indent**, **typography**, **emoji shortcodes**, **autolink**, **clear formatting**, **text case**, **invisible characters**, **selection highlight**, **typewriter scrolling**, **autosave**, **smart paste**, **hashtags** | smart quotes, dashes, arrows · `:tada:` · URLs link as you type · tab-separated text becomes a table |
+| **Finding** | **search and replace** | incremental: typing rescans one paragraph |
+| **Code** | **syntax highlighting** as decorations | a built-in tokeniser, or plug in Shiki, Prism or lowlight |
+| **Structure** | **table of contents**, **unique block ids**, **focus class**, **trailing node** | Tiptap charges for the first two |
 | **Interchange** | **Markdown in and out**, with no DOM | runs on a server |
-| **Dragging** | block drag and drop, **drag handle**, drop cursor | Tiptap charges for the handle |
+| **Dragging** | block drag and drop, **drag handle**, drop cursor, **files dropped or pasted** | Tiptap charges for the handle and the file handler |
 | **Review** | threaded comments anchored to ranges | Tiptap charges for these |
-| **Menus** | `@` mentions and `/` commands, detection only | the popup is yours |
+| **Menus** | `@` mentions and `/` commands, detection only, **bubble and floating menus** for your element | the popup is yours |
+| **Assistance** | **ghost text** completion from any source, **dictation** through the browser's recogniser | Tab takes the suggestion; nothing is sent anywhere the browser does not already send it |
 | **Paid** | AI streaming, collaboration with remote cursors, version history | |
 
-The four in bold that Tiptap puts behind its Pro tier — table of contents,
-unique ids, drag-handle-adjacent structure work, and comments — are free here.
-That is the deliberate shape of it: the things that take a week are free and
-drive adoption, and the ones that took months are what you pay for.
+Everything Tiptap puts behind its Pro tier that fits in a week — table of
+contents, unique ids, the drag handle, comments, the file handler, emoji,
+details — is free here. That is the deliberate shape of it: the things that
+take a week are free and drive adoption, and the ones that took months are
+what you pay for.
+
+### Adding one, step by step
+
+Every extension follows the same four steps. Search and replace, as the
+example:
+
+1. **Import it** from `@matrajs/core` — the binding you installed already
+   depends on it, so there is nothing to add to `package.json`.
+2. **Put it in the array.** Extensions that take options are functions;
+   the rest are plain objects.
+3. **Call its commands.** They are on `editor.commands`, typed from the
+   array, so a typo is a compile error.
+4. **Paste its CSS** if it has any. Extensions that draw something export a
+   `…CSS` string; the editor ships no appearance of its own.
+
+```ts
+import { createEditor, search, searchCSS, starterKit } from '@matrajs/core'
+
+const editor = createEditor({ extensions: [...starterKit, search()] as const })
+
+editor.commands.setSearch({ query: 'colour', wholeWord: true })
+editor.commands.nextMatch()              // selects it, so the view scrolls there
+editor.commands.replaceMatch('color')
+editor.commands.replaceAllMatches('color')   // one undo step
+editor.extensionState('search')          // { matches, current, query, … } for a panel
+
+document.head.appendChild(Object.assign(document.createElement('style'), { textContent: searchCSS }))
+```
+
+The same shape for the rest: `textStyle` then `editor.commands.setColor('#c00')`;
+`callout` then `toggleCallout('warning')`; `...detailsKit` then
+`insertDetails()`; `youtube` then `insertYoutube({ src: url })`;
+`fileHandler({ accept: ['image/'], onDrop })` then upload in `onDrop` and
+insert at `marker.map(pos)`; `...tableKit` then `insertTable(3, 3)` and
+`addRowAfter()`. Each is one row in the directory on
+[matrajs.com/extensions](https://matrajs.com/extensions), with the line you
+would write.
 
 `toMarkdown` and `fromMarkdown` are pure string work rather than a trip through
 HTML, so they run in Node, in a worker, and at the edge. Turning a document into
@@ -477,7 +547,7 @@ what the numbers are not.
 
 | | Matra | Tiptap | Lexical | Slate |
 |---|---|---|---|---|
-| Bundle, gzipped | **25 kB** | 117 kB | ~35 kB | ~50 kB |
+| Bundle, gzipped | **30 kB** | 117 kB | ~35 kB | ~50 kB |
 | Runtime dependencies | **0** | 51 packages | few | several |
 | Engine types in your code | **none** | ProseMirror | Lexical | Slate |
 | Command types | **inferred** | module augmentation | manual | manual |

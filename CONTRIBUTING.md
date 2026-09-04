@@ -24,8 +24,12 @@ pnpm build       # tsup, all packages
 ```
 
 CI runs those plus `pnpm size`, `pnpm bench:check`, `pnpm links`,
-`pnpm wiring` and `pnpm packaging`. Running the first four locally catches
-almost everything.
+`pnpm wiring`, `pnpm packaging`, `pnpm facts --check` and, in its own job,
+`pnpm install:matrix` — every package packed and installed with plain npm
+into a fresh React, Vue, Svelte, Solid and vanilla Vite app, built and run.
+Running the first four locally catches almost everything. Run the benchmark
+on a quiet machine: a build or an install in another terminal reads as a
+twenty per cent regression.
 
 ## What gets merged quickly
 

@@ -1,4 +1,16 @@
-# Removing ProseMirror
+# The Matra engine
+
+Matra runs on its own engine, called the Matra engine the way Tiptap's is
+called ProseMirror and Lexical's is Lexical: the document model, content
+expressions, transforms, position mapping, editor state, history, and the
+editable view, all under `packages/core/src/engine/`. Nothing in it depends on
+another editor framework, and no type from it appears in a public signature.
+
+This file is its history and its notes. It began as a plan to remove
+ProseMirror layer by layer, and the plan is kept as written because the
+reasoning still holds.
+
+## Removing ProseMirror
 
 Decision: Matra owns its engine. ProseMirror is being replaced layer by layer,
 not ripped out — the public API leaks no engine type, so each layer can be
@@ -37,7 +49,7 @@ honest:
 | Phase | Layer | Lines | gz | Status |
 |---|---|---|---|---|
 | 1 | keymap, input rules, history, list commands | ~1,700 | 21 kB | **done** |
-| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 29 kB | **done** |
+| 2 | model — nodes, marks, fragments, schema, content expressions, DOM parse/serialize | ~3,500 | 30 kB | **done** |
 | 3 | transform — steps, position mapping, rebasing | ~2,200 | 19 kB | **done** |
 | 4 | state — transactions, selection, plugins | ~1,000 | 9 kB | **done** |
 | 5 | view — contenteditable, IME, selection sync | ~6,000 | 59 kB | **done** |
@@ -165,8 +177,47 @@ user is the last row: an app ships a fraction of what it did, because nothing
 is pulled in that the editor does not use.
 
 Extensions have landed since, so that last number is not today's. The current
-figure is whatever `pnpm size` prints — **25 kB** for the starter kit as of
-0.16 — and it is checked in CI rather than quoted from here.
+figure is whatever `pnpm size` prints — **30 kB** for the starter kit as of
+1.0 — and it is checked in CI rather than quoted from here.
+
+## What 1.0 changed underneath
+
+Measured first, then changed; the numbers are in BENCHMARKS.md. The shape of
+each change, and why it is that shape:
+
+- **Fragments past twenty-four children keep a prefix index.** `findIndex`
+  bisects it, and `replaceChild` carries it across by shifting the tail rather
+  than rebuilding it. Resolving a position near the end of a long document
+  stopped costing the document.
+- **`nodesBetween` walks only what a range touches**, jumping to the first
+  child with the index and stopping at the last. `hasMark`, `removeMark`,
+  `setBlockType` and every extension that used to `descendants` its way
+  through the document to find a selected word use it.
+- **Mark steps rebuild locally.** A block level swaps only the run of children
+  that changed, via `Fragment.replaceRange`; a textblock is rebuilt in
+  canonical form because text merges. Untouched blocks stay the same object,
+  which is what lets the renderer skip them.
+- **The command context is a class with a lazy transaction.** `isActive`,
+  `can` and decoration hooks read the state and never start one.
+- **The transaction's selection is taken as it is.** It was mapped through the
+  whole mapping a second time in `EditorState.apply`, after the transaction
+  had already moved it step by step — so `insert('X')` left the caret one
+  past its own text. Found by a probe, pinned by a test.
+- **A block inserted at a caret inside a paragraph splits the paragraph.**
+  The rule button and the `---` shortcut both asked for that and were refused.
+- **Decorations are compared after mapping**, and the span where they differ
+  joins the span the edit touched. A textblock whose runs kept their shape has
+  its text nodes updated in place. A node decoration that moved rebuilds the
+  element it left as well as the one it reached.
+- **The parser compiles each selector once** and indexes rules by tag. Inside
+  `<pre>`, and inside any node that says `code`, whitespace is literal.
+- **Two editors from one extension array share the compiled schema**, the
+  parser, the serializer, the command table and the input rules.
+- **Position markers are held weakly**, and the mapping log is swept every
+  256 changes for what no live marker still needs.
+- **Attributes can be added to nodes another extension owns**, rendered onto
+  the element and read back on parse. `textAlign` now works on the paragraph
+  in the box; before, it silently did nothing unless you wrote your own.
 
 ## What typing costs
 
