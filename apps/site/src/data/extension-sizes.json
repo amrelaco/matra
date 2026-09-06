@@ -1,0 +1,425 @@
+{
+  "floorGz": 29.2,
+  "measured": "2026-09-06",
+  "extensions": [
+    {
+      "name": "table",
+      "gz": 1.85,
+      "bytes": 1896
+    },
+    {
+      "name": "smartPaste",
+      "gz": 1.78,
+      "bytes": 1822
+    },
+    {
+      "name": "search",
+      "gz": 1.36,
+      "bytes": 1391
+    },
+    {
+      "name": "embed",
+      "gz": 1.02,
+      "bytes": 1045
+    },
+    {
+      "name": "fromMarkdown",
+      "gz": 1.01,
+      "bytes": 1038
+    },
+    {
+      "name": "textTransform",
+      "gz": 0.95,
+      "bytes": 977
+    },
+    {
+      "name": "emoji",
+      "gz": 0.94,
+      "bytes": 967
+    },
+    {
+      "name": "taskItem",
+      "gz": 0.91,
+      "bytes": 935
+    },
+    {
+      "name": "dictation",
+      "gz": 0.84,
+      "bytes": 864
+    },
+    {
+      "name": "imageResize",
+      "gz": 0.81,
+      "bytes": 832
+    },
+    {
+      "name": "autosave",
+      "gz": 0.79,
+      "bytes": 814
+    },
+    {
+      "name": "selectionHighlight",
+      "gz": 0.79,
+      "bytes": 813
+    },
+    {
+      "name": "locked",
+      "gz": 0.79,
+      "bytes": 809
+    },
+    {
+      "name": "textStyle",
+      "gz": 0.79,
+      "bytes": 808
+    },
+    {
+      "name": "youtube",
+      "gz": 0.78,
+      "bytes": 800
+    },
+    {
+      "name": "mathInline",
+      "gz": 0.78,
+      "bytes": 800
+    },
+    {
+      "name": "toMarkdown",
+      "gz": 0.74,
+      "bytes": 759
+    },
+    {
+      "name": "invisibleCharacters",
+      "gz": 0.71,
+      "bytes": 722
+    },
+    {
+      "name": "ghostText",
+      "gz": 0.7,
+      "bytes": 715
+    },
+    {
+      "name": "floatingMenu",
+      "gz": 0.67,
+      "bytes": 686
+    },
+    {
+      "name": "textDirection",
+      "gz": 0.66,
+      "bytes": 678
+    },
+    {
+      "name": "codeHighlight",
+      "gz": 0.66,
+      "bytes": 675
+    },
+    {
+      "name": "typewriter",
+      "gz": 0.66,
+      "bytes": 674
+    },
+    {
+      "name": "columnList",
+      "gz": 0.65,
+      "bytes": 664
+    },
+    {
+      "name": "bubbleMenu",
+      "gz": 0.65,
+      "bytes": 661
+    },
+    {
+      "name": "callout",
+      "gz": 0.63,
+      "bytes": 649
+    },
+    {
+      "name": "dragHandle",
+      "gz": 0.58,
+      "bytes": 596
+    },
+    {
+      "name": "taskList",
+      "gz": 0.56,
+      "bytes": 573
+    },
+    {
+      "name": "details",
+      "gz": 0.56,
+      "bytes": 569
+    },
+    {
+      "name": "suggestion",
+      "gz": 0.54,
+      "bytes": 558
+    },
+    {
+      "name": "orderedList",
+      "gz": 0.54,
+      "bytes": 555
+    },
+    {
+      "name": "field",
+      "gz": 0.54,
+      "bytes": 554
+    },
+    {
+      "name": "listItem",
+      "gz": 0.49,
+      "bytes": 506
+    },
+    {
+      "name": "bulletList",
+      "gz": 0.49,
+      "bytes": 497
+    },
+    {
+      "name": "indent",
+      "gz": 0.44,
+      "bytes": 451
+    },
+    {
+      "name": "mathBlock",
+      "gz": 0.42,
+      "bytes": 429
+    },
+    {
+      "name": "snippets",
+      "gz": 0.4,
+      "bytes": 406
+    },
+    {
+      "name": "lineHeight",
+      "gz": 0.37,
+      "bytes": 378
+    },
+    {
+      "name": "textAlign",
+      "gz": 0.36,
+      "bytes": 366
+    },
+    {
+      "name": "autolink",
+      "gz": 0.36,
+      "bytes": 366
+    },
+    {
+      "name": "comment",
+      "gz": 0.33,
+      "bytes": 339
+    },
+    {
+      "name": "blockquote",
+      "gz": 0.33,
+      "bytes": 339
+    },
+    {
+      "name": "characterCount",
+      "gz": 0.28,
+      "bytes": 284
+    },
+    {
+      "name": "fillFieldsIn",
+      "gz": 0.27,
+      "bytes": 273
+    },
+    {
+      "name": "placeholder",
+      "gz": 0.26,
+      "bytes": 269
+    },
+    {
+      "name": "hashtag",
+      "gz": 0.26,
+      "bytes": 268
+    },
+    {
+      "name": "tableOfContents",
+      "gz": 0.25,
+      "bytes": 253
+    },
+    {
+      "name": "link",
+      "gz": 0.23,
+      "bytes": 235
+    },
+    {
+      "name": "clearFormatting",
+      "gz": 0.22,
+      "bytes": 229
+    },
+    {
+      "name": "mention",
+      "gz": 0.21,
+      "bytes": 217
+    },
+    {
+      "name": "image",
+      "gz": 0.2,
+      "bytes": 208
+    },
+    {
+      "name": "typography",
+      "gz": 0.2,
+      "bytes": 207
+    },
+    {
+      "name": "tableHeader",
+      "gz": 0.19,
+      "bytes": 199
+    },
+    {
+      "name": "tableCell",
+      "gz": 0.19,
+      "bytes": 197
+    },
+    {
+      "name": "uniqueId",
+      "gz": 0.19,
+      "bytes": 193
+    },
+    {
+      "name": "commentRanges",
+      "gz": 0.17,
+      "bytes": 177
+    },
+    {
+      "name": "highlight",
+      "gz": 0.17,
+      "bytes": 176
+    },
+    {
+      "name": "focus",
+      "gz": 0.15,
+      "bytes": 153
+    },
+    {
+      "name": "codeBlock",
+      "gz": 0.15,
+      "bytes": 152
+    },
+    {
+      "name": "fileHandler",
+      "gz": 0.15,
+      "bytes": 150
+    },
+    {
+      "name": "bold",
+      "gz": 0.13,
+      "bytes": 138
+    },
+    {
+      "name": "strike",
+      "gz": 0.09,
+      "bytes": 90
+    },
+    {
+      "name": "trailingNode",
+      "gz": 0.08,
+      "bytes": 87
+    },
+    {
+      "name": "italic",
+      "gz": 0.08,
+      "bytes": 83
+    },
+    {
+      "name": "horizontalRule",
+      "gz": 0.08,
+      "bytes": 80
+    },
+    {
+      "name": "underline",
+      "gz": 0.08,
+      "bytes": 79
+    },
+    {
+      "name": "pageBreak",
+      "gz": 0.07,
+      "bytes": 74
+    },
+    {
+      "name": "history",
+      "gz": 0.07,
+      "bytes": 69
+    },
+    {
+      "name": "hashtagsIn",
+      "gz": 0.07,
+      "bytes": 68
+    },
+    {
+      "name": "kbd",
+      "gz": 0.06,
+      "bytes": 60
+    },
+    {
+      "name": "hardBreak",
+      "gz": 0.06,
+      "bytes": 60
+    },
+    {
+      "name": "code",
+      "gz": 0.05,
+      "bytes": 55
+    },
+    {
+      "name": "subscript",
+      "gz": 0.05,
+      "bytes": 52
+    },
+    {
+      "name": "superscript",
+      "gz": 0.05,
+      "bytes": 49
+    },
+    {
+      "name": "column",
+      "gz": 0.05,
+      "bytes": 49
+    },
+    {
+      "name": "footnotes",
+      "gz": 0.05,
+      "bytes": 49
+    },
+    {
+      "name": "tableRow",
+      "gz": 0.04,
+      "bytes": 40
+    },
+    {
+      "name": "detailsSummary",
+      "gz": 0.03,
+      "bytes": 30
+    },
+    {
+      "name": "heading",
+      "gz": 0,
+      "bytes": 4
+    },
+    {
+      "name": "footnoteRef",
+      "gz": 0,
+      "bytes": 4
+    },
+    {
+      "name": "footnote",
+      "gz": 0,
+      "bytes": 4
+    }
+  ],
+  "totals": [
+    {
+      "id": "marks-six",
+      "count": 6,
+      "measured": 0.49,
+      "summed": 0.61
+    },
+    {
+      "id": "writing",
+      "count": 5,
+      "measured": 1.35,
+      "summed": 1.86
+    }
+  ]
+}
