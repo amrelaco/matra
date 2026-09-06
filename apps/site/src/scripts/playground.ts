@@ -360,11 +360,19 @@ function importLine(names: string[]): string {
   return `import { ${list} } from '@matrajs/core'\n\nconst editor = createEditor({\n  extensions: [${array}],\n})`
 }
 
-/** The selection lives in the URL, so a configuration can be sent to someone. */
+/**
+ * The selection lives in the URL, so a configuration can be sent to someone.
+ *
+ * The first argument is `history.state`, not null. Astro's client router keeps
+ * its own bookkeeping there — which entry this is, where it was scrolled — and
+ * passing null wiped it on every rebuild. The symptom was much stranger than
+ * the cause: pressing Back landed on `/playground` with the *docs* page in the
+ * body, because the router no longer knew what that entry held.
+ */
 function writeHash(names: string[]): void {
   const chosen = [...selected].sort()
-  const next = chosen.length ? `#${chosen.join(',')}` : ' '
-  window.history.replaceState(null, '', next)
+  const next = chosen.length ? `#${chosen.join(',')}` : window.location.pathname
+  window.history.replaceState(window.history.state, '', next)
 }
 
 function readHash(): string[] {
