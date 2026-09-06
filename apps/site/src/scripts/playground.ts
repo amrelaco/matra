@@ -16,6 +16,7 @@
  *   - the import line, generated from the selection so it is never stale.
  */
 import type * as Core from '@matrajs/core'
+import { TOOLS } from '../data/playground-tools'
 import catalogue from '../data/playground.json'
 
 type Def = Parameters<typeof Core.createEditor>[0]['extensions'][number]
@@ -115,6 +116,8 @@ const DEFAULT = ['bold', 'italic', 'link', 'heading', 'bulletList', 'listItem', 
 
 const selected = new Set<string>()
 let editor: AnyEditor | null = null
+/** The document the page shipped with, kept so Clear has something to go back to. */
+let seed = ''
 
 const $ = <T extends HTMLElement>(sel: string): T | null =>
   window.document.querySelector<T>(sel)
@@ -200,14 +203,22 @@ function rebuild(): void {
   const sheet = $('#pg-sheet')
   if (sheet) sheet.textContent = styleSheetFor(active)
 
+  /*
+    Carry the document across the rebuild rather than resetting it. Losing what
+    you typed every time you tick a box would make the page unusable — and when
+    unticking an extension drops the nodes it owned, watching that happen is
+    the clearest possible demonstration of what the array controls.
+  */
+  const carried = editor ? editor.getHTML() : seed
+
   const started = performance.now()
   try {
-    const made = core.createEditor({
-      extensions: defs as never,
-      content: '<p>This editor was built from the boxes on the left.</p>',
-    })
+    const made = core.createEditor({ extensions: defs as never, content: carried })
     made.mount(host)
     editor = made
+    // The buttons have to follow the caret, not just the rebuild.
+    made.on('change', paintTools)
+    made.on('selectionChange', paintTools)
   } catch (error) {
     editor = null
     if (status) {
@@ -224,6 +235,62 @@ function rebuild(): void {
 
   if (status) status.hidden = true
   paint(names, elapsed, failed)
+  wireTools()
+}
+
+/**
+ * Show the buttons this editor can actually run, and hide the rest.
+ *
+ * A ticked extension you cannot reach proves nothing: `bold` does nothing
+ * visible unless you already know Mod-B, and `table` has no keystroke at all.
+ * The test is the command's presence on the editor, not the tick — a command
+ * that arrived through a dependency gets its button too.
+ */
+function wireTools(): void {
+  const commands = editor?.commands as unknown as Record<string, unknown> | undefined
+  let shown = 0
+
+  for (const button of Array.from(
+    window.document.querySelectorAll<HTMLButtonElement>('.pg-tool'),
+  )) {
+    const name = button.dataset.cmd ?? ''
+    const available = typeof commands?.[name] === 'function'
+    button.hidden = !available
+    if (available) shown += 1
+  }
+
+  const empty = $('#pg-toolbar-empty')
+  if (empty) empty.hidden = shown > 0
+  paintTools()
+}
+
+function runTool(button: HTMLButtonElement): void {
+  const commands = editor?.commands as unknown as
+    | Record<string, ((...args: unknown[]) => boolean) | undefined>
+    | undefined
+  const name = button.dataset.cmd ?? ''
+  const raw = button.dataset.args ?? ''
+  const args = raw ? raw.split(',').map(Number) : []
+  commands?.[name]?.(...args)
+  paintTools()
+}
+
+/** Light a button when the thing it does is already true of the selection. */
+function paintTools(): void {
+  const active = editor?.isActive as unknown as
+    | ((name: string, attrs?: Record<string, unknown>) => boolean)
+    | undefined
+  for (const button of Array.from(
+    window.document.querySelectorAll<HTMLButtonElement>('.pg-tool'),
+  )) {
+    if (button.hidden || typeof active !== 'function') continue
+    const ext = button.dataset.ext ?? ''
+    try {
+      button.setAttribute('aria-pressed', String(active.call(editor, ext)))
+    } catch {
+      button.removeAttribute('aria-pressed')
+    }
+  }
 }
 
 function paint(names: string[], elapsed: number | null, failed: string[]): void {
@@ -297,12 +364,38 @@ async function start(): Promise<void> {
 
   if (!core) core = await import('./playground-registry')
 
+  // Captured before the first build, because the first build replaces it.
+  if (!seed) seed = host.innerHTML
+
+  /*
+    Bound once per button, not once per start().
+    
+    start() runs at module load and again on astro:page-load, which both fire
+    on a first visit. Two handlers on one button means toggleBold runs twice
+    and the mark goes on and straight back off — a button that looks bound and
+    does nothing.
+  */
+  for (const button of Array.from(
+    window.document.querySelectorAll<HTMLButtonElement>('.pg-tool'),
+  )) {
+    if (button.dataset.bound === 'yes') continue
+    button.dataset.bound = 'yes'
+    // mousedown, not click: clicking moves focus out of the editor first, and
+    // a command with no selection to work on does nothing.
+    button.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+      runTool(button)
+    })
+  }
+
   selected.clear()
   for (const name of readHash()) selected.add(name)
 
   for (const box of Array.from(
     window.document.querySelectorAll<HTMLInputElement>('input[data-ext]'),
   )) {
+    if (box.dataset.bound === 'yes') continue
+    box.dataset.bound = 'yes'
     box.addEventListener('change', () => {
       const name = box.dataset.ext ?? ''
       if (box.checked) selected.add(name)
