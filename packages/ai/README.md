@@ -24,4 +24,4 @@ Versions up to and including **0.5.0 were published under MIT**, and that grant
 cannot be withdrawn — if you are already on 0.5.0 you may keep using it under
 MIT indefinitely. The commercial licence applies from 0.6.0 onward.
 
-licensing@amrela.co
+licensing@matrajs.com

@@ -69,4 +69,4 @@ other two routes. **The last gate is the rendering path**, in
 ## Reporting
 
 Open an issue at https://github.com/amrelaco/matra/issues, or email
-security@amrela.co for anything you would rather not post publicly.
+security@matrajs.com for anything you would rather not post publicly.
