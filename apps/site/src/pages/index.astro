@@ -348,6 +348,45 @@ const groups = [
   ['History', ['snapshots', 'block diff', 'word diff', 'restore'], '@matrajs/versions'],
 ]
 
+/**
+ * The longest group, which is what every stem is measured against.
+ *
+ * Staggering the stems by position looked like a staircase and behaved like a
+ * mess: the drop was 16px a column regardless of what hung underneath, so by
+ * the tenth group the stem had pushed a two-item list 144px down the page and
+ * the block came out 43% empty. Length now comes from the content — a short
+ * group hangs on a long stem — so every column ends on the same line and the
+ * emptiness has nowhere to collect.
+ */
+const widest = Math.max(...groups.map(([, items]) => (items as string[]).length))
+
+/**
+ * Two lines: what the core gives you, and what it does not.
+ *
+ * Five and five was an arbitrary cut. Splitting on the licence says something
+ * — seven of the ten groups are MIT and in the box, three are the packages
+ * that cost money — and it is the split a reader is actually trying to make
+ * when they scan this.
+ *
+ * Both lines run on the same seven tracks so the columns align down the page;
+ * the paid line simply fills three of them. Seven columns give each 151px,
+ * which is the arithmetic that finally works: `tableOfContents` needs 103px
+ * and there is room left for the gutter that kept breaking it.
+ */
+const TRACKS = 7
+const lines = [
+  {
+    label: 'In the core',
+    note: 'MIT, and permanently',
+    groups: groups.filter(([, , pkg]) => pkg === '@matrajs/core'),
+  },
+  {
+    label: 'Paid packages',
+    note: 'free to try, licensed in production',
+    groups: groups.filter(([, , pkg]) => pkg !== '@matrajs/core'),
+  },
+]
+
 /** Counted, so the sentence above the row cannot drift from the row. */
 const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
 ---
@@ -628,25 +667,37 @@ const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
         from, so the groups hang off one rule on stems of different lengths —
         the same three-stem shape as the logo, widened to seven.
       -->
-      <div class="matra-line" aria-hidden="true"></div>
-      <div class="hanging" style={`--columns: ${groups.length}`}>
-        {
-          groups.map(([name, items, pkg], index) => (
-            <article class="hang" style={`--stem: ${28 + index * 16}px`}>
-              <span class="stem" aria-hidden="true" />
-              <div class="hang-body">
-                <div class="hang-name">{name}</div>
-                <div class="hang-pkg mono">{pkg}</div>
-                <ul class="hang-items">
-                  {(items as string[]).map((item) => (
-                    <li class="mono">{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          ))
-        }
-      </div>
+      {
+        lines.map((line) => (
+          <section class="tier">
+            <header class="tier-head">
+              <h3 class="tier-label">{line.label}</h3>
+              <p class="tier-note">{line.note}</p>
+            </header>
+            <div class="matra-line" aria-hidden="true" />
+            <div class="hanging" style={`--columns: ${TRACKS}`}>
+              {line.groups.map(([name, items, pkg], index) => (
+                <article class="hang" style={`--stem: ${24 + index * 14}px`}>
+                  <span class="stem" aria-hidden="true" />
+                  <div class="hang-body">
+                    <div class="hang-name">{name}</div>
+                    {pkg !== '@matrajs/core' && (
+                      <div class="hang-pkg mono">
+                        {(pkg as string).replace('@matrajs/', '')}
+                      </div>
+                    )}
+                    <ul class="hang-items">
+                      {(items as string[]).map((item) => (
+                        <li class="mono">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))
+      }
     </div>
   </section>
 
@@ -781,7 +832,7 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
   <Footer />
 
   <script>
-    import '../scripts/demos.ts'
+    import '../scripts/demos'
   </script>
 
   <style>
@@ -1333,10 +1384,62 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
       margin: 0;
     }
 
+    /*
+      The rule reaches the rails; the names stand off them.
+
+      That is the page's own rule — a headline should not start on a vertical
+      line — and it is only affordable now that there are seven columns rather
+      than ten. Ten needed every pixel of the bleed just to keep
+      `tableOfContents` in one piece, which is why the text was sitting on the
+      rail. Seven leave 117px of text per column with the inset intact.
+    */
+    .matra-line {
+      margin-inline: calc(var(--inset) * -1);
+    }
+
     .matra-line {
       height: 2px;
       background: var(--indigo);
       margin-top: var(--s5);
+    }
+
+    /* Room to breathe between the two lines, and after the second. */
+    .tier + .tier {
+      margin-top: var(--s5);
+    }
+
+    /*
+      The label belongs to the rule under it, so the air goes above the label
+      rather than between the two · the matra's own top margin was pushing its
+      name a hundred pixels away from it.
+    */
+    .tier-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 12px;
+      margin-top: var(--s5);
+      padding: 0 0 10px;
+    }
+
+    .tier .matra-line {
+      margin-top: 0;
+    }
+
+    .tier-label {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--indigo);
+    }
+
+    .tier-note {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--ink-faint);
     }
     /* One column per group, counted rather than typed · a hard-coded seven is
        a layout that breaks the day an eighth group ships, which it did. */
@@ -1347,17 +1450,29 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
       align-items: start;
     }
     .hang {
-      padding-right: var(--s2);
+      padding-right: 24px;
       min-width: 0;
+      padding-bottom: var(--s4);
     }
+
+    .hang:last-child {
+      padding-right: 0;
+    }
+    /*
+      The stem hangs off the matra and is drawn in the page's dash like every
+      other rule here · a solid hairline was the one line on the page that was
+      not dashed, and it read as a seam rather than as part of the drawing.
+    */
     .stem {
       display: block;
       width: 1px;
       height: var(--stem);
-      background: var(--rule-strong);
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-repeat: repeat-y;
     }
     .hang-body {
-      padding-top: var(--s2);
+      padding-top: 12px;
     }
     .hang-name {
       font-family: var(--font-display);
@@ -1371,16 +1486,18 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     }
     .hang-items {
       list-style: none;
-      margin: var(--s2) 0 0;
+      margin: 18px 0 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 13px;
     }
     .hang-items li {
       font-size: 11.5px;
       color: var(--ink-soft);
-      overflow-wrap: anywhere;
+      /* An extension name is one token · half of one reads as a typo, so the
+         column is sized to hold it rather than the name broken to fit. */
+      white-space: nowrap;
     }
 
     .groups {
