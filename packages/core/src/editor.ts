@@ -582,7 +582,21 @@ export function createEditor<const T extends readonly AnyDef[]>(
       element.addEventListener('focus', () => emit('focus'))
       element.addEventListener('blur', () => emit('blur'))
       for (const def of lifecycle) def.onCreate?.(editor)
-      if (options.autofocus) view.focus()
+      if (options.autofocus) {
+        // `true` focuses wherever the caret already is. 'start' and 'end' say
+        // where to put it first — the options type has always offered them,
+        // and until now they were indistinguishable from `true`.
+        if (options.autofocus === 'start' || options.autofocus === 'end') {
+          const tr = state.tr
+          tr.setSelection(
+            options.autofocus === 'start'
+              ? TextSelection.atStart(state.doc)
+              : TextSelection.atEnd(state.doc),
+          )
+          apply(tr)
+        }
+        view.focus()
+      }
     },
 
     destroy() {
