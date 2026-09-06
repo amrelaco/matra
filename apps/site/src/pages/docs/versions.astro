@@ -108,11 +108,20 @@ const editor = createEditor(&#123;
 
   <pre><code>import &#123; versionList &#125; from '@matrajs/versions'
 
+// Take it before the rewrite, not after. A snapshot of a document that has
+// not changed since the last one is refused — there is already a version
+// holding exactly that content, and it returns false.
 editor.commands.snapshotVersion('before the rewrite')
 
-const [first] = versionList(editor)
-editor.commands.previewVersion(first.id)   // show what changed
-editor.commands.restoreVersion(first.id)   // go back · one undo step</code></pre>
+// … the rewrite happens …
+
+// Newest last, so the version you just took is at the end.
+const list = versionList(editor)
+const before = list.at(-1)
+if (before) &#123;
+  editor.commands.previewVersion(before.id)   // show what changed
+  editor.commands.restoreVersion(before.id)   // go back · one undo step
+&#125;</code></pre>
 
   <div class="note">
     A restore is <strong>isolated as its own undo step</strong>, whatever was typed a second

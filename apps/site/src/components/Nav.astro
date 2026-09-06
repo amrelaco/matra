@@ -128,24 +128,13 @@ const isCurrent = (href: string): boolean => {
     color: var(--ink);
   }
   /*
-    The current section, marked by a rule rather than a pill: the bar is a row
-    of hairlines already, and a filled shape would be the loudest thing in it.
-
-    Drawn with the site's dash like every other edge here, at the chrome beat
-    rather than the page's — a nav item is small, and the section rule's 8px
-    dash would put barely two marks under a word.
+    The current section, said with weight and colour alone. A rule under it
+    added a third horizontal line to a bar that already has two.
   */
   .links a.current {
-    --dash: 4px;
-    --dash-gap: 3px;
-    --rule-strong: var(--indigo);
     color: var(--ink-strong);
-    padding-bottom: 3px;
-    background-image: var(--dash-h);
-    background-size: 100% 1px;
-    background-position: 0 100%;
-    background-repeat: no-repeat;
   }
+
   .right {
     display: flex;
     align-items: center;

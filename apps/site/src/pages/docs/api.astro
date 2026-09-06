@@ -261,7 +261,7 @@ const ctxApi = [
   </div>
 
   <h2>Types worth knowing</h2>
-  <pre><code>type Pos = number &amp; &#123; readonly __pos: unique symbol &#125;
+  <pre><code>type Pos = number &amp; &#123; readonly __brand: unique symbol &#125;
 type Range = &#123; from: Pos; to: Pos &#125;
 
 interface DocNode &#123;
@@ -272,8 +272,9 @@ interface DocNode &#123;
   marks?: DocMark[]
 &#125;</code></pre>
   <p>
-    <code>Pos</code> is branded so a raw number cannot be passed by accident. Cast at the boundary
-    where you genuinely know the number is a position.
+    <code>Pos</code> is branded so a raw number cannot be passed by accident. Write one with
+    <code>pos()</code> rather than casting: a codebase where <code>as Pos</code> is ordinary is one
+    where the cast hiding a real mistake looks like all the others.
   </p>
 
   <h2>Writing a position down</h2>

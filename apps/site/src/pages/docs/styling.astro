@@ -113,8 +113,11 @@ document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]`}</code></
     piece of state:
   </p>
 
-  <pre><code>{`const state = editor.extensionState('slash')
-// { active: true, query: 'head', range: { from: 12, to: 17 } }`}</code></pre>
+  <pre><code>{`import { activeSuggestion } from '@matrajs/core'
+
+const active = activeSuggestion(editor, 'slash')
+// null when nothing is open, or:
+// { query: 'head', range: { from: 12, to: 17 }, from: 12 }`}</code></pre>
 
   <p>
     The list, its position, its keyboard behaviour and its appearance are yours. That is
