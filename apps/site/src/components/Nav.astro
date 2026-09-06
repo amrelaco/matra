@@ -5,9 +5,27 @@ import Logo from './Logo.astro'
 const links = [
   ['Docs', '/docs'],
   ['Extensions', '/extensions'],
+  ['Playground', '/playground'],
   ['Benchmarks', '/#speed'],
   ['Pricing', '/pricing'],
 ]
+
+/**
+ * Which link describes where you are.
+ *
+ * Compared without the trailing slash, because Astro builds directory-style
+ * URLs and `/docs/` would otherwise never match `/docs`. Docs is a section:
+ * every page under it lights the one entry, which is what a reader deep in
+ * `/docs/position-mapping` needs to see. `/#speed` is an anchor on the home
+ * page, so it is only current on the home page itself.
+ */
+const here = Astro.url.pathname.replace(/\/+$/, '') || '/'
+const isCurrent = (href: string): boolean => {
+  const [path, hash] = href.split('#')
+  const target = (path ?? '').replace(/\/+$/, '') || '/'
+  if (hash) return here === target
+  return here === target || here.startsWith(`${target}/`)
+}
 ---
 
 <nav>
@@ -18,7 +36,20 @@ const links = [
     </a>
 
     <div class="links">
-      {links.map(([label, href]) => <a href={href}>{label}</a>)}
+      {
+        links.map(([label, href]) => {
+          const current = isCurrent(href as string)
+          return (
+            <a
+              href={href}
+              class={current ? 'current' : undefined}
+              aria-current={current ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          )
+        })
+      }
     </div>
 
     <div class="right">
@@ -95,6 +126,25 @@ const links = [
   }
   .links a:hover {
     color: var(--ink);
+  }
+  /*
+    The current section, marked by a rule rather than a pill: the bar is a row
+    of hairlines already, and a filled shape would be the loudest thing in it.
+
+    Drawn with the site's dash like every other edge here, at the chrome beat
+    rather than the page's — a nav item is small, and the section rule's 8px
+    dash would put barely two marks under a word.
+  */
+  .links a.current {
+    --dash: 4px;
+    --dash-gap: 3px;
+    --rule-strong: var(--indigo);
+    color: var(--ink-strong);
+    padding-bottom: 3px;
+    background-image: var(--dash-h);
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
   }
   .right {
     display: flex;
