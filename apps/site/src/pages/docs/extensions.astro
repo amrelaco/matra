@@ -161,13 +161,21 @@ handleDrop: (ctx, &#123; files, pos &#125;) =&gt; &#123;
     all — which is how <code>locked()</code> works — and <code>editor.can</code> asks the same question,
     so a button greys out rather than doing nothing.
   </p>
-  <pre><code>filterChange: (ctx) =&gt; &#123;
-  const &#123; state, tr &#125; = engine(ctx)   // the state before, the transaction as built
-  return !tr.docChanged || tr.doc.textContent.length &lt;= 280
-&#125;</code></pre>
+  <pre><code>const textLength = (node) =&gt;
+  node.text?.length ?? (node.content ?? []).reduce((n, child) =&gt; n + textLength(child), 0)
+
+filterChange: (ctx) =&gt; textLength(ctx.doc) &lt;= 280</code></pre>
   <p>
-    Undo and redo, and <code>setContent</code>, carry a meta the filter can look for, so a
-    change that was allowed in can always be allowed back out.
+    <code>ctx.doc</code> is the document as it would be, not as it is, so a filter reads the proposed
+    change directly rather than reconstructing it. Everything a filter needs is on
+    <code>Ctx</code>.
+  </p>
+  <p>
+    One caveat, because the bundled extensions do more than this. <code>locked()</code> also lets
+    undo, redo and <code>setContent</code> through by reading the metadata on the transaction, and
+    that reaches past <code>Ctx</code> into the engine — deliberately not public, and not covered
+    by semver. A filter you write sees the proposed document and no more; if you need a change to
+    be reversible, keep the rule narrow enough that undoing it is not itself refused.
   </p>
 
   <h2>Rendering somebody else's node</h2>
