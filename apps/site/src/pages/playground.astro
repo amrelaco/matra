@@ -178,9 +178,15 @@ const SEED = `<h2>A document, not a demo</h2>
       */
       height: calc(100vh - 68px);
       background-color: var(--paper);
-      background-image: var(--dash-h);
-      background-size: 100% 1px;
-      background-position: 0 0;
+      /* Both edges, so the pane divider meets a line at each end instead of
+         stopping in mid-air. */
+      background-image: var(--dash-h), var(--dash-h);
+      background-size:
+        100% 1px,
+        100% 1px;
+      background-position:
+        0 0,
+        0 100%;
       background-repeat: no-repeat;
     }
 
@@ -268,6 +274,14 @@ const SEED = `<h2>A document, not a demo</h2>
     .pg-chip {
       --dash: 3px;
       --dash-gap: 2px;
+      /*
+        The hidden checkbox inside is absolutely positioned. Without a
+        positioned ancestor it resolves against the initial containing block,
+        so 76 of them landed at document coordinates and stretched the page:
+        2602px of document behind 1469px of content, which is a thousand
+        pixels of empty scroll past the footer.
+      */
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: flex-start;

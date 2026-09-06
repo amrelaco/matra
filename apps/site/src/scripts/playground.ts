@@ -116,6 +116,16 @@ const DEFAULT = ['bold', 'italic', 'link', 'heading', 'bulletList', 'listItem', 
 
 const selected = new Set<string>()
 let editor: AnyEditor | null = null
+/**
+ * The element the live editor is mounted on.
+ *
+ * This module is evaluated once and survives client-side navigation, but the
+ * DOM does not: leaving the page and coming back swaps in a fresh element
+ * while `editor` still points at the old, detached one. Reading its HTML then
+ * carries a document from a page that no longer exists onto an element it was
+ * never mounted on, and the panel comes up blank.
+ */
+let mountedOn: HTMLElement | null = null
 /** The document the page shipped with, kept so Clear has something to go back to. */
 let seed = ''
 
@@ -197,25 +207,32 @@ function rebuild(): void {
     }
   }
 
-  editor?.destroy()
-  host.innerHTML = ''
-
-  const sheet = $('#pg-sheet')
-  if (sheet) sheet.textContent = styleSheetFor(active)
-
   /*
     Carry the document across the rebuild rather than resetting it. Losing what
     you typed every time you tick a box would make the page unusable — and when
     unticking an extension drops the nodes it owned, watching that happen is
     the clearest possible demonstration of what the array controls.
+
+    Read before destroying, and only when the editor belongs to the element in
+    front of us: after a client-side navigation it points at a detached one.
   */
-  const carried = editor ? editor.getHTML() : seed
+  const live = editor !== null && mountedOn === host
+  const carried = live ? (editor as AnyEditor).getHTML() : seed
+
+  if (live) (editor as AnyEditor).destroy()
+  editor = null
+  mountedOn = null
+  host.innerHTML = ''
+
+  const sheet = $('#pg-sheet')
+  if (sheet) sheet.textContent = styleSheetFor(active)
 
   const started = performance.now()
   try {
     const made = core.createEditor({ extensions: defs as never, content: carried })
     made.mount(host)
     editor = made
+    mountedOn = host
     // The buttons have to follow the caret, not just the rebuild.
     made.on('change', paintTools)
     made.on('selectionChange', paintTools)
@@ -364,8 +381,19 @@ async function start(): Promise<void> {
 
   if (!core) core = await import('./playground-registry')
 
-  // Captured before the first build, because the first build replaces it.
-  if (!seed) seed = host.innerHTML
+  /*
+    Re-read the seed whenever the element is a fresh one.
+
+    A served element holds the seed markup; one Matra has already mounted holds
+    a document and carries its class. Keying off that rather than off a
+    module-level flag means a return visit starts from the markup the page
+    actually shipped.
+  */
+  if (host !== mountedOn) {
+    seed = host.innerHTML
+    editor = null
+    mountedOn = null
+  }
 
   /*
     Bound once per button, not once per start().

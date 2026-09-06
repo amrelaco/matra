@@ -1,4 +1,4 @@
-import { exitContainerOnEmpty } from '../engine'
+import { exitContainerOnEmpty } from '../engine/container-commands'
 import { engine } from '../internal'
 import type { Command, NodeDef } from '../types'
 

@@ -16,14 +16,16 @@ const links = [
  * Compared without the trailing slash, because Astro builds directory-style
  * URLs and `/docs/` would otherwise never match `/docs`. Docs is a section:
  * every page under it lights the one entry, which is what a reader deep in
- * `/docs/position-mapping` needs to see. `/#speed` is an anchor on the home
- * page, so it is only current on the home page itself.
+ * `/docs/position-mapping` needs to see.
+ *
+ * A link carrying a hash is never current. `/#speed` is a place on the home
+ * page rather than a page of its own, and treating its path as a match lit
+ * Benchmarks on the home page — where the reader has not gone anywhere yet.
  */
 const here = Astro.url.pathname.replace(/\/+$/, '') || '/'
 const isCurrent = (href: string): boolean => {
-  const [path, hash] = href.split('#')
-  const target = (path ?? '').replace(/\/+$/, '') || '/'
-  if (hash) return here === target
+  if (href.includes('#')) return false
+  const target = href.replace(/\/+$/, '') || '/'
   return here === target || here.startsWith(`${target}/`)
 }
 ---
