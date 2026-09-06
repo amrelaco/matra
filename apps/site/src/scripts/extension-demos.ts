@@ -252,8 +252,18 @@ function injectCSS(): void {
 const TEXT_ALIGN = ['left', 'center', 'right']
 
 function wireTools(): void {
+  /*
+    `[data-cmd][data-for]`, not `[data-cmd]`.
+    
+    This sweep removes a button whose command its editor does not have, which
+    is right for the toolbars on this page — every one of them names its editor
+    in `data-for`. Unqualified, it also matched the playground's toolbar, whose
+    buttons name no editor here, and deleted all thirty of them: visit
+    /extensions, go back to /playground, and the toolbar was gone. This module
+    stays loaded across a client-side navigation, so the reach was real.
+  */
   for (const button of Array.from(
-    window.document.querySelectorAll<HTMLButtonElement>('[data-cmd]'),
+    window.document.querySelectorAll<HTMLButtonElement>('[data-cmd][data-for]'),
   )) {
     const editor = editors.get(button.dataset.for ?? '')
     const commands = editor?.commands as unknown as
@@ -291,7 +301,7 @@ function wireTools(): void {
 
 function paintTools(): void {
   for (const button of Array.from(
-    window.document.querySelectorAll<HTMLButtonElement>('[data-active]'),
+    window.document.querySelectorAll<HTMLButtonElement>('[data-active][data-for]'),
   )) {
     const editor = editors.get(button.dataset.for ?? '')
     if (!editor) continue
