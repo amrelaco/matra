@@ -7,6 +7,7 @@
 export * from './model'
 export * from './state'
 export * from './transform'
+export { exitContainerOnEmpty } from './container-commands'
 export { History, type HistoryEntry, type HistoryOptions } from './history'
 export { InputRules, type TextContext } from './input-rules'
 export { Keymap, type KeyStroke, parseBinding, strokeFromEvent, strokesMatch } from './keys'
