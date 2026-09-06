@@ -1,0 +1,498 @@
+---
+import Footer from '../components/Footer.astro'
+import Head from '../components/Head.astro'
+import Icon from '../components/Icon.astro'
+import Nav from '../components/Nav.astro'
+import { FALLBACK, ICONS } from '../data/extension-icons'
+import catalogue from '../data/playground.json'
+import Base from '../layouts/Base.astro'
+
+/**
+ * The page where the central claim stops being a claim.
+ *
+ * Everywhere else the site says the extension array is the feature list. Here
+ * you hold the array. Ticking a box destroys the editor and builds another one
+ * from what is ticked, and the three numbers beside it — extensions, kilobytes,
+ * milliseconds — are measured rather than quoted.
+ */
+const total = catalogue.groups.reduce((n, group) => n + group.items.length, 0)
+const marks = catalogue.totals.find((t) => t.id === 'marks-six')
+const writing = catalogue.totals.find((t) => t.id === 'writing')
+const overshoot =
+  marks && writing
+    ? Math.round(
+        ((marks.summed - marks.measured) / marks.summed +
+          (writing.summed - writing.measured) / writing.summed) *
+          50,
+      )
+    : 25
+---
+
+<Base
+  title="Playground | Matra"
+  description={`Build a rich text editor by ticking extensions. ${total} of them, each with its measured gzipped cost, assembling a real editor in your browser as you choose.`}
+>
+  <Nav />
+  <Head
+    kicker="Playground"
+    title="Tick what you<br />need. Type in it."
+    lede="Every box builds a real editor in this page · not a video, not a screenshot. The size is measured, and so is the time it took to build."
+  />
+
+  <section class="section flush">
+    <div class="wrap pg">
+      <div class="pg-controls">
+        <div class="pg-controls-head">
+          <p class="pg-hint">
+            {total} extensions. Ticking one that needs another brings it along, shown dimmed.
+          </p>
+          <div class="pg-presets">
+            <button type="button" class="btn ghost" id="pg-starter">Starter set</button>
+            <button type="button" class="btn ghost" id="pg-clear">Clear</button>
+          </div>
+        </div>
+
+        {
+          catalogue.groups.map((group) => (
+            <div class="pg-group">
+              <h2>
+                {group.group}
+                <span class="mono pg-group-n">{group.items.length}</span>
+              </h2>
+              <div class="pg-grid">
+                {group.items.map((item) => (
+                  <label class="pg-chip" title={item.what}>
+                    <input type="checkbox" data-ext={item.name} data-what={item.what} />
+                    <Icon icon={ICONS[item.name] ?? FALLBACK} size={19} class="pg-icon" />
+                    <span class="mono pg-name">{item.name}</span>
+                    <span class="mono pg-gz">{item.gz.toFixed(2)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="pg-panel">
+        <div class="pg-readout">
+          <div class="pg-stat">
+            <span class="mono pg-figure" id="pg-count">0</span>
+            <span class="pg-label">extensions</span>
+          </div>
+          <div class="pg-stat">
+            <span class="mono pg-figure" id="pg-size">{catalogue.floorGz.toFixed(1)}</span>
+            <span class="pg-label">kB gzipped</span>
+          </div>
+          <div class="pg-stat">
+            <span class="mono pg-figure" id="pg-time">—</span>
+            <span class="pg-label">ms to build</span>
+          </div>
+        </div>
+
+        <div class="pg-editor-shell">
+          <style id="pg-sheet" is:inline></style>
+          <div id="pg-editor" class="pg-editor"></div>
+          <p class="pg-error" id="pg-status" hidden></p>
+          <p class="pg-error" id="pg-failed" hidden></p>
+        </div>
+
+        <div class="pg-code-head">
+          <p>What you ticked, as code</p>
+          <button type="button" class="btn ghost" id="pg-copy">Copy</button>
+        </div>
+        <pre class="pg-code"><code class="mono" id="pg-code" /></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap pg-notes">
+      <h2>About these numbers</h2>
+      <p>
+        The kilobytes beside each extension are its own weight, measured by bundling it with
+        esbuild on top of a bare editor and gzipping the result. Nothing is estimated from
+        source length, and nothing is rounded up to look impressive · several extensions cost
+        less than the two decimal places can show, which is the honest answer to whether you
+        should install only <span class="mono">bold</span>.
+      </p>
+      <p>
+        The running total adds those figures up, and adding them up overstates the result. Gzip
+        compresses across the whole bundle, so extensions that share code are cheaper together
+        than apart. Six marks measured on their own sum to {marks?.summed} kB; built as one array
+        they come to {marks?.measured} kB. Five writing extensions sum to {writing?.summed} kB and
+        measure {writing?.measured} kB. Expect the real bundle to land about {overshoot}% under
+        the number on screen.
+      </p>
+      <p>
+        The milliseconds are yours, not ours. Every toggle destroys the editor and constructs a
+        new one, timed around <span class="mono">createEditor</span> and mount with
+        <span class="mono">performance.now()</span>. It is the same work your application does
+        once, on this machine, in this browser, right now.
+      </p>
+      <p>
+        Extensions measured on {catalogue.measured} against the published build. The selection is
+        kept in the address bar, so a configuration you like can be sent to someone else.
+      </p>
+    </div>
+  </section>
+
+  <Footer />
+
+  <script>
+    import '../scripts/playground.ts'
+  </script>
+
+  <style>
+    .pg {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    /* --- the list ---------------------------------------------------------- */
+
+    .pg-controls-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-bottom: 0.9rem;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .pg-hint {
+      margin: 0;
+      max-width: 34ch;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .pg-presets {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .pg-group {
+      margin-top: 1.75rem;
+    }
+
+    .pg-group h2 {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin: 0 0 0.6rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink-faint);
+    }
+
+    .pg-group-n {
+      font-size: 0.7rem;
+      color: var(--rule-firm);
+    }
+
+    .pg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr));
+      gap: 0.4rem;
+    }
+
+    /*
+      A square rather than a row. Seventy-six rows is a list you read; the same
+      seventy-six as glyphs is something you scan, and scanning is what picking
+      an extension actually is.
+
+      Flat and hairlined on purpose — the rest of the site is drawn in 1px
+      rules with no shadows, and a tray of soft-shadowed cards would belong to
+      a different website.
+    */
+    .pg-chip {
+      /*
+        Drawn with the site's dash, not the browser's — `.boxed` in
+        global.css is the only border here, and a chip is small enough to
+        want a shorter beat than a section rule.
+      */
+      --dash: 3px;
+      --dash-gap: 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.28rem;
+      padding: 0.6rem 0.55rem 0.5rem;
+      border: 0;
+      background-color: var(--surface);
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+      cursor: pointer;
+      transition: background-color 120ms ease;
+    }
+
+    .pg-chip:hover {
+      background-color: var(--surface-2, var(--code-chrome));
+    }
+
+    /* The input stays a real checkbox for the keyboard and the screen reader. */
+    .pg-chip input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pg-chip:focus-within {
+      outline: 2px solid var(--indigo);
+      outline-offset: 1px;
+    }
+
+    .pg-icon {
+      color: var(--ink-faint);
+      flex: none;
+    }
+
+    .pg-name {
+      font-size: 0.7rem;
+      line-height: 1.25;
+      color: var(--ink);
+      /* camelCase offers no break point, so the longest names would otherwise
+         run past the chip. Breaking anywhere is the lesser of the two. */
+      overflow-wrap: anywhere;
+    }
+
+    .pg-gz {
+      font-size: 0.66rem;
+      color: var(--ink-faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /*
+      On. The dash goes indigo by moving the colour the gradients read, so the
+      edge stays the same rhythm as every other edge on the site.
+    */
+    .pg-chip:has(input:checked) {
+      --rule-strong: var(--indigo);
+      background-color: var(--indigo-wash);
+    }
+
+    .pg-chip:has(input:checked) .pg-icon {
+      color: var(--indigo);
+    }
+
+    .pg-chip:has(input:checked) .pg-name {
+      color: var(--indigo-deep);
+    }
+
+    /*
+      Pulled in by something else rather than chosen. Indigo edge like the rest
+      of the selection, but no fill: the reader can tell what they picked from
+      what the schema insisted on.
+    */
+    .pg-chip.implied:has(input:checked) {
+      --rule-strong: var(--indigo);
+      background-color: transparent;
+    }
+
+    .pg-chip.implied:has(input:checked) .pg-icon,
+    .pg-chip.implied:has(input:checked) .pg-name {
+      color: var(--ink-soft);
+    }
+
+    /* --- the panel --------------------------------------------------------- */
+
+    .pg-panel {
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    .pg-readout {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      background-color: var(--surface);
+      background-image: var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+    }
+
+    .pg-stat {
+      padding: 0.9rem 1rem;
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-position: 100% 0;
+      background-repeat: no-repeat;
+    }
+
+    .pg-stat:last-child {
+      background-image: none;
+    }
+
+    .pg-figure {
+      display: block;
+      font-size: 1.65rem;
+      line-height: 1.1;
+      color: var(--ink-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pg-label {
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+    }
+
+    /* The one piece of motion on the page: the number acknowledges the click. */
+    #pg-size.ticked {
+      animation: pg-tick 420ms ease-out;
+    }
+
+    @keyframes pg-tick {
+      0% {
+        color: var(--indigo);
+      }
+      100% {
+        color: var(--ink-strong);
+      }
+    }
+
+    .pg-editor-shell {
+      border: 0;
+      background-color: var(--surface);
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+    }
+
+    .pg-editor {
+      min-height: 17rem;
+      max-height: 26rem;
+      overflow-y: auto;
+      padding: 1.1rem 1.2rem;
+    }
+
+    .pg-editor :global(.matra-editor:focus) {
+      outline: none;
+    }
+
+    .pg-error {
+      margin: 0;
+      padding: 0.7rem 1.2rem;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+      color: var(--blood);
+      font-size: 0.85rem;
+    }
+
+    .pg-code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-bottom: 0.5rem;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .pg-code-head p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
+
+    .pg-code {
+      margin: 0.75rem 0 0;
+      padding: 0.9rem 1rem;
+      border: 0;
+      background-color: var(--code-bg);
+      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+      background-size:
+        100% 1px,
+        100% 1px,
+        1px 100%,
+        1px 100%;
+      background-position:
+        0 0,
+        0 100%,
+        0 0,
+        100% 0;
+      background-repeat: no-repeat;
+      overflow-x: auto;
+      font-size: 0.78rem;
+      line-height: 1.65;
+      color: var(--code-fg);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* --- notes ------------------------------------------------------------- */
+
+    .pg-notes {
+      max-width: 62ch;
+    }
+
+    .pg-notes h2 {
+      margin: 0 0 0.9rem;
+    }
+
+    .pg-notes p {
+      color: var(--ink-soft);
+    }
+
+    @media (max-width: 900px) {
+      .pg {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2rem;
+      }
+
+      /* Sticky in one column would park the panel over the list it controls. */
+      .pg-panel {
+        position: static;
+        order: -1;
+      }
+
+      .pg-grid {
+        grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #pg-size.ticked {
+        animation: none;
+      }
+    }
+  </style>
+</Base>

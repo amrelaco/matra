@@ -1,0 +1,430 @@
+{
+  "floorGz": 29.2,
+  "measured": "2026-09-06",
+  "totals": [
+    {
+      "id": "marks-six",
+      "count": 6,
+      "measured": 0.49,
+      "summed": 0.61
+    },
+    {
+      "id": "writing",
+      "count": 5,
+      "measured": 1.35,
+      "summed": 1.86
+    }
+  ],
+  "groups": [
+    {
+      "group": "Marks",
+      "items": [
+        {
+          "name": "bold",
+          "what": "Bold",
+          "gz": 0.13
+        },
+        {
+          "name": "italic",
+          "what": "Italic",
+          "gz": 0.08
+        },
+        {
+          "name": "strike",
+          "what": "Struck through",
+          "gz": 0.09
+        },
+        {
+          "name": "code",
+          "what": "Inline code",
+          "gz": 0.05
+        },
+        {
+          "name": "underline",
+          "what": "Underlined",
+          "gz": 0.08
+        },
+        {
+          "name": "highlight",
+          "what": "Highlighted, with a colour attribute",
+          "gz": 0.17
+        },
+        {
+          "name": "link",
+          "what": "A link, with the scheme checked before it reaches the DOM",
+          "gz": 0.23
+        },
+        {
+          "name": "subscript",
+          "what": "Subscript",
+          "gz": 0.05
+        },
+        {
+          "name": "superscript",
+          "what": "Superscript",
+          "gz": 0.05
+        },
+        {
+          "name": "kbd",
+          "what": "A key name, as <kbd> \u00b7 \"press Ctrl\"",
+          "gz": 0.06
+        },
+        {
+          "name": "textStyle",
+          "what": "Colour, background, font family and size \u00b7 one mark, four attributes",
+          "gz": 0.79
+        },
+        {
+          "name": "comment",
+          "what": "A thread anchored to a range, which survives edits around it",
+          "gz": 0.33
+        }
+      ]
+    },
+    {
+      "group": "Blocks",
+      "items": [
+        {
+          "name": "heading",
+          "what": "Levels one to six",
+          "gz": 0
+        },
+        {
+          "name": "blockquote",
+          "what": "A quote, which holds blocks rather than text",
+          "gz": 0.33
+        },
+        {
+          "name": "codeBlock",
+          "what": "A fenced block that takes no marks",
+          "gz": 0.15
+        },
+        {
+          "name": "horizontalRule",
+          "what": "A divider \u00b7 one position, no insides",
+          "gz": 0.08
+        },
+        {
+          "name": "hardBreak",
+          "what": "A line break inside a block",
+          "gz": 0.06
+        },
+        {
+          "name": "image",
+          "what": "An image, with the src checked like a link",
+          "gz": 0.2
+        },
+        {
+          "name": "callout",
+          "what": "A Notion-style callout, with a type and an emoji",
+          "gz": 0.63
+        },
+        {
+          "name": "details",
+          "what": "A collapsible toggle, rendered as a real <details>",
+          "gz": 0.56
+        },
+        {
+          "name": "detailsSummary",
+          "what": "The title line of a toggle \u00b7 Enter moves into the content",
+          "gz": 0.03
+        },
+        {
+          "name": "youtube",
+          "what": "A video embed, built from the id on the privacy domain",
+          "gz": 0.78
+        },
+        {
+          "name": "embed",
+          "what": "Any embed page in a sandboxed frame, from an allowlist of hosts",
+          "gz": 1.02
+        },
+        {
+          "name": "pageBreak",
+          "what": "A labelled line on screen, a new page in print",
+          "gz": 0.07
+        },
+        {
+          "name": "columnList",
+          "what": "Two to six columns side by side \u00b7 the block at the caret becomes the first",
+          "gz": 0.65
+        },
+        {
+          "name": "column",
+          "what": "One column, which holds blocks",
+          "gz": 0.05
+        },
+        {
+          "name": "mathBlock",
+          "what": "A display formula \u00b7 KaTeX, MathJax or a <code> of the source",
+          "gz": 0.42
+        }
+      ]
+    },
+    {
+      "group": "Lists",
+      "items": [
+        {
+          "name": "bulletList",
+          "what": "Bulleted",
+          "gz": 0.49
+        },
+        {
+          "name": "orderedList",
+          "what": "Numbered",
+          "gz": 0.54
+        },
+        {
+          "name": "listItem",
+          "what": "What a list holds",
+          "gz": 0.49
+        },
+        {
+          "name": "taskList",
+          "what": "Checkboxes",
+          "gz": 0.56
+        },
+        {
+          "name": "taskItem",
+          "what": "One checkbox \u00b7 a real input the caret cannot enter",
+          "gz": 0.91
+        }
+      ]
+    },
+    {
+      "group": "Structure",
+      "items": [
+        {
+          "name": "table",
+          "what": "Rows, columns, header cells and column widths \u00b7 Tab moves between cells",
+          "gz": 1.85
+        },
+        {
+          "name": "tableRow",
+          "what": "One row",
+          "gz": 0.04
+        },
+        {
+          "name": "tableCell",
+          "what": "One cell, which holds blocks \u00b7 a spanning cell widens rather than splits",
+          "gz": 0.19
+        },
+        {
+          "name": "tableHeader",
+          "what": "A header cell",
+          "gz": 0.19
+        },
+        {
+          "name": "tableOfContents",
+          "what": "Headings, with their level and position",
+          "gz": 0.25
+        },
+        {
+          "name": "uniqueId",
+          "what": "A stable id on every block, for comments and anchors",
+          "gz": 0.19
+        },
+        {
+          "name": "dragHandle",
+          "what": "Drag a block to reorder it",
+          "gz": 0.58
+        },
+        {
+          "name": "focus",
+          "what": "A class on the block the caret is in",
+          "gz": 0.15
+        },
+        {
+          "name": "trailingNode",
+          "what": "Always a paragraph after whatever ends the document",
+          "gz": 0.08
+        },
+        {
+          "name": "fileHandler",
+          "what": "Files dropped or pasted, with a marker that survives the upload",
+          "gz": 0.15
+        },
+        {
+          "name": "locked",
+          "what": "Blocks that refuse every change \u00b7 a template with fixed clauses",
+          "gz": 0.79
+        },
+        {
+          "name": "field",
+          "what": "A blank in a template \u00b7 fill it in the editor, or in JSON on a server",
+          "gz": 0.54
+        },
+        {
+          "name": "imageResize",
+          "what": "A drag handle on every image, and a width the HTML keeps",
+          "gz": 0.81
+        },
+        {
+          "name": "footnoteRef",
+          "what": "A footnote marker, numbered by where it stands",
+          "gz": 0
+        },
+        {
+          "name": "footnote",
+          "what": "The note itself, under the text",
+          "gz": 0
+        },
+        {
+          "name": "footnotes",
+          "what": "The list the notes live in, kept last",
+          "gz": 0.05
+        }
+      ]
+    },
+    {
+      "group": "Writing",
+      "items": [
+        {
+          "name": "placeholder",
+          "what": "Text in an empty block",
+          "gz": 0.26
+        },
+        {
+          "name": "characterCount",
+          "what": "Characters and words, reduced on every change",
+          "gz": 0.28
+        },
+        {
+          "name": "textAlign",
+          "what": "Left, centre, right on a block",
+          "gz": 0.36
+        },
+        {
+          "name": "indent",
+          "what": "A paragraph or heading moved in and out, a level at a time",
+          "gz": 0.44
+        },
+        {
+          "name": "typography",
+          "what": "Curled quotes, em dashes, ellipses, arrows",
+          "gz": 0.2
+        },
+        {
+          "name": "emoji",
+          "what": "Shortcodes as you type, and a table for a picker",
+          "gz": 0.94
+        },
+        {
+          "name": "autolink",
+          "what": "A URL becomes a link once a space follows it, or when pasted",
+          "gz": 0.36
+        },
+        {
+          "name": "clearFormatting",
+          "what": "Every mark off, every block a paragraph \u00b7 one undo step",
+          "gz": 0.22
+        },
+        {
+          "name": "search",
+          "what": "Find and replace \u00b7 typing rescans one paragraph, not the document",
+          "gz": 1.36
+        },
+        {
+          "name": "codeHighlight",
+          "what": "Syntax colours as decorations \u00b7 built-in tokeniser, or Shiki, Prism, lowlight",
+          "gz": 0.66
+        },
+        {
+          "name": "history",
+          "what": "Undo that groups by word, not by keystroke",
+          "gz": 0.07
+        },
+        {
+          "name": "smartPaste",
+          "what": "Tab-separated text becomes a table, Markdown becomes blocks",
+          "gz": 1.78
+        },
+        {
+          "name": "textTransform",
+          "what": "Upper, lower, title and sentence case on the selection or the word",
+          "gz": 0.95
+        },
+        {
+          "name": "selectionHighlight",
+          "what": "Every other occurrence of the selected word",
+          "gz": 0.79
+        },
+        {
+          "name": "invisibleCharacters",
+          "what": "A dot on every space, a pilcrow on every block \u00b7 drawn, never stored",
+          "gz": 0.71
+        },
+        {
+          "name": "textDirection",
+          "what": "dir on a block, and right-to-left detected from the text",
+          "gz": 0.66
+        },
+        {
+          "name": "lineHeight",
+          "what": "Line height on a block, as a checked style",
+          "gz": 0.37
+        },
+        {
+          "name": "typewriter",
+          "what": "The line being written stays put; the page moves under it",
+          "gz": 0.66
+        },
+        {
+          "name": "autosave",
+          "what": "Saves once typing pauses, and before the page goes away",
+          "gz": 0.79
+        },
+        {
+          "name": "snippets",
+          "what": "Words that expand as they are typed \u00b7 text, nodes or whole blocks",
+          "gz": 0.4
+        },
+        {
+          "name": "hashtag",
+          "what": "A tag as a node, listable from the JSON",
+          "gz": 0.26
+        },
+        {
+          "name": "mathInline",
+          "what": "A formula in the run of text",
+          "gz": 0.78
+        }
+      ]
+    },
+    {
+      "group": "Menus",
+      "items": [
+        {
+          "name": "suggestion",
+          "what": "The machinery behind a slash menu or an @ mention",
+          "gz": 0.54
+        },
+        {
+          "name": "mention",
+          "what": "A mention node \u00b7 one position, its own DOM",
+          "gz": 0.21
+        },
+        {
+          "name": "bubbleMenu",
+          "what": "Your element, shown over the selection",
+          "gz": 0.65
+        },
+        {
+          "name": "floatingMenu",
+          "what": "Your element, shown on an empty line",
+          "gz": 0.67
+        },
+        {
+          "name": "ghostText",
+          "what": "Inline completion \u00b7 grey text after the caret, Tab to take it",
+          "gz": 0.7
+        },
+        {
+          "name": "dictation",
+          "what": "Speak, and the words arrive at the caret \u00b7 the browser\u2019s own recogniser",
+          "gz": 0.84
+        }
+      ]
+    }
+  ]
+}
