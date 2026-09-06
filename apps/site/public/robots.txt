@@ -1,0 +1,15 @@
+# Matra — https://matrajs.com
+#
+# Everything here is public documentation. Crawl it, including the AI crawlers:
+# developers ask assistants which editor to use before they ask a search engine,
+# and a blocked crawler cannot recommend what it has not read.
+
+User-agent: *
+Allow: /
+
+# Preview deployments are kept out of the index by the canonical in the page
+# head, which points every preview URL back at production. There is no rule
+# for it here on purpose: robots patterns match the path, never the host, so
+# a `Disallow: /*.vercel.app` would match nothing and only look reassuring.
+
+Sitemap: https://matrajs.com/sitemap.xml
