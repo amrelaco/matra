@@ -824,7 +824,7 @@ const spell = (n: number) => WORDS[n] ?? String(n)
 ---
 
 <Base
-  title="Extensions · Matra"
+  title="Extensions | Matra"
   description="Every extension that ships with Matra, each shown in a live editor rather than listed in a table."
 >
   <Nav />
@@ -850,7 +850,7 @@ const spell = (n: number) => WORDS[n] ?? String(n)
         <div class="wrap ext-row">
           <div class="ext-copy">
             <p class="kicker">{group.kicker}</p>
-            <h3>{group.title}</h3>
+            <h2>{group.title}</h2>
             <p>{group.blurb}</p>
             <ul class="chips" data-static>
               {group.items.map((item) => (
@@ -1097,7 +1097,7 @@ const spell = (n: number) => WORDS[n] ?? String(n)
       align-self: start;
       padding-block: var(--s6);
     }
-    .ext-copy h3 {
+    .ext-copy h2 {
       margin-bottom: var(--s2);
     }
     /*

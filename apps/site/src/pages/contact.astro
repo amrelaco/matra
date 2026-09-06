@@ -14,26 +14,26 @@ const routes = [
   [
     'Buying, or a licence question',
     'Seats, invoices, purchase orders, or a licence that does not fit your situation.',
-    'licensing@amrela.co',
-    'mailto:licensing@amrela.co',
+    'licensing@matrajs.com',
+    'mailto:licensing@matrajs.com',
   ],
   [
     'Security',
     'Anything you would rather not post in public. We answer these first.',
-    'security@amrela.co',
-    'mailto:security@amrela.co',
+    'security@matrajs.com',
+    'mailto:security@matrajs.com',
   ],
   [
     'Everything else',
     'Including whether Amrela can build the thing around the editor for you.',
-    'hello@amrela.co',
-    'mailto:hello@amrela.co',
+    'hello@matrajs.com',
+    'mailto:hello@matrajs.com',
   ],
 ]
 ---
 
 <Base
-  title="Contact · Matra"
+  title="Contact | Matra"
   description="Where to send a bug, a licence question, a security report, or anything else."
 >
   <Nav />
@@ -48,7 +48,7 @@ const routes = [
         {
           routes.map(([title, note, label, href]) => (
             <a class="route" href={href}>
-              <h3>{title}</h3>
+              <h2>{title}</h2>
               <p>{note}</p>
               <span class="mono go">{label} →</span>
             </a>
@@ -85,7 +85,7 @@ const routes = [
     .route:hover {
       border-color: var(--indigo);
     }
-    .route h3 {
+    .route h2 {
       font-size: 20px;
       margin: 0 0 8px;
     }

@@ -5,8 +5,23 @@ interface Props {
   title: string
   description: string
   editable?: boolean
+  /** Set on pages that should stay out of the index — thanks pages, redirects. */
+  noindex?: boolean
+  /** Overrides the default social card. Absolute or root-relative. */
+  image?: string
 }
-const { title, description, editable = true } = Astro.props
+const { title, description, editable = true, noindex = false, image = '/og.png' } = Astro.props
+
+/**
+ * Canonical has to be absolute and has to be the *clean* URL.
+ *
+ * Astro.url carries whatever the request came in on, which on Vercel includes
+ * the deployment host for preview builds. Resolving against Astro.site pins
+ * every page to matrajs.com, so a preview deploy that gets crawled points its
+ * canonical at production instead of competing with it.
+ */
+const canonical = new URL(Astro.url.pathname.replace(/\/{2,}/g, '/'), Astro.site).href
+const social = new URL(image, Astro.site).href
 ---
 
 <!doctype html>
@@ -16,11 +31,42 @@ const { title, description, editable = true } = Astro.props
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {
+      noindex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        />
+      )
+    }
+
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Matra" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={social} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={social} />
+
     <meta name="theme-color" content="#f5f1e8" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <!--
+      Points crawlers that read it at the plain-text index of the docs. Harmless
+      to the ones that do not.
+    -->
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="Matra docs for LLMs" />
     <!--
       Client-side navigation. Moving between pages swaps the document instead of
       reloading it, so the fonts stay warm and the page does not flash white
@@ -45,6 +91,85 @@ const { title, description, editable = true } = Astro.props
         /* Private mode blocks localStorage. Light is the default anyway. */
       }
     </script>
+
+    <!--
+      Structured data. Search engines use it for rich results; the answer
+      engines (ChatGPT, Perplexity, Gemini) lean on it harder, because it is
+      the only part of the page that states what this thing *is* without
+      needing prose parsed out of it.
+    -->
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'WebSite',
+            '@id': 'https://matrajs.com/#website',
+            url: 'https://matrajs.com/',
+            name: 'Matra',
+            description:
+              'A headless rich text editor framework with a first-class extension model.',
+            publisher: { '@id': 'https://matrajs.com/#org' },
+            inLanguage: 'en',
+          },
+          {
+            '@type': 'Organization',
+            '@id': 'https://matrajs.com/#org',
+            name: 'Amrela',
+            url: 'https://matrajs.com/',
+            logo: 'https://matrajs.com/favicon.svg',
+          },
+          {
+            '@type': 'SoftwareSourceCode',
+            '@id': 'https://matrajs.com/#software',
+            name: 'Matra',
+            description:
+              'A headless rich text editor framework for React, Vue, Svelte and Solid, with a first-class extension model, collaborative editing, version history and AI streaming edits.',
+            url: 'https://matrajs.com/',
+            codeRepository: 'https://github.com/amrelaco/matra',
+            programmingLanguage: 'TypeScript',
+            runtimePlatform: 'JavaScript',
+            license: 'https://matrajs.com/licence',
+            author: { '@id': 'https://matrajs.com/#org' },
+          },
+          {
+            '@type': 'SoftwareApplication',
+            '@id': 'https://matrajs.com/#app',
+            name: 'Matra',
+            applicationCategory: 'DeveloperApplication',
+            operatingSystem: 'Web',
+            url: 'https://matrajs.com/',
+            softwareVersion: '1.0.2',
+            offers: [
+              {
+                '@type': 'Offer',
+                name: 'Core',
+                price: '0',
+                priceCurrency: 'USD',
+                description: 'MIT-licensed core and framework bindings.',
+              },
+              {
+                '@type': 'Offer',
+                name: 'Pro',
+                price: '99',
+                priceCurrency: 'USD',
+                description: 'Commercial licence for AI, collaboration and version history.',
+              },
+              {
+                '@type': 'Offer',
+                name: 'Business',
+                price: '349',
+                priceCurrency: 'USD',
+                description: 'Commercial licence with a larger developer cap.',
+              },
+            ],
+            author: { '@id': 'https://matrajs.com/#org' },
+          },
+        ],
+      })}
+    />
   </head>
   <body>
     <slot />

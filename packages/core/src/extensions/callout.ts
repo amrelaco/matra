@@ -1,3 +1,5 @@
+import { exitContainerOnEmpty } from '../engine'
+import { engine } from '../internal'
 import type { Command, NodeDef } from '../types'
 
 export type CalloutType = 'info' | 'note' | 'tip' | 'warning' | 'danger' | 'success'
@@ -65,11 +67,19 @@ export const callout = {
       isType(type) ? ctx.setNodeAttrs('callout', { type }) : false,
     setCalloutEmoji: (ctx, emoji) =>
       emoji === null || SAFE_EMOJI.test(emoji) ? ctx.setNodeAttrs('callout', { emoji }) : false,
+    /** Enter on the empty last line of a callout leaves it. See blockquote. */
+    exitCallout: (ctx) => {
+      const { tr, schema } = engine(ctx)
+      const type = schema.nodes.callout
+      return type ? exitContainerOnEmpty(tr, type) : false
+    },
   },
+  keys: { Enter: 'exitCallout' },
 } satisfies NodeDef<{
   toggleCallout: Command<[type?: CalloutType]>
   setCalloutType: Command<[type: CalloutType]>
   setCalloutEmoji: Command<[emoji: string | null]>
+  exitCallout: Command
 }>
 
 /** Enough styling to tell the types apart. */

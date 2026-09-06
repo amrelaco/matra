@@ -2,6 +2,26 @@
 
 All packages share one version number and are released together.
 
+## 1.0.3 — 2026-09-06
+
+**Enter leaves a quote.** A blockquote was a room with no door: every Enter
+made another paragraph inside it, and the only way out was the mouse. Lists
+have had the rule since `splitListItem` — an empty item means the writer is
+finished — but the containers that are not lists never got it.
+`exitContainerOnEmpty` puts the rule in one place, wired into `blockquote`
+and `callout`, so a new container gets the behaviour by binding a key rather
+than reimplementing the check. It fires only on a caret in an empty textblock
+that is the last child, so Enter in the middle of a quote still splits and
+Enter outside one is untouched.
+
+**`autofocus: 'start' | 'end'` does what it says.** The option has been typed
+that way since 1.0, but mount only checked truthiness, so both strings behaved
+like `true` and the caret stayed wherever it already was.
+
+**Contact addresses moved to matrajs.com.** `amrela.co` does not resolve, so
+the address in the licence files — the one to write to about buying a licence
+— had been bouncing.
+
 ## 1.0.2 — 2026-09-05
 
 **Solid mounts.** A Solid ref runs when its element is made, before it is in
