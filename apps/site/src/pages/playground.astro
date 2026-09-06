@@ -1,6 +1,5 @@
 ---
 import Footer from '../components/Footer.astro'
-import Head from '../components/Head.astro'
 import Icon from '../components/Icon.astro'
 import Nav from '../components/Nav.astro'
 import { FALLBACK, ICONS } from '../data/extension-icons'
@@ -36,14 +35,66 @@ const SEED = `<h2>A document, not a demo</h2>
   description={`Build a rich text editor by ticking extensions. ${total} of them, each with its measured gzipped cost, assembling a real editor you can type in.`}
 >
   <Nav />
-  <Head
-    kicker="Playground"
-    title="Tick what you<br />need. Type in it."
-    lede="Every box rebuilds a real editor on this page · not a video, not a screenshot. The size is measured, and so is the time it took to build."
-  />
+  <!--
+    A workbench, not a page.
 
-  <section class="section flush">
-    <div class="wrap">
+    Two panes that scroll on their own inside one screen-height frame: pick on
+    the left, watch on the right. The first two passes stacked them, so ticking
+    something at the foot of the list meant scrolling back up to see what it
+    did — which is the one thing this page exists to show.
+  -->
+  <section class="pg-bench">
+    <div class="pg-side">
+      <div class="pg-side-head">
+        <div>
+          <p class="kicker">Playground</p>
+          <h1 class="pg-h">Tick what you need</h1>
+          <p class="pg-hint">
+            Matra ships nothing by default. Tick an extension and it joins the document on the
+            right · untick it and both the button and the behaviour go. The kilobytes are
+            measured, and so are the milliseconds.
+          </p>
+          <p class="pg-hint pg-legend">
+            The figure on each one is what it adds to the bundle, gzipped.
+          </p>
+        </div>
+        <div class="pg-presets">
+          <button type="button" class="btn ghost" id="pg-starter">Starter set</button>
+          <button type="button" class="btn ghost" id="pg-clear">Clear</button>
+        </div>
+      </div>
+
+      <div class="pg-side-scroll">
+        {
+          catalogue.groups.map((group) => (
+            <div class="pg-group">
+              <h3>
+                {group.group}
+                <span class="mono pg-group-n">{group.items.length}</span>
+              </h3>
+              <div class="pg-grid">
+                {group.items.map((item) => (
+                  <label
+                    class="pg-chip"
+                    title={`${item.what} · ${item.gz.toFixed(2)} kB gzipped`}
+                  >
+                    <input type="checkbox" data-ext={item.name} data-what={item.what} />
+                    <Icon icon={ICONS[item.name] ?? FALLBACK} size={18} class="pg-icon" />
+                    <span class="mono pg-name">{item.name}</span>
+                    <span class="mono pg-gz">
+                      {item.gz.toFixed(2)}
+                      <span class="pg-unit">kB</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="pg-main">
       <div class="pg-readout">
         <div class="pg-stat">
           <span class="mono pg-figure" id="pg-count">0</span>
@@ -59,83 +110,46 @@ const SEED = `<h2>A document, not a demo</h2>
         </div>
       </div>
 
-      <div class="pg-paper">
-        <div class="pg-toolbar" id="pg-toolbar" role="toolbar" aria-label="Editor commands">
-          {
-            TOOLS.map((tool) => (
-              <button
-                type="button"
-                class="pg-tool"
-                title={tool.title}
-                aria-label={tool.title}
-                data-cmd={tool.cmd}
-                data-ext={tool.ext}
-                data-args={tool.args.join(',')}
-                hidden
-              >
-                <Icon icon={ICONS[tool.ext] ?? FALLBACK} size={16} />
-              </button>
-            ))
-          }
-          <p class="pg-toolbar-empty" id="pg-toolbar-empty">
-            Nothing ticked. The editor below still runs · it just cannot do anything yet.
-          </p>
-        </div>
-
-        <style id="pg-sheet" is:inline></style>
-        <div id="pg-editor" class="pg-editor" set:html={SEED} />
-        <p class="pg-error" id="pg-status" hidden></p>
-        <p class="pg-error" id="pg-failed" hidden></p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap pg-build">
-      <div class="pg-picker">
-        <h2 class="pg-h">What is in this editor</h2>
-        <p class="pg-hint">
-          Matra ships no features by default · an editor has exactly the extensions you hand it,
-          and nothing else. These are all {total} of them, with what each one costs in gzipped kilobytes.
-          Tick one and it is added to the document above; untick it and both the button and the behaviour
-          go. Anything a ticked extension cannot work without is brought along and drawn outlined
-          rather than filled.
-        </p>
-        <div class="pg-presets">
-          <button type="button" class="btn ghost" id="pg-starter">Starter set</button>
-          <button type="button" class="btn ghost" id="pg-clear">Clear</button>
-        </div>
-
+      <div class="pg-toolbar" id="pg-toolbar" role="toolbar" aria-label="Editor commands">
         {
-          catalogue.groups.map((group) => (
-            <div class="pg-group">
-              <h3>
-                {group.group}
-                <span class="mono pg-group-n">{group.items.length}</span>
-              </h3>
-              <div class="pg-grid">
-                {group.items.map((item) => (
-                  <label class="pg-chip" title={item.what}>
-                    <input type="checkbox" data-ext={item.name} data-what={item.what} />
-                    <Icon icon={ICONS[item.name] ?? FALLBACK} size={19} class="pg-icon" />
-                    <span class="mono pg-name">{item.name}</span>
-                    <span class="mono pg-gz">{item.gz.toFixed(2)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+          TOOLS.map((tool) => (
+            <button
+              type="button"
+              class="pg-tool"
+              title={tool.title}
+              aria-label={tool.title}
+              data-cmd={tool.cmd}
+              data-ext={tool.ext}
+              data-args={tool.args.join(',')}
+              hidden
+            >
+              <Icon icon={ICONS[tool.ext] ?? FALLBACK} size={16} />
+            </button>
           ))
         }
+        <p class="pg-toolbar-empty" id="pg-toolbar-empty">
+          Nothing ticked · the editor runs, it just cannot do anything yet.
+        </p>
       </div>
 
-      <aside class="pg-out">
-        <div class="pg-code-head">
-          <h2 class="pg-h">Your editor, as code</h2>
+      <style id="pg-sheet" is:inline></style>
+      <!--
+        data-static keeps the site-wide editable sweep off this element. It
+        skips .matra-editor, but that class only lands once Matra has mounted —
+        so without this the sweep finds the seed's h2 first and mounts its own
+        editor over it, which is exactly the race its own comment warns about.
+      -->
+      <div id="pg-editor" class="pg-editor" data-static set:html={SEED} />
+      <p class="pg-error" id="pg-status" hidden></p>
+      <p class="pg-error" id="pg-failed" hidden></p>
+
+      <details class="pg-code-drawer" open>
+        <summary>
+          <span>Your editor, as code</span>
           <button type="button" class="btn ghost" id="pg-copy">Copy</button>
-        </div>
-        <p class="pg-hint">Paste this into a project and you get the editor above.</p>
+        </summary>
         <pre class="pg-code"><code class="mono" id="pg-code" /></pre>
-      </aside>
+      </details>
     </div>
   </section>
 
@@ -146,243 +160,110 @@ const SEED = `<h2>A document, not a demo</h2>
   </script>
 
   <style>
-    /* --- the numbers ------------------------------------------------------- */
-
-    .pg-readout {
+    /*
+      Full bleed. The site's 1140px measure is right for prose and wrong for a
+      tool: the list wants columns and the document wants width, and neither
+      gets it inside a column meant for reading.
+    */
+    .pg-bench {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      max-width: 26rem;
-      margin-bottom: 1.25rem;
-      background-color: var(--surface);
-      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size:
-        100% 1px,
-        100% 1px,
-        1px 100%,
-        1px 100%;
-      background-position:
-        0 0,
-        0 100%,
-        0 0,
-        100% 0;
+      grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+      /*
+        A screen's worth, and not sticky.
+        
+        Pinning it meant the footer scrolled up into the same space and showed
+        through the gaps between the panes. There is nothing to pin for: both
+        panes scroll inside the frame, so once the bench is on screen you never
+        need to scroll the page to use it.
+      */
+      height: calc(100vh - 68px);
+      background-color: var(--paper);
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
       background-repeat: no-repeat;
     }
 
-    .pg-stat {
-      padding: 0.7rem 0.9rem;
+    /* --- left: the picker --------------------------------------------------- */
+
+    .pg-side {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background-color: var(--paper);
       background-image: var(--dash-v);
       background-size: 1px 100%;
       background-position: 100% 0;
       background-repeat: no-repeat;
     }
 
-    .pg-stat:last-child {
-      background-image: none;
-    }
-
-    .pg-figure {
-      display: block;
-      font-size: 1.4rem;
-      line-height: 1.1;
-      color: var(--ink-strong);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .pg-label {
-      font-size: 0.74rem;
-      color: var(--ink-soft);
-    }
-
-    #pg-size.ticked {
-      animation: pg-tick 420ms ease-out;
-    }
-
-    @keyframes pg-tick {
-      0% {
-        color: var(--indigo);
-      }
-      100% {
-        color: var(--ink-strong);
-      }
-    }
-
-    /* --- the document ------------------------------------------------------ */
-
-    /*
-      A sheet, because that is what people are here to judge. The picker moved
-      below it: an editor you cannot reach proves nothing, and the first thing
-      on the page should be the thing you type into.
-    */
-    .pg-paper {
-      background-color: var(--surface);
-      background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
-      background-size:
-        100% 1px,
-        100% 1px,
-        1px 100%,
-        1px 100%;
-      background-position:
-        0 0,
-        0 100%,
-        0 0,
-        100% 0;
-      background-repeat: no-repeat;
-    }
-
-    .pg-toolbar {
+    .pg-side-head {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 2px;
-      padding: 0.5rem 0.6rem;
-      min-height: 2.6rem;
+      flex-direction: column;
+      gap: 0.7rem;
+      padding: 1.1rem 1.2rem 0.9rem;
       background-image: var(--dash-h);
       background-size: 100% 1px;
       background-position: 0 100%;
       background-repeat: no-repeat;
     }
 
-    .pg-tool {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.85rem;
-      height: 1.85rem;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: var(--ink-soft);
-      cursor: pointer;
-    }
-
-    /*
-      `display` on the class beats the `display: none` the UA stylesheet gives
-      [hidden], so without this every button stays on screen while claiming to
-      be hidden — visible to the eye, absent from the accessibility tree.
-    */
-    .pg-tool[hidden] {
-      display: none;
-    }
-
-    .pg-tool:hover {
-      background-color: var(--code-chrome);
-      color: var(--ink);
-    }
-
-    /* Lit when the thing the button does is already true of the selection. */
-    .pg-tool[aria-pressed='true'] {
-      background-color: var(--indigo-wash);
-      color: var(--indigo);
-    }
-
-    .pg-tool:focus-visible {
-      outline: 2px solid var(--indigo);
-      outline-offset: -2px;
-    }
-
-    .pg-toolbar-empty {
-      margin: 0;
-      padding-left: 0.2rem;
-      font-size: 0.82rem;
-      color: var(--ink-faint);
-    }
-
-    .pg-editor {
-      min-height: 22rem;
-      padding: 2.2rem clamp(1.2rem, 5vw, 3.5rem);
-      font-size: 1rem;
-      line-height: 1.7;
-    }
-
-    /* The measure a document wants, not the width the page happens to have. */
-    .pg-editor > :global(*) {
-      max-width: 46rem;
-      margin-inline: auto;
-    }
-
-    .pg-editor:focus {
-      outline: none;
-    }
-
-    .pg-error {
-      margin: 0;
-      padding: 0.7rem 1.2rem;
-      background-image: var(--dash-h);
-      background-size: 100% 1px;
-      background-position: 0 0;
-      background-repeat: no-repeat;
-      color: var(--blood);
-      font-size: 0.85rem;
-    }
-
-    /* --- the picker, and the code beside it --------------------------------- */
-
-    .pg-build {
-      display: grid;
-      grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
-      gap: 2.5rem;
-      align-items: start;
-    }
-
     .pg-h {
-      margin: 0 0 0.5rem;
-      font-size: 1.05rem;
-      font-weight: 500;
+      margin: 0.15rem 0 0.4rem;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 400;
+      line-height: 1.15;
     }
 
     .pg-hint {
-      margin: 0 0 1rem;
-      max-width: 62ch;
+      margin: 0;
       color: var(--ink-soft);
-      font-size: 0.9rem;
-      line-height: 1.65;
+      font-size: 0.84rem;
+      line-height: 1.55;
     }
 
     .pg-presets {
       display: flex;
       gap: 0.5rem;
-      padding-bottom: 0.9rem;
-      background-image: var(--dash-h);
-      background-size: 100% 1px;
-      background-position: 0 100%;
-      background-repeat: no-repeat;
     }
 
-    /* The code follows you down the list it describes. */
-    .pg-out {
-      position: sticky;
-      top: 1.5rem;
+    /* The one pane that scrolls on the left. */
+    .pg-side-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0 1.2rem 1.5rem;
     }
 
     .pg-group {
-      margin-top: 1.75rem;
+      margin-top: 1.25rem;
     }
 
     .pg-group h3 {
       display: flex;
       align-items: baseline;
-      gap: 0.5rem;
-      margin: 0 0 0.6rem;
-      font-size: 1rem;
+      gap: 0.45rem;
+      margin: 0 0 0.5rem;
+      font-size: 0.92rem;
       font-weight: 500;
       color: var(--ink-faint);
     }
 
     .pg-group-n {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--rule-firm);
     }
 
     .pg-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr));
-      gap: 0.4rem;
+      grid-template-columns: repeat(auto-fill, minmax(6.9rem, 1fr));
+      gap: 0.35rem;
     }
 
     /*
       A square rather than a row. Seventy-six rows is a list you read; the same
-      seventy-six as glyphs is something you scan, and scanning is what picking
-      an extension actually is. Drawn with the site's dash, not the browser's.
+      seventy-six as glyphs is something you scan. Drawn with the site's dash.
     */
     .pg-chip {
       --dash: 3px;
@@ -390,8 +271,8 @@ const SEED = `<h2>A document, not a demo</h2>
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 0.28rem;
-      padding: 0.6rem 0.55rem 0.5rem;
+      gap: 0.22rem;
+      padding: 0.5rem 0.5rem 0.42rem;
       border: 0;
       background-color: var(--surface);
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
@@ -422,7 +303,7 @@ const SEED = `<h2>A document, not a demo</h2>
       pointer-events: none;
     }
 
-    /* Keyboard only. A ring that appears on every mouse click is noise. */
+    /* Keyboard only. A ring on every mouse click is noise. */
     .pg-chip:has(input:focus-visible) {
       outline: 2px solid var(--indigo);
       outline-offset: 1px;
@@ -434,24 +315,32 @@ const SEED = `<h2>A document, not a demo</h2>
     }
 
     .pg-name {
-      font-size: 0.7rem;
+      font-size: 0.66rem;
       line-height: 1.25;
       color: var(--ink);
-      /* camelCase offers no break point, so the longest names would otherwise
-         run past the chip. Breaking anywhere is the lesser of the two. */
+      /* camelCase offers no break point, so the longest names would run past
+         the chip. Breaking anywhere is the lesser of the two. */
       overflow-wrap: anywhere;
     }
 
     .pg-gz {
-      font-size: 0.66rem;
+      font-size: 0.62rem;
       color: var(--ink-faint);
       font-variant-numeric: tabular-nums;
     }
 
-    /*
-      On. The dash goes indigo by moving the colour the gradients read, so the
-      edge keeps the same rhythm as every other edge on the site.
-    */
+    /* Quieter than the figure: the unit is the same on every chip. */
+    .pg-unit {
+      opacity: 0.65;
+    }
+
+    .pg-legend {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--ink-faint);
+    }
+
+    /* On. The dash goes indigo by moving the colour the gradients read. */
     .pg-chip:has(input:checked) {
       --rule-strong: var(--indigo);
       background-color: var(--indigo-wash);
@@ -476,20 +365,21 @@ const SEED = `<h2>A document, not a demo</h2>
       color: var(--ink-soft);
     }
 
-    /* --- the code ---------------------------------------------------------- */
+    /* --- right: the document ------------------------------------------------ */
 
-    .pg-code-head {
+    .pg-main {
       display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 1rem;
+      flex-direction: column;
+      min-height: 0;
+      background-color: var(--paper);
     }
 
-    .pg-code {
-      margin: 0.75rem 0 0;
-      padding: 0.9rem 1rem;
-      border: 0;
-      background-color: var(--code-bg);
+    .pg-readout {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-width: 24rem;
+      margin: 0.9rem 1.2rem;
+      background-color: var(--surface);
       background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
       background-size:
         100% 1px,
@@ -502,32 +392,229 @@ const SEED = `<h2>A document, not a demo</h2>
         0 0,
         100% 0;
       background-repeat: no-repeat;
-      overflow-x: auto;
-      font-size: 0.78rem;
+    }
+
+    .pg-stat {
+      padding: 0.45rem 0.8rem;
+      background-image: var(--dash-v);
+      background-size: 1px 100%;
+      background-position: 100% 0;
+      background-repeat: no-repeat;
+    }
+
+    .pg-stat:last-child {
+      background-image: none;
+    }
+
+    .pg-figure {
+      display: block;
+      font-size: 1.2rem;
+      line-height: 1.15;
+      color: var(--ink-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pg-label {
+      font-size: 0.7rem;
+      color: var(--ink-soft);
+    }
+
+    #pg-size.ticked {
+      animation: pg-tick 420ms ease-out;
+    }
+
+    @keyframes pg-tick {
+      0% {
+        color: var(--indigo);
+      }
+      100% {
+        color: var(--ink-strong);
+      }
+    }
+
+    .pg-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px;
+      padding: 0.45rem 1.2rem;
+      min-height: 2.5rem;
+      background-image: var(--dash-h), var(--dash-h);
+      background-size:
+        100% 1px,
+        100% 1px;
+      background-position:
+        0 0,
+        0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .pg-tool {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.8rem;
+      height: 1.8rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+
+    /*
+      `display` on the class beats the `display: none` the UA gives [hidden],
+      so without this every button stays on screen while claiming to be hidden.
+    */
+    .pg-tool[hidden] {
+      display: none;
+    }
+
+    .pg-tool:hover {
+      background-color: var(--code-chrome);
+      color: var(--ink);
+    }
+
+    .pg-tool[aria-pressed='true'] {
+      background-color: var(--indigo-wash);
+      color: var(--indigo);
+    }
+
+    .pg-tool:focus-visible {
+      outline: 2px solid var(--indigo);
+      outline-offset: -2px;
+    }
+
+    .pg-toolbar-empty {
+      margin: 0;
+      padding-left: 0.2rem;
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+    }
+
+    /* The other pane that scrolls. */
+    .pg-editor {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1.8rem clamp(1.2rem, 4vw, 3rem);
+      background-color: var(--surface);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    /* The measure a document wants, not the width the screen happens to have. */
+    .pg-editor > :global(*) {
+      max-width: 44rem;
+      margin-inline: auto;
+    }
+
+    .pg-editor:focus {
+      outline: none;
+    }
+
+    .pg-error {
+      margin: 0;
+      padding: 0.6rem 1.2rem;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+      color: var(--blood);
+      font-size: 0.84rem;
+    }
+
+    /* --- the code, out of the way until wanted ------------------------------ */
+
+    .pg-code-drawer {
+      flex: none;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+    }
+
+    .pg-code-drawer summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      /* Right padding clears the floating shortcuts button, which sits in this
+         corner and would otherwise land on top of Copy. */
+      padding: 0.55rem 12rem 0.55rem 1.2rem;
+      font-size: 0.86rem;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+
+    /* Pushes the button to the right without making the label a third
+       space-between item, which centred it. */
+    .pg-code-drawer summary > span {
+      margin-right: auto;
+    }
+
+    .pg-code-drawer summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .pg-code-drawer summary::before {
+      content: '▸';
+      margin-right: 0.4rem;
+      color: var(--ink-faint);
+    }
+
+    .pg-code-drawer[open] summary::before {
+      content: '▾';
+    }
+
+    .pg-code {
+      margin: 0;
+      max-height: 11rem;
+      overflow: auto;
+      /* Right padding clears the floating shortcuts button in this corner. */
+      padding: 0.8rem 12rem 0.8rem 1.2rem;
+      border: 0;
+      background-color: var(--code-bg);
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+      font-size: 0.75rem;
       line-height: 1.65;
       color: var(--code-fg);
       white-space: pre-wrap;
       word-break: break-word;
     }
 
-    @media (max-width: 900px) {
-      .pg-build {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 2rem;
-      }
+    /* --- narrow ------------------------------------------------------------- */
 
-      /* Sticky in one column parks the code over the list it describes. */
-      .pg-out {
+    /*
+      Below this there is no room for two panes side by side, and a viewport
+      lock on a phone fights the browser chrome. Back to one column that
+      scrolls, document first.
+    */
+    @media (max-width: 860px), (max-height: 560px) {
+      .pg-bench {
         position: static;
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
       }
 
-      .pg-grid {
-        grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr));
+      .pg-side {
+        order: 2;
+        background-image: none;
+      }
+
+      .pg-side-scroll {
+        overflow-y: visible;
       }
 
       .pg-editor {
-        min-height: 16rem;
-        padding: 1.4rem 1.1rem;
+        height: 22rem;
+        flex: none;
+      }
+
+      .pg-grid {
+        grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
       }
     }
 

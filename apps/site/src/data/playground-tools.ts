@@ -9,6 +9,11 @@
  *
  * Generated from the `use` column of the extensions directory, so a command
  * renamed there is renamed here.
+ *
+ * `taskItem` is left out by hand: its command toggles one checkbox's ticked
+ * state, which you do by clicking the checkbox, and its icon is a checked
+ * square one pixel different from `taskList`'s — two identical-looking buttons
+ * side by side, one of which does nothing you would guess.
  */
 export interface Tool {
   /** The extension that supplies it. */
@@ -57,12 +62,6 @@ export const TOOLS: Tool[] = [
   { ext: 'bulletList', cmd: 'toggleBulletList', args: [], title: 'Bulleted' },
   { ext: 'orderedList', cmd: 'toggleOrderedList', args: [], title: 'Numbered' },
   { ext: 'taskList', cmd: 'toggleTaskList', args: [], title: 'Checkboxes' },
-  {
-    ext: 'taskItem',
-    cmd: 'toggleTaskItem',
-    args: [],
-    title: 'One checkbox · a real input the caret cannot enter',
-  },
   {
     ext: 'table',
     cmd: 'insertTable',
