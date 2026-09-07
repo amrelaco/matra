@@ -9,8 +9,25 @@ interface Props {
   noindex?: boolean
   /** Overrides the default social card. Absolute or root-relative. */
   image?: string
+  /**
+   * Extra structured data for this page, added to the site-wide graph.
+   *
+   * The graph below says what Matra *is*, and it is the same on every page —
+   * which is right for the organisation and the software, and useless for
+   * telling an answer engine what *this* page covers. A docs page passes a
+   * `TechArticle` and its breadcrumbs; the comparison page passes its
+   * questions as an `FAQPage`. Those are the shapes that get quoted back.
+   */
+  schema?: Record<string, unknown>[]
 }
-const { title, description, editable = true, noindex = false, image = '/og.png' } = Astro.props
+const {
+  title,
+  description,
+  editable = true,
+  noindex = false,
+  image = '/og.png',
+  schema = [],
+} = Astro.props
 
 /**
  * Canonical has to be absolute and has to be the *clean* URL.
@@ -67,6 +84,12 @@ const social = new URL(image, Astro.site).href
       to the ones that do not.
     -->
     <link rel="alternate" type="text/plain" href="/llms.txt" title="Matra docs for LLMs" />
+    <link
+      rel="alternate"
+      type="text/plain"
+      href="/llms-full.txt"
+      title="Matra docs for LLMs, in full"
+    />
     <!--
       Client-side navigation. Moving between pages swaps the document instead of
       reloading it, so the fonts stay warm and the page does not flash white
@@ -167,6 +190,7 @@ const social = new URL(image, Astro.site).href
             ],
             author: { '@id': 'https://matrajs.com/#org' },
           },
+          ...schema,
         ],
       })}
     />
@@ -205,6 +229,9 @@ const social = new URL(image, Astro.site).href
 
     <script>
       import '../scripts/theme'
+    </script>
+    <script>
+      import '../scripts/tooltip'
     </script>
     <script>
       import '../scripts/shortcuts'

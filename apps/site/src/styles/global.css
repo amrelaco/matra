@@ -5,7 +5,7 @@
  * rhythm here is roughly half again as generous. The dashed rule stays as the
  * only separator — it is the one device the whole system is built on.
  */
-@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/bricolage-grotesque/500.css";
 @import "@fontsource/geist-sans/400.css";
 @import "@fontsource/geist-sans/500.css";
 @import "@fontsource/geist-sans/700.css";
@@ -46,7 +46,25 @@
   --dot-y: #d4ac5e;
   --dot-g: #7fa678;
 
-  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  /*
+     Headings, and only headings.
+
+     This was Instrument Serif, which reads beautifully at 92px and punishes
+     anyone who has to read a page of 25px section titles — the report was
+     literal eye strain. Bricolage Grotesque keeps enough character to still be
+     a display face, with none of the hairline strokes and tight apertures that
+     make a display serif hard work at section-title sizes.
+  */
+  --font-display: "Bricolage Grotesque", "Geist Sans", -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  /*
+     One weight, and it has to be this one.
+
+     Only the 500 face is loaded — 24 kB, the same as the serif it replaced, so
+     the swap costs nothing. Ask for any other number here and the browser
+     synthesises it, which on a grotesque looks like a smear.
+  */
+  --display-weight: 500;
   --font-ui: "Geist Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Cascadia Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -117,6 +135,21 @@
   box-sizing: border-box;
 }
 
+/*
+ * Anything you press says so.
+ *
+ * A <button> gets an arrow cursor by default and an <a> gets a hand, which is
+ * how a site ends up with two kinds of clickable thing that feel different.
+ * `:disabled` is excluded because a control that cannot be pressed should not
+ * invite the press.
+ */
+button:not(:disabled),
+summary,
+label:has(input[type="checkbox"]),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
@@ -146,7 +179,7 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: var(--display-weight);
   margin: 0;
   color: var(--ink-strong);
 }
@@ -171,6 +204,29 @@ h3 {
 
 a {
   color: inherit;
+}
+
+/*
+ * The tooltip, drawn once on the body · see scripts/tooltip.ts.
+ *
+ * On the body rather than on the control, because every strip on this site
+ * scrolls and a pseudo-element inside a scrolling box is clipped by it.
+ */
+.mx-tip {
+  position: absolute;
+  z-index: 90;
+  max-width: 20rem;
+  padding: 5px 8px;
+  background-color: var(--invert-bg);
+  color: var(--invert-fg);
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.18);
+}
+
+.mx-tip[hidden] {
+  display: none;
 }
 
 /* --- structure -------------------------------------------------------- */
@@ -261,6 +317,11 @@ a {
   gap: 9px;
   padding: 14px 23px;
   border: 0;
+  /* Every `.btn` on the site was an <a>, which the browser gives a hand
+     cursor for free. The first <button> to take the class got an arrow, and
+     so did every one after it — the playground's presets, Copy, and the
+     buttons in the comment margin. One line here rather than one per page. */
+  cursor: pointer;
   /* Every .btn on the site was an <a>, which inherits the page's face. The
      first <button> to take this class rendered its label in the browser's own
      Arial, because a button does not inherit font-family and nothing here set
@@ -355,12 +416,47 @@ th {
  * alternative is each page re-describing what a blockquote is. Anything a page
  * wants to say differently it says after this.
  */
+/*
+ * One rhythm, set once.
+ *
+ * The gaps used to be picked per element — 8 under a heading, 10 under a
+ * paragraph, 12 under a quote, 16 around a rule — and anything an extension
+ * introduced got none at all, so a heading directly after a callout or a
+ * disclosure sat flush against it with nothing between them. Measured on a
+ * document holding one of everything, the gaps ran 0, 8, 10, 12 and 16.
+ *
+ * Two numbers now: what a block leaves under it, and what a heading takes
+ * above it. A heading needs the second one because it belongs to what follows,
+ * not to what it interrupts.
+ */
+.matra-editor {
+  --block-gap: 12px;
+  --head-gap: 24px;
+  /* The extensions' own stylesheets read this · see `embedCSS` in core. */
+  --matra-block-gap: var(--block-gap);
+}
+
 .matra-editor :is(h1, h2, h3, h4) {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: var(--display-weight);
   line-height: 1.15;
   letter-spacing: -0.02em;
-  margin: 0 0 8px;
+  margin: var(--head-gap) 0 8px;
+}
+
+/*
+ * Blocks an extension brought with it.
+ *
+ * A callout, a disclosure, a table, an image, a column set: none of them are
+ * described above, and none carried a margin of their own.
+ */
+.matra-editor > :is(div, details, table, img, figure, iframe) {
+  margin-bottom: var(--block-gap);
+}
+
+/* Nothing hangs off the top or the bottom of the document. */
+.matra-editor > :first-child {
+  margin-top: 0;
 }
 
 .matra-editor h1 {
@@ -377,7 +473,7 @@ th {
 }
 
 .matra-editor p {
-  margin: 0 0 10px;
+  margin: 0 0 var(--block-gap);
   line-height: 1.6;
 }
 
@@ -386,7 +482,7 @@ th {
 }
 
 .matra-editor blockquote {
-  margin: 0 0 12px;
+  margin: 0 0 var(--block-gap);
   padding: 2px 0 2px 16px;
   color: var(--ink-soft);
   font-style: italic;
@@ -407,7 +503,7 @@ th {
 }
 
 .matra-editor :is(ul, ol) {
-  margin: 0 0 12px;
+  margin: 0 0 var(--block-gap);
   padding-left: 22px;
 }
 
@@ -429,7 +525,7 @@ th {
  * would otherwise force the box wider than its column and bring the bar back.
  */
 .matra-editor pre {
-  margin: 0 0 12px;
+  margin: 0 0 var(--block-gap);
   padding: 14px 16px;
   background-color: var(--code-bg);
   color: var(--code-fg);
@@ -450,7 +546,8 @@ th {
 .matra-editor hr {
   border: 0;
   height: 1px;
-  margin: 16px 0;
+  /* The block above already left its gap · 16 on both sides double-counted it. */
+  margin: 4px 0 var(--block-gap);
   background-image: var(--dash-h);
   background-size: 100% 1px;
   background-repeat: no-repeat;
@@ -616,6 +713,7 @@ th {
   align-items: center;
   gap: 10px;
   font-family: var(--font-display);
+  font-weight: var(--display-weight);
   font-size: 20px;
 }
 .site-footer .brand-col p {
@@ -1074,14 +1172,14 @@ b {
   font-weight: 700;
 }
 
-/* Instrument Serif ships one weight, so a heading emphasises with colour. */
+/* Only one display weight is loaded, so a heading emphasises with colour. */
 h1 strong,
 h2 strong,
 h3 strong,
 h1 b,
 h2 b,
 h3 b {
-  font-weight: 400;
+  font-weight: var(--display-weight);
   color: var(--indigo);
 }
 
@@ -1096,7 +1194,9 @@ h3 b {
 ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
-  margin: var(--s2) 0;
+  /* In the document's rhythm · `16px` on both sides collapsed against the
+     block above and won, so a checklist sat further out than any other list. */
+  margin: 0 0 var(--block-gap);
 }
 
 .matra-task-item,
@@ -1530,6 +1630,7 @@ html[data-theme-changing] {
 
 .keys-title {
   font-family: var(--font-display);
+  font-weight: var(--display-weight);
   font-size: 17px;
 }
 

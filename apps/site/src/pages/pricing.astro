@@ -223,11 +223,11 @@ const questions = [
       display: flex;
       flex-direction: column;
     }
+    /* The `background` shorthand already drops the dashed edges the tier draws,
+       so the featured card is a filled block. There is no border to restyle. */
     .tier.featured {
       background: var(--invert-bg);
       color: var(--invert-fg);
-      border-style: solid;
-      border-color: var(--invert-bg);
     }
     .tier.featured .tier-tag,
     .tier.featured li {
@@ -294,6 +294,7 @@ const questions = [
     }
     .price b {
       font-family: var(--font-display);
+      font-weight: var(--display-weight);
       font-size: 42px;
       font-weight: 400;
       line-height: 1;

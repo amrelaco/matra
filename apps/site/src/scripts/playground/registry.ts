@@ -112,13 +112,44 @@ export const SHEETS: Record<string, string> = {
 }
 
 export const { createEditor } = core
+
+/**
+ * The two helpers the interface needs and the document does not.
+ *
+ * `commentRanges` is how a margin finds out where the threads are — the mark
+ * carries only an id, deliberately, so the anchor is read back off the
+ * document rather than stored twice. `tableOfContents` is the same idea for
+ * headings: an outline is a *reading* of the document, not a thing kept beside
+ * it, so it cannot go stale.
+ */
+export const commentRanges = core.commentRanges as (doc: unknown) => {
+  threadId: string
+  from: number
+  to: number
+  text: string
+}[]
+export const tableOfContents = core.tableOfContents as (doc: unknown) => {
+  level: number
+  text: string
+  id?: string
+  pos?: number
+}[]
+export const activeSuggestion = core.activeSuggestion
 export const CONFIGURE = {
   autosave: core.autosave,
+  /*
+    The one kit the playground cannot take apart.
+
+    `footnoteRef`, `footnote` and `footnotes` are three nodes and no commands —
+    the numbering and `insertFootnote` live in a fourth, unexported extension
+    that only `footnotesKit()` can hand out. Ticking the three nodes alone gives
+    a schema that can hold footnotes and an editor that cannot make one.
+  */
+  footnotesKit: core.footnotesKit,
   bubbleMenu: core.bubbleMenu,
   floatingMenu: core.floatingMenu,
   ghostText: core.ghostText,
   placeholder: core.placeholder,
   snippets: core.snippets,
   suggestion: core.suggestion,
-  tableOfContents: core.tableOfContents,
 }

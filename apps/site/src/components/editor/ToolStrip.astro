@@ -1,0 +1,120 @@
+---
+import { BAR_ORDER, type Tool } from '../../data/editor-tools'
+/**
+ * A strip of commands · the one component every menu on this site is made of.
+ *
+ * The bar above the document, the bubble that follows a selection and the
+ * block menu on an empty line are the same thing three times: buttons carrying
+ * a command name, shown only while the editor has that command. Splitting them
+ * into three components meant three places to forget a data attribute, and the
+ * bubble menu spent a week not lighting its buttons because it had `data-ext`
+ * and the bar had `data-active`.
+ *
+ * The script side is `scripts/playground/tools.ts` — `bindTools`, `syncTools`,
+ * `paintTools` — and it works on any root, so this component is reusable
+ * anywhere an editor exists.
+ *
+ * The server paints the bar the script is about to paint.
+ *
+ * Two versions of this were wrong. Rendering everything hidden and letting the
+ * script reveal what the editor has leaves an empty bar for a frame — and a
+ * genuinely empty one for good if the script never runs. Rendering everything
+ * visible fixes that and costs a flash on every single load: fifty-one buttons
+ * paint, then collapse to the seventeen the editor actually has, and the bar
+ * reflows from two rows to one while you watch.
+ *
+ * So `visible` carries the set the page opens with, worked out at build time
+ * from the same default the script reads. A first visit — no hash, no stored
+ * selection — renders exactly right and never changes. Arriving on a shared
+ * link still corrects, but by adding buttons rather than taking them away.
+ */
+import { FALLBACK, ICONS } from '../../data/extension-icons'
+import Icon from '../Icon.astro'
+
+interface Props {
+  id: string
+  tools: Tool[]
+  /** `glyphs` is icons only, `words` shows the label, `both` shows both. */
+  look?: 'glyphs' | 'words' | 'both'
+  /** Group the rows and rule between the groups. */
+  grouped?: boolean
+  label: string
+  class?: string
+  /**
+   * Start hidden.
+   *
+   * The floating strips must, and it has to be the attribute rather than a
+   * class: the `bubbleMenu` and `floatingMenu` extensions show and hide their
+   * element by toggling `hidden`, so a strip hidden any other way would still
+   * be hidden when the extension tried to show it — and one left visible would
+   * sit in the corner of the page whenever the extension was not ticked.
+   */
+  hidden?: boolean
+  /** Keep the site-wide editable sweep off it · see the note on the playground. */
+  static?: boolean
+  /**
+   * Extensions whose buttons should render visible.
+   *
+   * Omit it and every button renders visible; pass the set the page expects to
+   * open with and the server paints the bar the script would have painted, so
+   * there is nothing to correct once it runs.
+   */
+  visible?: ReadonlySet<string>
+}
+
+const {
+  id,
+  tools,
+  look = 'glyphs',
+  grouped = false,
+  label,
+  class: className = '',
+  hidden = false,
+  static: isStatic = false,
+  visible,
+} = Astro.props
+
+const groups = grouped
+  ? BAR_ORDER.map((group) => ({
+      name: group,
+      rows: tools.filter((tool) => tool.group === group),
+    })).filter((entry) => entry.rows.length > 0)
+  : [{ name: '', rows: tools }]
+---
+
+<div
+  class={`mx-strip ${className}`}
+  id={id}
+  role="toolbar"
+  aria-label={label}
+  data-look={look}
+  hidden={hidden}
+  data-static={isStatic ? '' : undefined}
+>
+  {
+    groups.map((entry) => (
+      <div class="mx-strip-group" data-tool-group>
+        {entry.rows.map((tool) => (
+          <button
+            type="button"
+            class="mx-tool"
+            data-tip={tool.title}
+            aria-label={tool.title}
+            data-cmd={tool.cmd}
+            data-ext={tool.ext}
+            data-active={tool.active ?? tool.ext}
+            data-active-attrs={tool.activeAttrs ? JSON.stringify(tool.activeAttrs) : undefined}
+            data-args={JSON.stringify(tool.args)}
+            hidden={visible ? !visible.has(tool.ext) : undefined}
+          >
+            {look !== 'words' && (
+              <Icon icon={tool.icon ?? ICONS[tool.ext] ?? FALLBACK} size={16} />
+            )}
+            {look !== 'glyphs' && <span class="mx-tool-label">{tool.label}</span>}
+          </button>
+        ))}
+      </div>
+    ))
+  }
+  <slot />
+</div>

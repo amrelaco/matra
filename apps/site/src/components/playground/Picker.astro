@@ -1,0 +1,76 @@
+---
+/**
+ * The catalogue, and nothing else.
+ *
+ * Seventy-six rows of text is a settings page. The same seventy-six as a grid
+ * of glyphs with their measured weight on each one is a place you poke at,
+ * which is the difference this page lives or dies on.
+ *
+ * The title, the standfirst and the three presets used to sit above this and
+ * cost a third of the column before a single extension appeared. They are in
+ * the header now, where the rest of the workbench's controls are, and this is
+ * a filter and a grid.
+ *
+ * The play button on each chip is a button inside a label, which is allowed and
+ * is load-bearing: the demo used to live in a second list of all seventy-six in
+ * the margin, so every extension was on screen twice. It belongs on the thing
+ * it is about. Clicking an interactive element inside a label does not forward
+ * to the label's control, so pressing it does not tick the box on its way past
+ * — and the handler stops the event anyway, because two ways of being sure
+ * about that is cheaper than one bug report.
+ */
+import { PlayIcon } from '@hugeicons/core-free-icons'
+import { FALLBACK, ICONS } from '../../data/extension-icons'
+import catalogue from '../../data/playground.json'
+import Icon from '../Icon.astro'
+---
+
+<div class="pg-side">
+  <div class="pg-side-head">
+    <label class="pg-filter">
+      <span class="visually-hidden">Filter the catalogue</span>
+      <input type="search" id="pg-filter" placeholder="Filter · table, math, comment…" />
+    </label>
+  </div>
+
+  <div class="pg-side-scroll">
+    {
+      catalogue.groups.map((group) => (
+        <div class="pg-group" data-group>
+          <h3>
+            {group.group}
+            <span class="mono pg-group-n">{group.items.length}</span>
+          </h3>
+          <div class="pg-grid">
+            {group.items.map((item) => (
+              <label
+                class="pg-chip"
+                data-chip={item.name}
+                data-what={item.what}
+                data-tip={`${item.what} · ${item.gz.toFixed(2)} kB gzipped`}
+              >
+                <input type="checkbox" data-ext={item.name} />
+                <Icon icon={ICONS[item.name] ?? FALLBACK} size={18} class="pg-icon" />
+                <span class="mono pg-name">{item.name}</span>
+                <span class="mono pg-gz">
+                  {item.gz.toFixed(2)}
+                  <span class="pg-unit">kB</span>
+                </span>
+                <button
+                  type="button"
+                  class="pg-try"
+                  data-demo={item.name}
+                  data-tip={`Show me ${item.name}`}
+                  aria-label={`Show me ${item.name}`}
+                >
+                  <Icon icon={PlayIcon} size={11} />
+                </button>
+              </label>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+    <p class="pg-panel-empty" id="pg-filter-empty" hidden>Nothing by that name.</p>
+  </div>
+</div>

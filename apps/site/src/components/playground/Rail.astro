@@ -1,0 +1,69 @@
+---
+/**
+ * The margin.
+ *
+ * Every panel here belongs to an extension and is present only while that
+ * extension is ticked — the same contract the toolbar keeps, applied to panels
+ * instead of buttons. Untick `search` and find-and-replace does not grey out,
+ * it leaves.
+ *
+ * The first panel is the exception, and it is the one that matters: what you
+ * have ticked, what each one does, and a button that does it to the document
+ * in front of you.
+ */
+---
+
+<aside class="pg-rail" id="pg-rail" data-static>
+  <!--
+    A nudge, not a second catalogue.
+
+    This used to list every ticked extension with a "Show me" beside it, which
+    meant seventy-six rows on the right repeating seventy-six chips on the left.
+    The demo now lives on the chip; what is left here is the last few you added,
+    because that is the one thing the picker cannot tell you.
+  -->
+  <section class="pg-panel">
+    <h3 class="pg-panel-head">Just added</h3>
+    <p class="pg-panel-empty" id="pg-guide-empty">
+      Tick something on the left · or press play on any chip to see it work.
+    </p>
+    <ul class="pg-guide" id="pg-guide-list"></ul>
+  </section>
+
+  <section class="pg-panel" id="pg-outline" hidden>
+    <h3 class="pg-panel-head">Outline</h3>
+    <div class="pg-outline" id="pg-outline-list"></div>
+  </section>
+
+  <section class="pg-panel" id="pg-find-panel" hidden>
+    <h3 class="pg-panel-head">Find and replace</h3>
+    <input type="search" class="pg-input" id="pg-find-query" placeholder="Find" />
+    <input type="text" class="pg-input" id="pg-find-replace" placeholder="Replace with" />
+    <div class="pg-panel-row">
+      <button type="button" class="btn ghost small" id="pg-find-prev">Previous</button>
+      <button type="button" class="btn ghost small" id="pg-find-next">Next</button>
+      <span class="mono pg-panel-figure" id="pg-find-count">no matches</span>
+    </div>
+    <div class="pg-panel-row">
+      <button type="button" class="btn ghost small" id="pg-find-swap">Replace</button>
+      <button type="button" class="btn ghost small" id="pg-find-swap-all">Replace all</button>
+    </div>
+  </section>
+
+  <section class="pg-panel" id="pg-count-panel" hidden>
+    <h3 class="pg-panel-head">Length</h3>
+    <div class="pg-panel-row">
+      <span class="mono pg-panel-figure" id="pg-words">0</span><span class="pg-panel-unit"
+        >words</span
+      >
+      <span class="mono pg-panel-figure" id="pg-chars">0</span><span class="pg-panel-unit"
+        >characters</span
+      >
+    </div>
+  </section>
+
+  <section class="pg-panel" id="pg-saved-panel" hidden>
+    <h3 class="pg-panel-head">Autosave</h3>
+    <p class="pg-panel-line mono" id="pg-saved">—</p>
+  </section>
+</aside>

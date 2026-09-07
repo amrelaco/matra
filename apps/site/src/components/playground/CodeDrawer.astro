@@ -1,0 +1,34 @@
+---
+/**
+ * The array, written out.
+ *
+ * Generated from the selection rather than kept beside it, so it cannot fall
+ * behind what is ticked — and so the page never shows an import line that
+ * would not compile.
+ *
+ * A button and a `hidden`, not a `<details>`. Copy has to sit on the same line
+ * as the disclosure, and inside a `<summary>` it is a control inside a control:
+ * the click toggles the disclosure on its way past, and assistive technology
+ * announces one thing that does two. Positioning it over the summary instead
+ * meant a hard-coded right offset chosen to dodge the floating shortcuts
+ * button, which is the kind of number that is wrong the moment anything near
+ * it moves. A plain row with `aria-expanded` has neither problem.
+ */
+---
+
+<div class="pg-code-drawer" data-static>
+  <div class="pg-code-bar">
+    <button
+      type="button"
+      class="pg-code-toggle"
+      id="pg-code-toggle"
+      aria-expanded="true"
+      aria-controls="pg-code-body"
+    >
+      <span class="pg-code-caret" aria-hidden="true"></span>
+      Your editor, as code
+    </button>
+    <button type="button" class="btn ghost small" id="pg-copy">Copy</button>
+  </div>
+  <pre class="pg-code" id="pg-code-body"><code class="mono" id="pg-code" /></pre>
+</div>

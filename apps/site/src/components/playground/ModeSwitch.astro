@@ -1,0 +1,32 @@
+---
+/**
+ * Four interfaces over one editor.
+ *
+ * The claim the site makes everywhere else is that Matra draws nothing. This
+ * is the only place a visitor can check it: the same document, the same
+ * extension array give or take what a skin needs, and an interface that goes
+ * from a Notion-shaped page to a Google-Docs-shaped one to nothing at all.
+ *
+ * What each one does is a tooltip rather than a line of prose under the switch.
+ * That line wrapped to two, sat in the header competing with the numbers beside
+ * it, and said the same thing whether or not anybody wanted to know.
+ */
+import { MODES } from '../../data/playground-modes'
+---
+
+<div class="pg-seg pg-modes" role="radiogroup" aria-label="Interface" data-static>
+  {
+    MODES.map((mode) => (
+      <button
+        type="button"
+        class="pg-seg-btn pg-mode"
+        role="radio"
+        aria-checked="false"
+        data-mode={mode.id}
+        data-tip={mode.blurb}
+      >
+        {mode.name}
+      </button>
+    ))
+  }
+</div>

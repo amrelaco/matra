@@ -1,0 +1,1312 @@
+/*
+ * The workbench.
+ *
+ * Kept in one file rather than scattered across the components it dresses,
+ * because half of what it dresses does not exist at build time: comment cards,
+ * guide rows and outline entries are built by script, and Astro's scoped styles
+ * only reach markup Astro rendered. One file that describes the whole surface
+ * beats five that each describe part of it and a sixth full of `:global`.
+ *
+ * Everything here is the site's own system — the dashed rule, the paper, the
+ * indigo — with one addition: `[data-mode]` on the frame, which is how the same
+ * document ends up looking like Notion, like Docs, or like nothing at all.
+ */
+
+/* --- the frame ---------------------------------------------------------- */
+
+.pg-bench {
+  display: grid;
+  grid-template-columns: minmax(0, 23rem) minmax(0, 1fr);
+  /*
+    A screen's worth, and not sticky. Pinning it meant the footer scrolled up
+    into the same space and showed through the gaps between the panes. Every
+    pane scrolls inside the frame, so once the bench is on screen you never need
+    to scroll the page to use it.
+  */
+  height: calc(100vh - 68px);
+  background-color: var(--paper);
+  background-image: var(--dash-h), var(--dash-h);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A button that has to fit in a margin rather than a page. */
+.btn.small {
+  padding: 5px 10px;
+  font-size: 12px;
+  gap: 5px;
+}
+
+/* --- left: the picker --------------------------------------------------- */
+
+.pg-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: var(--paper);
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+}
+
+/* Just the filter now · the title and the presets moved to the header. */
+.pg-side-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+
+.pg-h {
+  margin: 0.1rem 0 0.15rem;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.pg-hint {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+/*
+  One segmented control, used twice.
+
+  The presets and the skins are the same kind of thing — pick one of these —
+  and were drawn two different ways: three separately bordered ghost buttons
+  next to four words in a box. Same shape for both, with a word in front saying
+  which is which, because four bare words beside three bare buttons told a
+  first-time visitor neither what they change nor that they were two unrelated
+  things.
+*/
+.pg-head-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pg-head-label {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.pg-seg {
+  display: flex;
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+}
+
+.pg-seg-btn {
+  padding: 0.45rem 0.8rem;
+  border: 0;
+  background: transparent;
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+  font-family: inherit;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--ink-soft);
+}
+
+.pg-seg-btn:last-child {
+  background-image: none;
+}
+
+.pg-seg-btn:hover {
+  color: var(--ink);
+  background-color: var(--surface);
+}
+
+.pg-seg-btn:focus-visible {
+  outline: none;
+  color: var(--indigo-deep);
+  background-color: var(--indigo-wash);
+}
+
+.pg-filter input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+  background-color: var(--surface);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+}
+
+/*
+  Focus said with the dash, not with a ring.
+
+  A 2px solid outline on a control whose whole border is a dashed gradient
+  reads as a browser default somebody forgot to style. Moving the colour the
+  gradients read is the same device every other "on" state here uses — and it
+  stays a visible focus indicator, which is not optional.
+*/
+.pg-filter input:focus-visible {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+/* The one pane that scrolls on the left. */
+.pg-side-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1.2rem 1.5rem;
+}
+
+.pg-group {
+  margin-top: 1.25rem;
+}
+
+.pg-group[hidden] {
+  display: none;
+}
+
+.pg-group h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+.pg-group-n {
+  font-size: 0.68rem;
+  color: var(--rule-firm);
+}
+
+.pg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.9rem, 1fr));
+  gap: 0.35rem;
+}
+
+/*
+  A square rather than a row. Seventy-six rows is a list you read; the same
+  seventy-six as glyphs is something you scan.
+*/
+.pg-chip {
+  --dash: 3px;
+  --dash-gap: 2px;
+  /*
+    The hidden checkbox inside is absolutely positioned. Without a positioned
+    ancestor it resolves against the initial containing block, so 76 of them
+    landed at document coordinates and stretched the page by a thousand pixels
+    of empty scroll past the footer.
+  */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.22rem;
+  padding: 0.5rem 0.5rem 0.42rem;
+  border: 0;
+  background-color: var(--surface);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.pg-chip[hidden] {
+  display: none;
+}
+
+.pg-chip:hover {
+  background-color: var(--code-chrome);
+}
+
+.pg-chip input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Keyboard only. A ring on every mouse click is noise. */
+.pg-chip:has(input:focus-visible) {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+.pg-icon {
+  color: var(--ink-faint);
+  flex: none;
+}
+
+.pg-name {
+  font-size: 0.66rem;
+  line-height: 1.25;
+  color: var(--ink);
+  /* camelCase offers no break point, so the longest names would run past the
+     chip. Breaking anywhere is the lesser of the two. */
+  overflow-wrap: anywhere;
+}
+
+.pg-gz {
+  font-size: 0.62rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.pg-unit {
+  opacity: 0.65;
+}
+
+/* On. The dash goes indigo by moving the colour the gradients read. */
+.pg-chip:has(input:checked) {
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+.pg-chip:has(input:checked) .pg-icon {
+  color: var(--indigo);
+}
+
+.pg-chip:has(input:checked) .pg-name {
+  color: var(--indigo-deep);
+}
+
+/* Required by the schema rather than chosen: edged, not filled. */
+.pg-chip.implied:has(input:checked) {
+  --rule-strong: var(--indigo);
+  background-color: transparent;
+}
+
+.pg-chip.implied:has(input:checked) .pg-icon,
+.pg-chip.implied:has(input:checked) .pg-name {
+  color: var(--ink-soft);
+}
+
+/* --- the mode switch ---------------------------------------------------- */
+
+/* The one thing a skin has that a preset does not: it stays chosen. */
+.pg-mode.on {
+  background-color: var(--indigo-wash);
+  color: var(--indigo-deep);
+}
+
+/* --- the play button on a chip ------------------------------------------- */
+
+/*
+  Shown on hover and on keyboard focus, never both at once with the name it
+  would cover. It sits inside the label on purpose · the demo belongs to the
+  extension, and putting it in a second list on the right is what made the page
+  say everything twice.
+*/
+.pg-try {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border: 0;
+  background-color: var(--indigo);
+  color: var(--paper);
+  line-height: 0;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.pg-chip:hover .pg-try,
+.pg-try:focus-visible {
+  opacity: 1;
+}
+
+.pg-try:focus-visible {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+/* --- the line that replaced two browser modals --------------------------- */
+
+.pg-note {
+  flex: none;
+  margin: 0;
+  padding: 0.5rem 1.2rem;
+  background-color: var(--indigo-wash);
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  color: var(--indigo-deep);
+  font-size: 0.82rem;
+}
+
+.pg-note[hidden] {
+  display: none;
+}
+
+/* --- asking for a link address, in the page ------------------------------ */
+
+.mx-linkbar {
+  position: absolute;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background-color: var(--invert-bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.mx-linkbar[hidden] {
+  display: none;
+}
+
+.mx-linkbar input {
+  width: 15rem;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  background-color: rgb(255 255 255 / 0.08);
+  color: var(--invert-fg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.mx-linkbar input::placeholder {
+  color: var(--invert-soft);
+}
+
+.mx-linkbar input:focus-visible {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+/* --- right: the workbench ----------------------------------------------- */
+
+.pg-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: var(--paper);
+}
+
+.pg-head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem 1.2rem;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+
+/* Each row is one pair: a thing on the left and a thing on the right, never a
+   pile in one corner. */
+.pg-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+}
+
+.pg-head-lede {
+  max-width: 32rem;
+}
+
+/*
+  Buttons the size of the numbers beside them.
+
+  `.btn` is a page button at 14px of padding; three of them stacked under a
+  readout turned the header into a third of the workbench. The class stays —
+  the same component, the same dash, the same hand cursor — at the size a
+  toolbar wants.
+*/
+.pg-head .btn {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+/* In the header the switch sizes to its labels rather than filling a column. */
+.pg-head .pg-modes {
+  width: auto;
+}
+
+.pg-head .pg-mode {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.75rem;
+}
+
+.pg-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 21rem;
+  max-width: 100%;
+  background-color: var(--surface);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+}
+
+.pg-stat {
+  padding: 0.45rem 0.8rem;
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+}
+
+.pg-stat:last-child {
+  background-image: none;
+}
+
+.pg-figure {
+  display: block;
+  font-size: 1.2rem;
+  line-height: 1.15;
+  color: var(--ink-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.pg-label {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+#pg-size.ticked {
+  animation: pg-tick 420ms ease-out;
+}
+
+@keyframes pg-tick {
+  0% {
+    color: var(--indigo);
+  }
+  100% {
+    color: var(--ink-strong);
+  }
+}
+
+/* --- strips of commands ------------------------------------------------- */
+
+.mx-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.mx-strip[hidden] {
+  display: none;
+}
+
+.mx-strip-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding-right: 0.45rem;
+  margin-right: 0.45rem;
+  background-image: var(--dash-v);
+  background-size: 1px 60%;
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+}
+
+.mx-strip-group:last-of-type {
+  background-image: none;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+.mx-strip-group[hidden] {
+  display: none;
+}
+
+.mx-tool {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+/*
+  `display` on the class beats the `display: none` the UA gives [hidden], so
+  without this every button stays on screen while claiming to be hidden.
+*/
+.mx-tool[hidden] {
+  display: none;
+}
+
+.mx-tool:hover {
+  background-color: var(--code-chrome);
+  color: var(--ink);
+}
+
+.mx-tool[aria-pressed="true"] {
+  background-color: var(--indigo-wash);
+  color: var(--indigo);
+}
+
+.mx-tool:focus-visible {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+/* Words are carried in the markup and shown only by the skin that wants them. */
+.mx-tool-label {
+  display: none;
+}
+
+/*
+  The bar above the document.
+
+  One row that scrolls sideways rather than a block that wraps. Fifty commands
+  written out as words wrap to four rows, and four rows of toolbar come out of
+  the document's height — on a screen-height workbench that is the wrong thing
+  to spend space on. `flex: none` because without it the stage's `flex: 1 1
+  auto` squeezed the bar to a single row's height and quietly clipped the rest.
+*/
+/*
+  The bar wraps · it does not scroll, and nothing hides behind a "More".
+
+  Every command on screen at once, in as many rows as the width needs — two on
+  a wide screen, three or four on a narrow one. The alternatives were both
+  worse: one row that scrolls sideways hides commands off an edge nobody thinks
+  to drag, and an overflow menu hides them behind a button. `flex: none` because
+  the stage's `flex: 1 1 auto` will otherwise squeeze this to a single row's
+  height and quietly clip the rest.
+*/
+#pg-bar {
+  flex: none;
+  flex-wrap: wrap;
+  /* Rows that touch read as one dense block · measured, they had no gap at all. */
+  row-gap: 6px;
+  padding: 0.5rem 1.2rem;
+  min-height: 2.5rem;
+  background-image: var(--dash-h), var(--dash-h);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat;
+}
+
+.pg-toolbar-empty {
+  margin: 0;
+  padding-left: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+/*
+  The two menus that float.
+
+  Positioned by the extensions — this only says what they look like and that
+  they sit inside the scrolling pane, so they travel with the text they point
+  at instead of hanging in the air when the document scrolls under them.
+*/
+.mx-bubble,
+.mx-floating {
+  position: absolute;
+  z-index: 30;
+  padding: 3px;
+  background-color: var(--invert-bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.mx-bubble .mx-tool,
+.mx-floating .mx-tool {
+  color: var(--invert-soft);
+}
+
+.mx-bubble .mx-tool:hover,
+.mx-floating .mx-tool:hover {
+  background-color: rgb(255 255 255 / 0.1);
+  color: var(--invert-fg);
+}
+
+.mx-bubble .mx-tool[aria-pressed="true"],
+.mx-floating .mx-tool[aria-pressed="true"] {
+  background-color: rgb(255 255 255 / 0.16);
+  color: var(--invert-fg);
+}
+
+.mx-bubble .mx-strip-group,
+.mx-floating .mx-strip-group {
+  background-image: none;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+/*
+  The plus on an empty line.
+
+  Positioned by `floatingMenu`, which owns its `hidden`. One button, because
+  twelve of them sitting in the document permanently is furniture rather than an
+  offer · pressing it opens `#pg-blocks` underneath.
+*/
+.mx-plus {
+  position: absolute;
+  z-index: 30;
+}
+
+.mx-plus[hidden] {
+  display: none;
+}
+
+.mx-plus button {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: var(--ink-faint);
+  line-height: 0;
+}
+
+.mx-plus button:hover {
+  background-color: var(--code-chrome);
+  color: var(--ink);
+}
+
+.mx-plus button:focus-visible {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+/* --- the stage ---------------------------------------------------------- */
+
+.pg-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 19rem);
+}
+
+.pg-scroll {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  background-color: var(--surface);
+}
+
+.pg-canvas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0;
+  align-items: start;
+  min-height: 100%;
+  transition: grid-template-columns 160ms ease;
+}
+
+/* The lane only exists once there is something in it. */
+.pg-canvas:has(.pg-margin:not([data-count="0"])) {
+  grid-template-columns: minmax(0, 1fr) 17rem;
+}
+
+.pg-page {
+  padding: 1.8rem clamp(1.2rem, 4vw, 3rem);
+}
+
+.pg-editor {
+  max-width: 44rem;
+  margin-inline: auto;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.pg-editor:focus {
+  outline: none;
+}
+
+.pg-margin {
+  position: relative;
+  min-height: 100%;
+  padding-right: 0.9rem;
+}
+
+/* --- comment threads ---------------------------------------------------- */
+
+.pg-thread {
+  position: absolute;
+  left: 0;
+  right: 0.9rem;
+  padding: 0.65rem 0.7rem;
+  background-color: var(--paper);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  transition: top 140ms ease;
+}
+
+.pg-thread.on {
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+.pg-thread-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.pg-thread-who {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-strong);
+}
+
+.pg-thread-when {
+  font-size: 0.65rem;
+  color: var(--ink-faint);
+}
+
+.pg-thread-quote {
+  --dash: 5px;
+  --dash-gap: 4px;
+  margin: 0.3rem 0;
+  padding-left: 0.5rem;
+  /* The site draws every rule as a dashed gradient · a solid 2px edge here was
+     the only one in the project, and it showed. */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--indigo) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+  background-size: 2px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.pg-thread-body {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.pg-thread-reply {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+.pg-thread-input {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.45rem;
+  border: 0;
+  background-color: var(--surface);
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--ink);
+  resize: vertical;
+}
+
+.pg-thread-input:focus-visible {
+  outline: none;
+  --rule-strong: var(--indigo);
+  background-color: var(--indigo-wash);
+}
+
+.pg-thread-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+/* --- the margin panels -------------------------------------------------- */
+
+.pg-rail {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 0 2rem;
+  background-color: var(--paper);
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+.pg-panel {
+  padding: 0.9rem 1rem;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+
+.pg-panel[hidden] {
+  display: none;
+}
+
+.pg-panel-head {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pg-panel-empty {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+.pg-panel-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.pg-panel-figure {
+  font-size: 0.95rem;
+  color: var(--ink-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.pg-panel-unit {
+  margin-right: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.pg-panel-line {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.pg-input {
+  width: 100%;
+  margin-bottom: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  background-color: var(--surface);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+
+/* --- the guide ---------------------------------------------------------- */
+
+.pg-guide {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pg-guide-row {
+  padding: 0.5rem 0;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+
+.pg-guide-row:last-child {
+  background-image: none;
+}
+
+.pg-guide-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.pg-guide-name {
+  font-size: 0.74rem;
+  color: var(--indigo-deep);
+  overflow-wrap: anywhere;
+}
+
+.pg-guide-where {
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pg-guide-try {
+  margin: 0.2rem 0 0.35rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.pg-outline {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pg-outline-row {
+  padding: 0.25rem 0.3rem;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pg-outline-row:hover {
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+.pg-outline-row[data-level="2"] {
+  padding-left: 0.9rem;
+}
+.pg-outline-row[data-level="3"] {
+  padding-left: 1.5rem;
+}
+.pg-outline-row[data-level="4"],
+.pg-outline-row[data-level="5"],
+.pg-outline-row[data-level="6"] {
+  padding-left: 2.1rem;
+}
+
+/* --- errors and the code drawer ----------------------------------------- */
+
+.pg-error {
+  flex: none;
+  margin: 0;
+  padding: 0.6rem 1.2rem;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  color: var(--blood);
+  font-size: 0.84rem;
+}
+
+.pg-code-drawer {
+  flex: none;
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+/*
+  One row: the disclosure on the left, Copy on the right.
+
+  The right padding clears the floating shortcuts button, which is fixed to
+  this corner of the window — and it is padding on a flex row rather than an
+  offset on an absolutely positioned button, so nothing needs re-measuring when
+  the button moves.
+*/
+.pg-code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.35rem 12rem 0.35rem 1.2rem;
+}
+
+.pg-code-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+.pg-code-toggle:hover {
+  color: var(--ink);
+}
+
+.pg-code-caret::before {
+  content: "▾";
+  color: var(--ink-faint);
+}
+
+.pg-code-toggle[aria-expanded="false"] .pg-code-caret::before {
+  content: "▸";
+}
+
+.pg-code {
+  margin: 0;
+  max-height: 10rem;
+  overflow: auto;
+  padding: 0.8rem 1.2rem;
+  border: 0;
+  background-color: var(--code-bg);
+  background-image: var(--dash-h);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: var(--code-fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pg-code[hidden] {
+  display: none;
+}
+
+/* --- the skins ----------------------------------------------------------- */
+
+/*
+ * Notion: no toolbar at all.
+ *
+ * Everything is reached by typing — a slash for blocks, a selection for the
+ * bubble, a handle in the margin for moving things. A wider measure and a
+ * flatter page, because the chrome is not competing for the space.
+ */
+.pg-bench[data-mode="notion"] #pg-bar,
+.pg-bench[data-mode="notion"] .pg-rail {
+  display: none;
+}
+
+.pg-bench[data-mode="notion"] .pg-stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pg-bench[data-mode="notion"] .pg-page {
+  padding: 3rem clamp(1.2rem, 6vw, 5rem);
+}
+
+.pg-bench[data-mode="notion"] .pg-editor {
+  max-width: 46rem;
+  font-size: 1.02rem;
+}
+
+/*
+ * Docs: a page on a desk.
+ *
+ * The one skin that shows words on its buttons, because that is what a ribbon
+ * is, and the one that always keeps the comment lane open.
+ */
+/*
+  Icons, like the thing it is named after.
+
+  Docs mode showed a word on every button, which is Word's idiom and not
+  Google's — and fifty-one words do not fit on any screen, so the bar
+  overflowed at once and the overflow had to hold thirty-four commands. The
+  crowding started here. Names live in the tooltip.
+*/
+.pg-bench[data-mode="docs"] .mx-tool {
+  padding: 0 0.5rem;
+}
+
+/*
+  `gap` here, not `column-gap`, set the row gap to 1px as well and glued the
+  wrapped rows together · it was written when the bar was a single row.
+*/
+.pg-bench[data-mode="docs"] #pg-bar {
+  column-gap: 1px;
+  background-color: var(--surface);
+}
+
+.pg-bench[data-mode="docs"] #pg-bar .mx-tool {
+  padding: 0 0.45rem;
+}
+
+.pg-bench[data-mode="docs"] .pg-scroll {
+  background-color: var(--surface-2);
+}
+
+.pg-bench[data-mode="docs"] .pg-page {
+  padding: 2rem clamp(0.6rem, 2vw, 1.6rem) 3rem;
+}
+
+.pg-bench[data-mode="docs"] .pg-editor {
+  max-width: 46rem;
+  padding: 3.5rem 4rem;
+  background-color: var(--surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.14);
+}
+
+.pg-bench[data-mode="docs"] .pg-canvas {
+  grid-template-columns: minmax(0, 1fr) 17rem;
+}
+
+/*
+ * Headless: the argument, undressed.
+ *
+ * No bar, no margin, no panels. The same editor with the same extensions and
+ * nothing at all drawn around it, which is what every framework binding starts
+ * from.
+ */
+.pg-bench[data-mode="bare"] #pg-bar,
+.pg-bench[data-mode="bare"] .pg-rail,
+.pg-bench[data-mode="bare"] .pg-margin {
+  display: none;
+}
+
+.pg-bench[data-mode="bare"] .pg-stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pg-bench[data-mode="bare"] .pg-canvas {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pg-bench[data-mode="bare"] .pg-scroll {
+  background-color: var(--paper);
+}
+
+/* --- narrow ------------------------------------------------------------- */
+
+/*
+  Below this there is no room for three panes side by side, and a viewport lock
+  on a phone fights the browser chrome. Back to one column that scrolls,
+  document first.
+*/
+@media (max-width: 1100px) {
+  /* The margin goes under the document rather than beside it · one column, and
+     the panels take what they need at the foot of it. */
+  .pg-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .pg-rail {
+    background-image: var(--dash-h);
+    background-size: 100% 1px;
+    background-position: 0 0;
+    max-height: 16rem;
+  }
+}
+
+@media (max-width: 860px), (max-height: 560px) {
+  .pg-bench {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .pg-side {
+    order: 2;
+    background-image: none;
+  }
+
+  .pg-side-scroll {
+    overflow-y: visible;
+  }
+
+  /*
+    The stage stops being a pane and becomes two stacked blocks: a document tall
+    enough to be worth typing in, and the margin's panels reading on below it
+    rather than fighting it for 500 pixels.
+  */
+  .pg-stage {
+    display: block;
+    height: auto;
+  }
+
+  .pg-scroll {
+    height: 26rem;
+  }
+
+  .pg-rail {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .pg-grid {
+    grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
+  }
+
+  /*
+    `:has(.pg-margin)`, not a bare `.pg-canvas`.
+
+    The rule that opens the comment lane is `.pg-canvas:has(.pg-margin:not(…))`,
+    and a plain class selector cannot beat it — so on a phone the lane kept its
+    17rem and left the document 140 pixels wide, breaking words down the middle
+    of "document". Matching specificity and coming later is what closes it.
+  */
+  .pg-bench .pg-canvas:has(.pg-margin),
+  .pg-bench[data-mode="docs"] .pg-canvas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pg-margin {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #pg-size.ticked {
+    animation: none;
+  }
+
+  .pg-canvas,
+  .pg-thread {
+    transition: none;
+  }
+}
