@@ -241,5 +241,5 @@ export function mathKit(
 export const mathCSS = `
 .matra-math { font-family: 'Latin Modern Math', 'STIX Two Math', 'Cambria Math', Cambria, Georgia, serif; font-style: normal; white-space: nowrap; }
 .matra-math code { font: inherit; background: none; padding: 0; }
-.matra-math-block { display: block; text-align: center; margin: 1em 0; white-space: normal; }
+.matra-math-block { display: block; text-align: center; margin: var(--matra-block-gap, 1em) 0; white-space: normal; }
 `

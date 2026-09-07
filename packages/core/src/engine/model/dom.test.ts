@@ -198,3 +198,84 @@ describe('round trip', () => {
     expect(roundTrip('<p><b>x</b></p>')).toBe('<p><strong>x</strong></p>')
   })
 })
+
+/*
+ * One broad rule must not shadow the narrow ones behind it.
+ *
+ * `textStyle` claims every `span` and then declines the ones with no inline
+ * style — and while a declining rule ended the search, `span[data-comment]`,
+ * `span[data-field]` and every other narrow span rule never got a turn. The
+ * symptom was a comment mark that silently vanished on the way in whenever
+ * `textStyle` happened to be in the same schema.
+ */
+describe('a rule that declines', () => {
+  const shadowed = new Schema({
+    nodes: [
+      { name: 'doc', content: 'block+' },
+      {
+        name: 'paragraph',
+        content: 'inline*',
+        group: 'block',
+        parseDOM: [{ tag: 'p' }],
+        toDOM: () => ['p', 0],
+      },
+      { name: 'text', group: 'inline' },
+    ],
+    marks: [
+      {
+        // Broad, and registered first: any span, unless it has no style.
+        name: 'textStyle',
+        attrs: { color: { default: null } },
+        parseDOM: [
+          {
+            tag: 'span',
+            getAttrs: (dom: Element | string) => {
+              const colour = (dom as HTMLElement).style?.color
+              return colour ? { color: colour } : false
+            },
+          },
+        ],
+        toDOM: (m) => ['span', { style: `color: ${m.attrs.color}` }, 0],
+      },
+      {
+        name: 'comment',
+        excludes: '',
+        attrs: { threadId: { required: true } },
+        parseDOM: [
+          {
+            tag: 'span[data-comment]',
+            getAttrs: (dom: Element | string) => ({
+              threadId: (dom as Element).getAttribute('data-comment'),
+            }),
+          },
+        ],
+        toDOM: (m) => ['span', { 'data-comment': m.attrs.threadId }, 0],
+      },
+    ],
+  })
+
+  const narrow = DOMParser.fromSchema(shadowed)
+  const out = DOMSerializer.fromSchema(shadowed)
+  const parse = (source: string) => {
+    const container = document.createElement('div')
+    container.innerHTML = source
+    return narrow.parse(container)
+  }
+
+  it('lets the next rule for the same tag have its turn', () => {
+    const doc = parse('<p>a <span data-comment="t1">phrase</span> here</p>')
+    expect(out.serializeHTML(doc.content)).toBe(
+      '<p>a <span data-comment="t1">phrase</span> here</p>',
+    )
+  })
+
+  it('still lets the broad rule win when it accepts', () => {
+    const doc = parse('<p><span style="color: red">red</span></p>')
+    expect(out.serializeHTML(doc.content)).toContain('color: red')
+  })
+
+  it('stays transparent when every rule declines', () => {
+    const doc = parse('<p><span>plain</span></p>')
+    expect(out.serializeHTML(doc.content)).toBe('<p>plain</p>')
+  })
+})

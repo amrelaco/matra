@@ -39,7 +39,7 @@ export const pageBreak = {
  * never selected, copied or read out — and it can be hidden for print.
  */
 export const pageBreakCSS = `
-.matra-page-break { position: relative; height: 0; margin: 1.5em 0; border-top: 1px dashed var(--matra-page-break, #b0b0b0); user-select: none; }
+.matra-page-break { position: relative; height: 0; margin: var(--matra-page-break-gap, 1.5em) 0; border-top: 1px dashed var(--matra-page-break, #b0b0b0); user-select: none; }
 .matra-page-break::before { content: 'Page break'; position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); padding: 0 0.5em; font-size: 0.75em; line-height: 1.6; letter-spacing: 0.06em; text-transform: uppercase; color: var(--matra-page-break, #b0b0b0); background: var(--matra-page-break-bg, Canvas); }
 @media print {
   .matra-page-break { break-after: page; page-break-after: always; height: 0; margin: 0; border: 0; }

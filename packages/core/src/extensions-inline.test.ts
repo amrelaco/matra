@@ -320,6 +320,18 @@ describe('embed', () => {
     expect(editor.commands.insertEmbed('https://www.google.com/maps/embed?pb=1')).toBe(true)
   })
 
+  /*
+    Twitch has its own player host, and its own clip host, and neither is the
+    site you would reach by typing twitch.tv. Both are on the list; the site
+    itself is not, for the same reason the rest of Google is not.
+  */
+  it('takes a Twitch player or clip, and not the site around them', () => {
+    const editor = build()
+    expect(editor.commands.insertEmbed('https://player.twitch.tv/?channel=x')).toBe(true)
+    expect(editor.commands.insertEmbed('https://clips.twitch.tv/embed?clip=y')).toBe(true)
+    expect(editor.commands.insertEmbed('https://www.twitch.tv/x')).toBe(false)
+  })
+
   it('drops a frame pointing anywhere else on parse', () => {
     const editor = build(
       '<iframe src="https://evil.example/x"></iframe>' +

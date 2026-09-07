@@ -33,6 +33,12 @@ interface CompiledRule extends ParseRule {
   order: number
 }
 
+/** A rule that matched and did not decline, with the attributes it read. */
+interface MatchedRule {
+  rule: CompiledRule
+  attrs: Record<string, unknown> | null
+}
+
 function compileSelector(selector: string): Selector {
   if (selector === '*') return { tag: null }
 
@@ -226,14 +232,11 @@ export class DOMParser {
     const element = dom as Element
     const matched = this.matchElement(element)
 
-    if (matched?.ignore) return NONE
+    if (matched?.rule.ignore) return NONE
 
-    if (matched?.kind === 'mark') {
-      const type = matched.owner as MarkType
-      const attrs = this.attrsFor(matched, element)
-      if (attrs === false) {
-        return this.parseChildren(element, marks, depth, parent, literal).content
-      }
+    if (matched?.rule.kind === 'mark') {
+      const type = matched.rule.owner as MarkType
+      const attrs = matched.attrs
       // The node this text is landing in may not accept the mark. A code block
       // says it accepts none — so the `<code>` inside a `<pre>` is the fence's
       // own tag, not an inline code mark, and reading it as one produced
@@ -243,12 +246,9 @@ export class DOMParser {
       return this.parseChildren(element, carried, depth, parent, literal).content
     }
 
-    if (matched?.kind === 'node') {
-      const type = matched.owner as NodeType
-      const attrs = this.attrsFor(matched, element)
-      if (attrs === false) {
-        return this.parseChildren(element, marks, depth, parent, literal).content
-      }
+    if (matched?.rule.kind === 'node') {
+      const type = matched.rule.owner as NodeType
+      const attrs = matched.attrs
       // Marks this node will not accept are dropped at its border rather than
       // carried in and rendered back out.
       const inherited = marks.filter((mark) => type.allowsMarkType(mark.type))
@@ -274,12 +274,23 @@ export class DOMParser {
   }
 
   /**
-   * The highest-priority rule this element matches.
+   * The highest-priority rule this element matches *and accepts*.
    *
    * Two lists — the rules for this tag and the rules for any tag — each already
    * in priority order, walked together so the first hit is the overall winner.
+   *
+   * A rule whose `getAttrs` returns false has looked at the element and turned
+   * it down, and that is not the same as the element having no rule: the walk
+   * carries on to the next candidate. Stopping there meant one broad rule could
+   * shadow every narrow one behind it — `textStyle` claims `span`, declines a
+   * span with no inline style, and `span[data-comment]`, `span[data-field]` and
+   * `span[data-hashtag]` never got a turn. The symptom was a comment mark that
+   * vanished on the way in whenever `textStyle` happened to be in the schema.
+   *
+   * The attributes come back with the rule because deciding costs a call to
+   * `getAttrs`, and the caller needs the same answer.
    */
-  private matchElement(element: Element): CompiledRule | null {
+  private matchElement(element: Element): MatchedRule | null {
     const forTag = this.byTag.get(element.tagName.toLowerCase())
     const anyTag = this.anyTag
     if (!forTag && !anyTag.length) return null
@@ -297,7 +308,13 @@ export class DOMParser {
         next = b
         j++
       }
-      if (matches(element, next.selector)) return next
+      if (!matches(element, next.selector)) continue
+      // An ignore rule is a decision, not a reading, so it is never asked for
+      // attributes.
+      if (next.ignore) return { rule: next, attrs: null }
+      const attrs = this.attrsFor(next, element)
+      if (attrs === false) continue
+      return { rule: next, attrs }
     }
   }
 

@@ -2,6 +2,31 @@
 
 All packages share one version number and are released together.
 
+## Unreleased
+
+**A parse rule that declines no longer blocks the ones behind it.** Rules are
+tried in priority order and the first match wins — but a rule whose `getAttrs`
+returned false ended the search rather than passing the element on. One broad
+rule could therefore shadow every narrow one behind it: `textStyle` claims
+`span`, declines a span with no inline style, and `span[data-comment]`,
+`span[data-field]`, `span[data-hashtag]` and `span[data-math]` never got a turn.
+The symptom was a comment mark that vanished on the way in whenever `textStyle`
+happened to be in the same schema. Declining is now "not a match", and the walk
+continues.
+
+**Extension stylesheets no longer decide a document's vertical rhythm.**
+`embedCSS`, `mathCSS`, `youtubeCSS` and `pageBreakCSS` each set a fixed
+`margin: 1em 0` on their node. Adjacent margins collapse to the larger of the
+two, so one node with an opinion pulled every gap around it out of line with
+whatever the host had set. They now read `var(--matra-block-gap, 1em)` — the
+default is unchanged for anyone who sets nothing, and a host that sets
+`--matra-block-gap` on its editor brings every extension into step. Page breaks
+read `--matra-page-break-gap`, which defaults to `1.5em` as before.
+
+**Twitch players and clips can be embedded.** `player.twitch.tv` and
+`clips.twitch.tv` join the default allow-list. `twitch.tv` itself does not, for
+the same reason the rest of Google is not on it.
+
 ## 1.0.3 — 2026-09-06
 
 **Enter leaves a quote.** A blockquote was a room with no door: every Enter

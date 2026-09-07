@@ -151,6 +151,6 @@ export const youtube = {
 } satisfies NodeDef<{ insertYoutube: Command<[attrs: YoutubeAttrs]> }>
 
 export const youtubeCSS = `
-.matra-youtube { position: relative; max-width: 100%; margin: 1em 0; }
+.matra-youtube { position: relative; max-width: 100%; margin: var(--matra-block-gap, 1em) 0; }
 .matra-youtube iframe { max-width: 100%; border-radius: 8px; display: block; }
 `

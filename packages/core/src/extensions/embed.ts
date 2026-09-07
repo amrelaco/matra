@@ -30,6 +30,8 @@ export interface EmbedOptions {
 const DEFAULT_HOSTS: ReadonlySet<string> = new Set([
   'www.youtube-nocookie.com',
   'player.vimeo.com',
+  'player.twitch.tv',
+  'clips.twitch.tv',
   'codepen.io',
   'www.figma.com',
   'www.loom.com',
@@ -199,7 +201,16 @@ export function embed(options: EmbedOptions = {}): NodeDef<{
   }
 }
 
+/**
+ * Enough styling for a frame to hold its shape.
+ *
+ * The vertical margin is a variable with a sensible default, because a
+ * stylesheet that ships with an editor should not decide a document's rhythm.
+ * A fixed `1em` collapses against whatever the host set on the paragraph above
+ * and wins, so one node with an opinion pulled every gap around it out of line.
+ * Set `--matra-block-gap` on the editor and every extension falls in step.
+ */
 export const embedCSS = `
-.matra-embed { position: relative; width: 100%; margin: 1em 0; }
+.matra-embed { position: relative; width: 100%; margin: var(--matra-block-gap, 1em) 0; }
 .matra-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 `
