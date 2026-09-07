@@ -238,7 +238,9 @@ export const TOOLS: Tool[] = [
     args: ['#c2554d'],
     label: 'Colour',
     group: 'mark',
-    title: 'Colour the selection · one checked style attribute',
+    title: 'Colour the selected words · a mark, so it stops where they do',
+    // It colours a selection, so the selection is where it should be offered.
+    bubble: true,
   },
 
   // --- lists ---------------------------------------------------------------
@@ -450,6 +452,13 @@ export const TOOLS: Tool[] = [
     label: 'Block colour',
     group: 'layout',
     title: 'Colour the block · text and background, on the block itself',
+    /*
+      In the bubble menu as well as the bar, because that is the only place it
+      can be reached in two of the four interfaces: Notion mode draws no
+      toolbar at all, so a tool that is not on the selection is a tool that
+      does not exist there. It is also where Notion itself keeps colour.
+    */
+    bubble: true,
   },
   {
     ext: 'textDirection',

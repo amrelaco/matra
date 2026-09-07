@@ -67,6 +67,7 @@ export const MODES: Mode[] = [
       'code',
       'strike',
       'link',
+      'blockColor',
       'placeholder',
       'trailingNode',
       'history',
