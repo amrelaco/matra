@@ -2,6 +2,49 @@
 
 All packages share one version number and are released together.
 
+## Unreleased
+
+**The drag handle is a drawn grip, aligned to the top of the first line.** It
+was the braille character `⠿` at 14px, so its weight and size were whatever the
+reader's font did with it — faint on most, a tofu box on a machine without the
+glyph. Six dots in a CSS grid are the same shape everywhere and can be sized to
+the hand rather than to a font. Its colour is `var(--matra-drag-handle,
+currentColor)`, so a host can set one without restyling the element.
+
+It also sat against the top of the whole *block*, which read as aligned on a
+paragraph and visibly high on a heading. It now measures the first line box and
+sits at the top of that.
+
+**The drag handle stays put while you reach for it.** It lives outside the
+editable element, so a pointer travelling from the words to the grip fires
+`mouseleave` on the way. The guard for that compared `relatedTarget` to the
+handle by identity, which stopped working the moment the handle grew a child —
+and even fixed, the gap between the text and the grip belongs to neither, so
+the pointer is over nothing at all while it crosses. The check uses `contains`
+now, the handle pads out to the block's edge so the gap is part of its target,
+and a 240ms grace period covers the rest.
+
+**A drag carries the block, not the grip.** The browser builds its drag image
+from whatever the drag started on, and a drag starts on the handle — so a
+nineteen-pixel grip flew around the screen while the paragraph it belonged to
+sat still. `dragstart` now hands `setDragImage` a copy of the block, the block
+it came from dims to show what is being carried, and the drop line takes the
+width of the block it would land against.
+
+The copy looks like the block, which took a second pass to get right.
+`setDragImage` needs an element that is in the document, and the obvious place
+to put one — `document.body` — is outside everything the text inherits from:
+right words, wrong font, wrong colour, wrong measure, and no background at all,
+because an editor's own `background-color` is usually `transparent` and the page
+paints behind it. The copy now sits in a wrapper carrying the editor's class,
+with the inherited properties that come from the page copied across and the
+background resolved by walking up to the first ancestor that actually paints
+one. Nothing is added to it: no padding, no shadow, no fade.
+
+Three new variables with defaults — `--matra-drag-handle`,
+`--matra-drag-ghost-bg` and `--matra-drop-cursor` — let a host colour all of it
+without restyling elements it does not own.
+
 ## 1.1.0 — 2026-09-07
 
 **A parse rule that declines no longer blocks the ones behind it.** Rules are
