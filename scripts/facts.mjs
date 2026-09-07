@@ -76,7 +76,18 @@ const adversarial = results.testResults
   .reduce((sum, file) => sum + file.assertionResults.length, 0)
 const extensions = await extensionCount(previous.extensions ?? 0)
 
-const facts = { tests, adversarial, extensions }
+/**
+ * The released version, so the page and the package cannot disagree.
+ *
+ * The structured data in `Base.astro` carried `softwareVersion: '1.0.2'` while
+ * npm had 1.0.3 — a number typed into a page is a number nobody is told to
+ * update, which is the whole reason this file exists.
+ */
+const version = JSON.parse(
+  readFileSync(join(ROOT, 'packages/core/package.json'), 'utf8'),
+).version
+
+const facts = { version, tests, adversarial, extensions }
 
 if (check) {
   const stale = Object.entries(facts).filter(([key, value]) => previous[key] !== value)
@@ -92,6 +103,6 @@ if (check) {
 } else {
   writeFileSync(OUT, `${JSON.stringify(facts, null, 2)}\n`)
   console.log(
-    `wrote ${OUT} · ${tests} tests, ${adversarial} adversarial, ${extensions} extensions`,
+    `wrote ${OUT} · v${version}, ${tests} tests, ${adversarial} adversarial, ${extensions} extensions`,
   )
 }

@@ -2,7 +2,7 @@
 
 All packages share one version number and are released together.
 
-## Unreleased
+## 1.1.0 — 2026-09-07
 
 **A parse rule that declines no longer blocks the ones behind it.** Rules are
 tried in priority order and the first match wins — but a rule whose `getAttrs`

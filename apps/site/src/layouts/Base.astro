@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions'
+import facts from '../data/facts.json'
 import '../styles/global.css'
 interface Props {
   title: string
@@ -164,7 +165,7 @@ const social = new URL(image, Astro.site).href
             applicationCategory: 'DeveloperApplication',
             operatingSystem: 'Web',
             url: 'https://matrajs.com/',
-            softwareVersion: '1.0.2',
+            softwareVersion: facts.version,
             offers: [
               {
                 '@type': 'Offer',
