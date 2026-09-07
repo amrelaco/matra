@@ -1,241 +1,251 @@
 {
-  "floorGz": 29.2,
-  "measured": "2026-09-06",
+  "floorGz": 29.5,
+  "measured": "2026-09-07",
   "extensions": [
     {
       "name": "table",
-      "gz": 1.85,
-      "bytes": 1896
+      "gz": 1.84,
+      "bytes": 1887
     },
     {
       "name": "smartPaste",
-      "gz": 1.78,
-      "bytes": 1822
+      "gz": 1.76,
+      "bytes": 1807
     },
     {
       "name": "search",
-      "gz": 1.36,
-      "bytes": 1391
+      "gz": 1.37,
+      "bytes": 1398
     },
     {
       "name": "embed",
-      "gz": 1.02,
-      "bytes": 1045
+      "gz": 1.04,
+      "bytes": 1067
+    },
+    {
+      "name": "dragHandle",
+      "gz": 1.01,
+      "bytes": 1039
     },
     {
       "name": "fromMarkdown",
-      "gz": 1.01,
-      "bytes": 1038
+      "gz": 1,
+      "bytes": 1028
     },
     {
       "name": "textTransform",
-      "gz": 0.95,
-      "bytes": 977
+      "gz": 0.96,
+      "bytes": 978
     },
     {
       "name": "emoji",
       "gz": 0.94,
-      "bytes": 967
+      "bytes": 962
     },
     {
       "name": "taskItem",
-      "gz": 0.91,
-      "bytes": 935
+      "gz": 0.92,
+      "bytes": 946
     },
     {
       "name": "dictation",
-      "gz": 0.84,
-      "bytes": 864
+      "gz": 0.85,
+      "bytes": 868
+    },
+    {
+      "name": "autosave",
+      "gz": 0.81,
+      "bytes": 829
     },
     {
       "name": "imageResize",
       "gz": 0.81,
-      "bytes": 832
+      "bytes": 828
     },
     {
-      "name": "autosave",
+      "name": "selectionHighlight",
+      "gz": 0.81,
+      "bytes": 826
+    },
+    {
+      "name": "locked",
+      "gz": 0.8,
+      "bytes": 818
+    },
+    {
+      "name": "mathInline",
       "gz": 0.79,
       "bytes": 814
     },
     {
-      "name": "selectionHighlight",
-      "gz": 0.79,
-      "bytes": 813
-    },
-    {
-      "name": "locked",
-      "gz": 0.79,
-      "bytes": 809
-    },
-    {
-      "name": "textStyle",
-      "gz": 0.79,
-      "bytes": 808
-    },
-    {
       "name": "youtube",
-      "gz": 0.78,
-      "bytes": 800
-    },
-    {
-      "name": "mathInline",
-      "gz": 0.78,
-      "bytes": 800
+      "gz": 0.77,
+      "bytes": 791
     },
     {
       "name": "toMarkdown",
-      "gz": 0.74,
-      "bytes": 759
+      "gz": 0.75,
+      "bytes": 769
     },
     {
       "name": "invisibleCharacters",
-      "gz": 0.71,
-      "bytes": 722
+      "gz": 0.72,
+      "bytes": 736
     },
     {
       "name": "ghostText",
-      "gz": 0.7,
-      "bytes": 715
+      "gz": 0.71,
+      "bytes": 728
+    },
+    {
+      "name": "typewriter",
+      "gz": 0.68,
+      "bytes": 698
+    },
+    {
+      "name": "textDirection",
+      "gz": 0.68,
+      "bytes": 693
     },
     {
       "name": "floatingMenu",
       "gz": 0.67,
-      "bytes": 686
-    },
-    {
-      "name": "textDirection",
-      "gz": 0.66,
-      "bytes": 678
-    },
-    {
-      "name": "codeHighlight",
-      "gz": 0.66,
-      "bytes": 675
-    },
-    {
-      "name": "typewriter",
-      "gz": 0.66,
-      "bytes": 674
+      "bytes": 688
     },
     {
       "name": "columnList",
-      "gz": 0.65,
-      "bytes": 664
+      "gz": 0.66,
+      "bytes": 671
     },
     {
       "name": "bubbleMenu",
       "gz": 0.65,
-      "bytes": 661
+      "bytes": 662
     },
     {
       "name": "callout",
-      "gz": 0.63,
-      "bytes": 649
+      "gz": 0.64,
+      "bytes": 651
     },
     {
-      "name": "dragHandle",
-      "gz": 0.58,
-      "bytes": 596
+      "name": "codeHighlight",
+      "gz": 0.63,
+      "bytes": 642
+    },
+    {
+      "name": "textStyle",
+      "gz": 0.6,
+      "bytes": 616
     },
     {
       "name": "taskList",
-      "gz": 0.56,
-      "bytes": 573
+      "gz": 0.57,
+      "bytes": 584
     },
     {
       "name": "details",
-      "gz": 0.56,
-      "bytes": 569
+      "gz": 0.57,
+      "bytes": 580
+    },
+    {
+      "name": "orderedList",
+      "gz": 0.55,
+      "bytes": 565
+    },
+    {
+      "name": "field",
+      "gz": 0.55,
+      "bytes": 565
     },
     {
       "name": "suggestion",
       "gz": 0.54,
-      "bytes": 558
-    },
-    {
-      "name": "orderedList",
-      "gz": 0.54,
-      "bytes": 555
-    },
-    {
-      "name": "field",
-      "gz": 0.54,
-      "bytes": 554
+      "bytes": 557
     },
     {
       "name": "listItem",
-      "gz": 0.49,
-      "bytes": 506
+      "gz": 0.51,
+      "bytes": 518
     },
     {
       "name": "bulletList",
       "gz": 0.49,
-      "bytes": 497
+      "bytes": 506
     },
     {
       "name": "indent",
-      "gz": 0.44,
-      "bytes": 451
+      "gz": 0.45,
+      "bytes": 458
     },
     {
       "name": "mathBlock",
       "gz": 0.42,
-      "bytes": 429
+      "bytes": 435
     },
     {
       "name": "snippets",
       "gz": 0.4,
-      "bytes": 406
+      "bytes": 407
     },
     {
-      "name": "lineHeight",
+      "name": "blockColor",
       "gz": 0.37,
-      "bytes": 378
+      "bytes": 382
     },
     {
       "name": "textAlign",
+      "gz": 0.36,
+      "bytes": 368
+    },
+    {
+      "name": "lineHeight",
       "gz": 0.36,
       "bytes": 366
     },
     {
       "name": "autolink",
-      "gz": 0.36,
-      "bytes": 366
-    },
-    {
-      "name": "comment",
-      "gz": 0.33,
-      "bytes": 339
+      "gz": 0.35,
+      "bytes": 361
     },
     {
       "name": "blockquote",
       "gz": 0.33,
-      "bytes": 339
+      "bytes": 342
+    },
+    {
+      "name": "comment",
+      "gz": 0.33,
+      "bytes": 336
     },
     {
       "name": "characterCount",
       "gz": 0.28,
-      "bytes": 284
-    },
-    {
-      "name": "fillFieldsIn",
-      "gz": 0.27,
-      "bytes": 273
+      "bytes": 291
     },
     {
       "name": "placeholder",
+      "gz": 0.27,
+      "bytes": 278
+    },
+    {
+      "name": "fillFieldsIn",
       "gz": 0.26,
-      "bytes": 269
+      "bytes": 271
     },
     {
       "name": "hashtag",
-      "gz": 0.26,
-      "bytes": 268
+      "gz": 0.24,
+      "bytes": 245
     },
     {
       "name": "tableOfContents",
-      "gz": 0.25,
-      "bytes": 253
+      "gz": 0.24,
+      "bytes": 244
+    },
+    {
+      "name": "clearFormatting",
+      "gz": 0.24,
+      "bytes": 243
     },
     {
       "name": "link",
@@ -243,14 +253,9 @@
       "bytes": 235
     },
     {
-      "name": "clearFormatting",
-      "gz": 0.22,
-      "bytes": 229
-    },
-    {
       "name": "mention",
       "gz": 0.21,
-      "bytes": 217
+      "bytes": 212
     },
     {
       "name": "image",
@@ -260,166 +265,166 @@
     {
       "name": "typography",
       "gz": 0.2,
-      "bytes": 207
+      "bytes": 205
     },
     {
       "name": "tableHeader",
       "gz": 0.19,
-      "bytes": 199
+      "bytes": 195
     },
     {
       "name": "tableCell",
       "gz": 0.19,
-      "bytes": 197
+      "bytes": 194
     },
     {
       "name": "uniqueId",
-      "gz": 0.19,
-      "bytes": 193
+      "gz": 0.18,
+      "bytes": 187
     },
     {
       "name": "commentRanges",
       "gz": 0.17,
-      "bytes": 177
+      "bytes": 170
     },
     {
       "name": "highlight",
-      "gz": 0.17,
-      "bytes": 176
+      "gz": 0.15,
+      "bytes": 154
     },
     {
       "name": "focus",
       "gz": 0.15,
-      "bytes": 153
+      "bytes": 151
     },
     {
       "name": "codeBlock",
-      "gz": 0.15,
-      "bytes": 152
+      "gz": 0.14,
+      "bytes": 147
     },
     {
       "name": "fileHandler",
-      "gz": 0.15,
-      "bytes": 150
+      "gz": 0.14,
+      "bytes": 146
     },
     {
       "name": "bold",
       "gz": 0.13,
-      "bytes": 138
+      "bytes": 130
     },
     {
       "name": "strike",
-      "gz": 0.09,
-      "bytes": 90
+      "gz": 0.08,
+      "bytes": 86
     },
     {
       "name": "trailingNode",
       "gz": 0.08,
-      "bytes": 87
+      "bytes": 82
     },
     {
       "name": "italic",
       "gz": 0.08,
-      "bytes": 83
+      "bytes": 77
     },
     {
       "name": "horizontalRule",
-      "gz": 0.08,
-      "bytes": 80
+      "gz": 0.07,
+      "bytes": 76
     },
     {
       "name": "underline",
-      "gz": 0.08,
-      "bytes": 79
+      "gz": 0.07,
+      "bytes": 76
     },
     {
       "name": "pageBreak",
       "gz": 0.07,
-      "bytes": 74
+      "bytes": 71
     },
     {
       "name": "history",
       "gz": 0.07,
-      "bytes": 69
+      "bytes": 71
     },
     {
       "name": "hashtagsIn",
-      "gz": 0.07,
-      "bytes": 68
-    },
-    {
-      "name": "kbd",
       "gz": 0.06,
-      "bytes": 60
+      "bytes": 64
     },
     {
       "name": "hardBreak",
       "gz": 0.06,
-      "bytes": 60
+      "bytes": 57
+    },
+    {
+      "name": "kbd",
+      "gz": 0.05,
+      "bytes": 56
     },
     {
       "name": "code",
       "gz": 0.05,
-      "bytes": 55
+      "bytes": 51
     },
     {
       "name": "subscript",
       "gz": 0.05,
-      "bytes": 52
+      "bytes": 50
     },
     {
       "name": "superscript",
       "gz": 0.05,
-      "bytes": 49
+      "bytes": 47
     },
     {
       "name": "column",
-      "gz": 0.05,
-      "bytes": 49
+      "gz": 0.04,
+      "bytes": 46
     },
     {
       "name": "footnotes",
-      "gz": 0.05,
-      "bytes": 49
+      "gz": 0.04,
+      "bytes": 45
     },
     {
       "name": "tableRow",
       "gz": 0.04,
-      "bytes": 40
+      "bytes": 36
     },
     {
       "name": "detailsSummary",
       "gz": 0.03,
-      "bytes": 30
+      "bytes": 26
     },
     {
       "name": "heading",
       "gz": 0,
-      "bytes": 4
+      "bytes": 0
     },
     {
       "name": "footnoteRef",
       "gz": 0,
-      "bytes": 4
+      "bytes": 0
     },
     {
       "name": "footnote",
       "gz": 0,
-      "bytes": 4
+      "bytes": 0
     }
   ],
   "totals": [
     {
       "id": "marks-six",
       "count": 6,
-      "measured": 0.49,
-      "summed": 0.61
+      "measured": 0.47,
+      "summed": 0.56
     },
     {
       "id": "writing",
       "count": 5,
-      "measured": 1.35,
-      "summed": 1.86
+      "measured": 1.36,
+      "summed": 1.89
     }
   ]
 }

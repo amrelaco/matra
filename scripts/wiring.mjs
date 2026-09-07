@@ -123,7 +123,7 @@ try {
   const isDefinition = (value) =>
     value && typeof value === 'object' && 'kind' in value && 'name' in value
   const FACTORY =
-    /^(placeholder|characterCount|textAlign|suggestion|uniqueId|dragHandle|tableOfContents|mention|search|autolink|codeHighlight|emoji|focus|trailingNode|indent|fileHandler|locked|ghostText|dictation|smartPaste|bubbleMenu|floatingMenu|imageResize|invisibleCharacters|lineHeight|hashtag|snippets|embed|mathInline|mathBlock|selectionHighlight|textDirection|typewriter|autosave)$/
+    /^(placeholder|characterCount|textAlign|suggestion|uniqueId|dragHandle|tableOfContents|mention|search|autolink|codeHighlight|emoji|focus|trailingNode|indent|fileHandler|locked|ghostText|dictation|smartPaste|bubbleMenu|floatingMenu|imageResize|invisibleCharacters|lineHeight|hashtag|snippets|embed|mathInline|mathBlock|selectionHighlight|textDirection|typewriter|autosave|blockColor)$/
 
   const exported = new Set(
     Object.entries(core)

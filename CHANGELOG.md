@@ -4,6 +4,31 @@ All packages share one version number and are released together.
 
 ## Unreleased
 
+**`blockColor` · colour on the block, the way Notion means it.** `textStyle`
+already colours text, and a mark is the right model for three words in a
+sentence and the wrong one for a paragraph: mark every character and the
+background still stops at the last one, then comes apart when somebody types at
+the end. This is an attribute on the block instead, so the colour spans the
+measure, travels with the block when it is dragged, and stays on an empty
+paragraph — none of which a mark can do. `setBlockColor`, `setBlockBackground`,
+their unsets and `unsetBlockColors`; the block types are yours to pass, and so
+is the palette, because a headless editor that picks your ten colours has
+picked your design. 0.37 kB gzipped, measured.
+
+**Global attributes that render a style no longer overwrite each other.** The
+composition rule was applied when a global met the node's own attributes and
+not when it met another global, so of `textAlign`, `lineHeight` and `indent`
+only the last to run reached the HTML. Centring a paragraph and then setting
+its line height silently dropped the centring — and since that HTML is what
+gets stored and parsed back, it was data leaving the document rather than a
+rendering quirk. Found while adding a fourth extension that renders a style.
+
+**`colorOf` is exported, and is now the only thing that decides what a colour
+is.** The check had been copied into a second extension and a third was about
+to copy it again; a security-critical pattern maintained in three places is one
+that gets corrected in one of them.
+
+
 **The drag handle is a drawn grip, aligned to the top of the first line.** It
 was the braille character `⠿` at 14px, so its weight and size were whatever the
 reader's font did with it — faint on most, a tofu box on a machine without the

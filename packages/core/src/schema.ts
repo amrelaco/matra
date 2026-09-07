@@ -88,6 +88,32 @@ function toParseDOM(rules: ParseRule[] | undefined, globals: readonly Global[]) 
 }
 
 /**
+ * Add one rendered attribute to a bag, composing `style` and `class` instead
+ * of replacing them.
+ *
+ * Composition was applied when the globals met the node's own attributes, and
+ * not when they met each other — so of the three shipped extensions that all
+ * render a `style`, only the last to run survived. A centred paragraph given a
+ * line height came out of `getHTML` with `line-height` set and `text-align`
+ * gone: not a rendering quirk but data leaving the document, since that HTML
+ * is what gets stored and parsed back. One rule in one place now.
+ */
+function put(bag: Record<string, unknown>, key: string, value: unknown): void {
+  const existing = bag[key]
+  if (typeof existing === 'string' && existing && typeof value === 'string') {
+    if (key === 'style') {
+      bag.style = `${existing.replace(/;\s*$/, '')}; ${value}`
+      return
+    }
+    if (key === 'class') {
+      bag.class = `${existing} ${value}`
+      return
+    }
+  }
+  bag[key] = value
+}
+
+/**
  * Put the rendered global attributes onto a `toDOM` result.
  *
  * Costs nothing on a node with no global set — the loop reads one attribute
@@ -108,7 +134,7 @@ function withGlobals(
       : { [dataName(name)]: String(value) }
     if (!rendered) continue
     if (!add) add = {}
-    for (const key in rendered) add[key] = rendered[key]
+    for (const key in rendered) put(add, key, rendered[key])
   }
   if (!add) return spec
   if (typeof spec === 'string') return [spec, add]
@@ -116,17 +142,7 @@ function withGlobals(
   const own = spec[1]
   if (own && typeof own === 'object' && !Array.isArray(own)) {
     const merged: Record<string, unknown> = { ...(own as Record<string, unknown>) }
-    for (const [name, value] of Object.entries(add)) {
-      const existing = merged[name]
-      // Two sources of `style` or `class` compose rather than overwrite.
-      if (name === 'style' && typeof existing === 'string' && existing) {
-        merged.style = `${existing.replace(/;\s*$/, '')}; ${value}`
-      } else if (name === 'class' && typeof existing === 'string' && existing) {
-        merged.class = `${existing} ${value}`
-      } else {
-        merged[name] = value
-      }
-    }
+    for (const [name, value] of Object.entries(add)) put(merged, name, value)
     return [spec[0], merged, ...spec.slice(2)]
   }
   return [spec[0], add, ...spec.slice(1)]

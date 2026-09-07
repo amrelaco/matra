@@ -1310,3 +1310,81 @@
     transition: none;
   }
 }
+
+/*
+  The block palette.
+
+  Positioned like the link bar, and dressed like it: the surface colour rather
+  than the inverted chip, because this one is a panel of colours and an
+  inverted ground would lie about every swatch on it.
+*/
+.pg-palette {
+  position: absolute;
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background-color: var(--surface);
+  background-image: var(--dash-h), var(--dash-h), var(--dash-v), var(--dash-v);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  box-shadow: var(--shadow-pop);
+}
+
+.pg-palette[hidden] {
+  display: none;
+}
+
+.pg-palette-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pg-palette-label {
+  flex: 0 0 74px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pg-palette-swatches {
+  display: flex;
+  gap: 4px;
+}
+
+/*
+  A swatch is a square of the colour it sets.
+
+  No dashed edge on these: the point of the control is the colour inside it,
+  and a rule around each of twenty would read as a grid rather than a palette.
+  The ring on hover is the surface pulled in, which is the same trick the image
+  grip uses and is spacing rather than a stroke.
+*/
+.pg-swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background-color: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: box-shadow var(--motion) ease;
+}
+
+.pg-swatch:hover,
+.pg-swatch:focus-visible {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--indigo);
+}
+
+#pg-palette-clear {
+  align-self: flex-start;
+}

@@ -198,6 +198,30 @@ editor.commands.unsetTextStyle()           // everything off</code></pre>
     length before it reaches a <code>style</code> attribute · whatever route it arrived by.
   </p>
 
+  <h2>Colouring the block, not the words</h2>
+  <pre><code>import &#123; blockColor &#125; from '@matrajs/core'
+
+const editor = createEditor(&#123;
+  extensions: [...starterKit, blockColor(['paragraph', 'heading'])] as const,
+&#125;)
+
+editor.commands.setBlockBackground('#fdecc8')   // the whole block, full measure
+editor.commands.setBlockColor('#d44c47')        // and its text
+editor.commands.unsetBlockColors()              // both off</code></pre>
+  <p>
+    <code>textStyle</code> colours a run of characters, which is what you want for three words in
+    a sentence and not what you want for a paragraph: mark every character and the background still
+    stops at the last one, and it comes apart as soon as somebody types at the end. This is an attribute
+    on the block, so the colour spans the measure, survives the block being dragged somewhere else,
+    and stays on an empty paragraph · none of which a mark can do.
+  </p>
+  <p>
+    The palette is yours. Notion ships ten names and stores the name, which is how a document
+    follows a theme; this stores the value it is handed, so <code>'red'</code> and a rule in your
+    stylesheet works exactly as well as a hex. Pass the block types you want it on · the default is
+    paragraphs and headings.
+  </p>
+
   <h2>Tables people can actually edit</h2>
   <pre><code>import &#123; tableKit &#125; from '@matrajs/core'
 

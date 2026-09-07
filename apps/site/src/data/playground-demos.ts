@@ -294,6 +294,10 @@ export const DEMOS: Record<string, Demo> = {
     try: 'Press Line height · it is a checked attribute, not a style string.',
     run: { cmd: 'setLineHeight', args: [1.9] },
   },
+  blockColor: {
+    try: 'Press Block colour and pick one · the whole block takes it, empty or not.',
+    run: { cmd: 'setBlockBackground', args: ['#faf0cf'] },
+  },
   typewriter: {
     try: 'Press Typewriter, then type · the caret line stays put and the page moves.',
     run: { cmd: 'toggleTypewriter' },

@@ -620,6 +620,11 @@ const directory: {
         use: 'editor.commands.setLineHeight(1.5)',
       },
       {
+        name: 'blockColor',
+        what: 'Colour and background on the block itself, not on the text inside it',
+        use: "editor.commands.setBlockBackground('#fdecc8')",
+      },
+      {
         name: 'typewriter',
         what: 'The line being written stays put; the page moves under it',
         use: 'typewriter({ position: 0.5 })',
@@ -699,6 +704,11 @@ const directory: {
         name: 'toMarkdown',
         what: 'A document to markdown, without touching a DOM',
         use: 'toMarkdown(editor.getJSON())',
+      },
+      {
+        name: 'colorOf',
+        what: 'The one check that decides whether a string is a colour',
+        use: "colorOf('#fdecc8')",
       },
       {
         name: 'fromMarkdown',

@@ -26,6 +26,7 @@ import { renderMath } from '../math'
 import { watchSlash } from '../slash'
 import { attachComments, focusThread, render as renderComments, startThread } from './comments'
 import { closeMentions, watchMentions } from './mentions'
+import { paintSwatches } from './palette'
 import { bindRail, renderRail, runDemo } from './rail'
 import {
   DEFAULT_SELECTION,
@@ -71,6 +72,7 @@ const ALL = [...SIZES.keys()]
 
 /** Extensions that ship a stylesheet, so ticking one also looks right. */
 const STYLES: Record<string, string> = {
+  blockColor: 'blockColorCSS',
   callout: 'calloutCSS',
   codeHighlight: 'codeHighlightCSS',
   columnList: 'columnsCSS',
@@ -203,6 +205,56 @@ function showLinkBar(target: AnyEditor): void {
   }
   input.value = ''
   input.focus()
+}
+
+/*
+  The block palette.
+
+  Positioned like the link bar and dismissed like it, but it needs no
+  selection: block colour applies to whatever block the caret is in, which is
+  the whole reason it is not a mark. A caret inside a paragraph is enough.
+*/
+function hidePalette(): void {
+  const palette = $('#pg-palette')
+  if (palette) palette.hidden = true
+}
+
+function showPalette(target: AnyEditor): void {
+  const palette = $('#pg-palette')
+  const scroll = $('#pg-scroll')
+  if (!palette || !scroll) return
+  void target
+
+  const range = window.getSelection()?.rangeCount
+    ? window.getSelection()?.getRangeAt(0).getBoundingClientRect()
+    : null
+  const base = scroll.getBoundingClientRect()
+  palette.hidden = false
+  if (range) {
+    palette.style.left = `${Math.max(8, Math.round(range.left - base.left + scroll.scrollLeft))}px`
+    palette.style.top = `${Math.round(range.bottom - base.top + scroll.scrollTop + 8)}px`
+  }
+}
+
+/**
+ * Apply one swatch.
+ *
+ * The value rides on the button, so this stays a lookup-free handler: read the
+ * attribute, pick the command by which row it came from, pass it on. A swatch
+ * with no `data-color` is the clear.
+ */
+function applySwatch(button: HTMLElement): void {
+  if (!editor) return
+  const commands = editor.commands as Record<string, ((value?: unknown) => boolean) | undefined>
+  const color = button.dataset.color
+  const text = button.dataset.kind === 'text'
+  const set = text ? commands.setBlockColor : commands.setBlockBackground
+  const clear = text ? commands.unsetBlockColor : commands.unsetBlockBackground
+  const done = color ? set?.(color) : clear?.()
+  if (done === false && color) {
+    note('That colour was refused · the value has to be a colour and nothing else.')
+  }
+  editor.commands.focus?.()
 }
 
 function applyLink(): void {
@@ -799,6 +851,7 @@ async function start(): Promise<void> {
     if (strip) {
       bindTools(strip, getEditor, {
         link: (target) => showLinkBar(target as never),
+        blockColor: (target) => showPalette(target as never),
         comment: (target) => {
           if (!startThread(target as never)) {
             note('Select some words first · a comment has to point at something.')
@@ -901,6 +954,56 @@ async function start(): Promise<void> {
   once('#pg-linkbar-ok', applyLink)
   once('#pg-linkbar-cancel', () => {
     hideLinkBar()
+    editor?.commands.focus?.()
+  })
+
+  /*
+    The palette's swatches, painted once and then delegated.
+
+    `mousedown` rather than `click`, and prevented: a click on a button takes
+    the caret out of the editor before the handler runs, and the command would
+    then have no block to colour. The link bar does not have this problem
+    because it re-selects a range it stored; block colour has nowhere to store.
+  */
+  const textRow = $('#pg-palette-text')
+  const backRow = $('#pg-palette-bg')
+  if (textRow && backRow && textRow.dataset.bound !== 'yes') {
+    textRow.dataset.bound = 'yes'
+    paintSwatches(textRow, 'text')
+    paintSwatches(backRow, 'back')
+  }
+  const palette = $('#pg-palette')
+  if (palette && palette.dataset.bound !== 'yes') {
+    palette.dataset.bound = 'yes'
+    palette.addEventListener('mousedown', (event) => {
+      const swatch = (event.target as HTMLElement | null)?.closest<HTMLElement>('.pg-swatch')
+      if (!swatch) return
+      event.preventDefault()
+      applySwatch(swatch)
+    })
+    /*
+      Dismissal. `mousedown` fires before the `click` that opens it, so the
+      first press on the toolbar button reads as "already hidden" and falls
+      through — no need to special-case the opener beyond leaving it alone.
+    */
+    window.document.addEventListener('mousedown', (event) => {
+      if (palette.hidden) return
+      const target = event.target as HTMLElement | null
+      if (target && (palette.contains(target) || target.closest('[data-ext="blockColor"]')))
+        return
+      hidePalette()
+    })
+    window.document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || palette.hidden) return
+      hidePalette()
+      editor?.commands.focus?.()
+    })
+  }
+  once('#pg-palette-clear', () => {
+    ;(
+      editor?.commands as Record<string, (() => boolean) | undefined> | undefined
+    )?.unsetBlockColors?.()
+    hidePalette()
     editor?.commands.focus?.()
   })
 

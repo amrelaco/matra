@@ -79,6 +79,7 @@ export const REGISTRY: Record<string, unknown> = {
   invisibleCharacters: core.invisibleCharacters,
   textDirection: core.textDirection,
   lineHeight: core.lineHeight,
+  blockColor: core.blockColor,
   typewriter: core.typewriter,
   hashtag: core.hashtag,
   mathInline: core.mathInline,
@@ -87,6 +88,7 @@ export const REGISTRY: Record<string, unknown> = {
 }
 
 export const SHEETS: Record<string, string> = {
+  blockColorCSS: core.blockColorCSS,
   calloutCSS: core.calloutCSS,
   codeHighlightCSS: core.codeHighlightCSS,
   columnsCSS: core.columnsCSS,

@@ -442,6 +442,16 @@ export const TOOLS: Tool[] = [
     title: 'Line height on a block, as a checked style',
   },
   {
+    ext: 'blockColor',
+    // The command is nominal · the palette opens instead, and applies whichever
+    // swatch is pressed. `args` stays empty so nothing fires on a plain click.
+    cmd: 'setBlockBackground',
+    args: [],
+    label: 'Block colour',
+    group: 'layout',
+    title: 'Colour the block · text and background, on the block itself',
+  },
+  {
     ext: 'textDirection',
     cmd: 'setTextDirection',
     args: ['rtl'],

@@ -1,6 +1,7 @@
 import type { Mark } from '../engine/model'
 import { engine } from '../internal'
 import type { Command, MarkDef } from '../types'
+import { colorOf } from './color'
 
 export type TextStyleAttrs = {
   color?: string | null
@@ -16,25 +17,34 @@ export type TextStyleAttrs = {
  * `expression()` have both lived in one — so every value is checked against
  * the shape of what it claims to be before it reaches the DOM, whether it
  * arrived from a command, from pasted HTML or from stored JSON.
+ *
+ * The colour check is `colorOf`, shared with `blockColor`, so the two places
+ * that decide what a colour is cannot drift apart.
  */
-const SAFE_COLOR =
-  /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%/]+\)|hsla?\([\d\s.,%/deg]+\)|[a-z]{3,30})$/i
 const SAFE_FAMILY = /^[\p{L}\p{N}\s,'"_-]{1,120}$/u
 const SAFE_SIZE = /^\d{1,3}(\.\d{1,2})?(px|em|rem|pt|%)$/
 
-const STYLE: Array<[key: keyof TextStyleAttrs, property: string, safe: RegExp]> = [
-  ['color', 'color', SAFE_COLOR],
-  ['backgroundColor', 'background-color', SAFE_COLOR],
-  ['fontFamily', 'font-family', SAFE_FAMILY],
-  ['fontSize', 'font-size', SAFE_SIZE],
+/** A validator for one of the shapes above, in the form `colorOf` already has. */
+const shaped =
+  (pattern: RegExp) =>
+  (value: unknown): string | null => {
+    if (typeof value !== 'string') return null
+    const text = value.trim()
+    return text && pattern.test(text) ? text : null
+  }
+
+const STYLE: Array<
+  [key: keyof TextStyleAttrs, property: string, safe: (value: unknown) => string | null]
+> = [
+  ['color', 'color', colorOf],
+  ['backgroundColor', 'background-color', colorOf],
+  ['fontFamily', 'font-family', shaped(SAFE_FAMILY)],
+  ['fontSize', 'font-size', shaped(SAFE_SIZE)],
 ]
 
 const clean = (attrs: TextStyleAttrs): TextStyleAttrs => {
   const out: TextStyleAttrs = {}
-  for (const [key, , safe] of STYLE) {
-    const value = attrs[key]
-    out[key] = typeof value === 'string' && safe.test(value.trim()) ? value.trim() : null
-  }
+  for (const [key, , safe] of STYLE) out[key] = safe(attrs[key])
   return out
 }
 

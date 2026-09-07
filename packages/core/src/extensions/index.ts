@@ -107,6 +107,8 @@ export {
 export { column, columnList, columnsCSS, columnsKit } from './columns'
 export { pageBreak, pageBreakCSS } from './page-break'
 export { lineHeight, lineHeightOf } from './line-height'
+export { blockColor, blockColorCSS } from './block-color'
+export { colorOf } from './color'
 export { kbd } from './kbd'
 export { hashtag, hashtagsIn, type HashtagOptions } from './hashtag'
 export { snippets, type Snippet, type SnippetsOptions } from './snippets'

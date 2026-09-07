@@ -249,6 +249,26 @@ const SEED = `<h2>A document, not a demo</h2>
             hidden
           />
 
+          <!--
+            The block palette. Ten hues in two rows: the first sets the text
+            colour of the block, the second its background. Notion's shape,
+            this site's colours — the swatch carries its own value in
+            `data-color`, so the script needs no table of its own.
+          -->
+          <div class="pg-palette" id="pg-palette" hidden>
+            <div class="pg-palette-row">
+              <span class="pg-palette-label">Text</span>
+              <div class="pg-palette-swatches" id="pg-palette-text"></div>
+            </div>
+            <div class="pg-palette-row">
+              <span class="pg-palette-label">Background</span>
+              <div class="pg-palette-swatches" id="pg-palette-bg"></div>
+            </div>
+            <button type="button" class="btn ghost small" id="pg-palette-clear">
+              Clear colour
+            </button>
+          </div>
+
           <div class="mx-linkbar" id="pg-linkbar" hidden>
             <input
               type="url"

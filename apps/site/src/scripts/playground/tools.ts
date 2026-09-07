@@ -18,6 +18,8 @@ export interface ToolHooks {
   link?: (editor: AnyEditor) => void
   /** Comments are a thread in the margin, not a mark you toggle. */
   comment?: (editor: AnyEditor) => void
+  /** Block colour opens a palette · the button itself applies nothing. */
+  blockColor?: (editor: AnyEditor) => void
 }
 
 const parse = (raw: string | undefined): unknown[] => {
@@ -54,6 +56,7 @@ export function bindTools(
       const name = button.dataset.cmd ?? ''
       if (name === 'setLink' && hooks.link) return hooks.link(editor)
       if (name === 'addComment' && hooks.comment) return hooks.comment(editor)
+      if (name === 'setBlockBackground' && hooks.blockColor) return hooks.blockColor(editor)
       editor.commands[name]?.(...parse(button.dataset.args))
       paintTools(root, editor)
     })

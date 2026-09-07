@@ -1,18 +1,18 @@
 {
-  "floorGz": 29.2,
-  "measured": "2026-09-06",
+  "floorGz": 29.5,
+  "measured": "2026-09-07",
   "totals": [
     {
       "id": "marks-six",
       "count": 6,
-      "measured": 0.49,
-      "summed": 0.61
+      "measured": 0.47,
+      "summed": 0.56
     },
     {
       "id": "writing",
       "count": 5,
-      "measured": 1.35,
-      "summed": 1.86
+      "measured": 1.36,
+      "summed": 1.89
     }
   ],
   "groups": [
@@ -32,7 +32,7 @@
         {
           "name": "strike",
           "what": "Struck through",
-          "gz": 0.09
+          "gz": 0.08
         },
         {
           "name": "code",
@@ -42,12 +42,12 @@
         {
           "name": "underline",
           "what": "Underlined",
-          "gz": 0.08
+          "gz": 0.07
         },
         {
           "name": "highlight",
           "what": "Highlighted, with a colour attribute",
-          "gz": 0.17
+          "gz": 0.15
         },
         {
           "name": "link",
@@ -67,12 +67,12 @@
         {
           "name": "kbd",
           "what": "A key name, as <kbd> \u00b7 \"press Ctrl\"",
-          "gz": 0.06
+          "gz": 0.05
         },
         {
           "name": "textStyle",
           "what": "Colour, background, font family and size \u00b7 one mark, four attributes",
-          "gz": 0.79
+          "gz": 0.6
         },
         {
           "name": "comment",
@@ -97,12 +97,12 @@
         {
           "name": "codeBlock",
           "what": "A fenced block that takes no marks",
-          "gz": 0.15
+          "gz": 0.14
         },
         {
           "name": "horizontalRule",
           "what": "A divider \u00b7 one position, no insides",
-          "gz": 0.08
+          "gz": 0.07
         },
         {
           "name": "hardBreak",
@@ -117,12 +117,12 @@
         {
           "name": "callout",
           "what": "A Notion-style callout, with a type and an emoji",
-          "gz": 0.63
+          "gz": 0.64
         },
         {
           "name": "details",
           "what": "A collapsible toggle, rendered as a real <details>",
-          "gz": 0.56
+          "gz": 0.57
         },
         {
           "name": "detailsSummary",
@@ -132,12 +132,12 @@
         {
           "name": "youtube",
           "what": "A video embed, built from the id on the privacy domain",
-          "gz": 0.78
+          "gz": 0.77
         },
         {
           "name": "embed",
           "what": "Any embed page in a sandboxed frame, from an allowlist of hosts",
-          "gz": 1.02
+          "gz": 1.04
         },
         {
           "name": "pageBreak",
@@ -147,12 +147,12 @@
         {
           "name": "columnList",
           "what": "Two to six columns side by side \u00b7 the block at the caret becomes the first",
-          "gz": 0.65
+          "gz": 0.66
         },
         {
           "name": "column",
           "what": "One column, which holds blocks",
-          "gz": 0.05
+          "gz": 0.04
         },
         {
           "name": "mathBlock",
@@ -172,22 +172,22 @@
         {
           "name": "orderedList",
           "what": "Numbered",
-          "gz": 0.54
+          "gz": 0.55
         },
         {
           "name": "listItem",
           "what": "What a list holds",
-          "gz": 0.49
+          "gz": 0.51
         },
         {
           "name": "taskList",
           "what": "Checkboxes",
-          "gz": 0.56
+          "gz": 0.57
         },
         {
           "name": "taskItem",
           "what": "One checkbox \u00b7 a real input the caret cannot enter",
-          "gz": 0.91
+          "gz": 0.92
         }
       ]
     },
@@ -197,7 +197,7 @@
         {
           "name": "table",
           "what": "Rows, columns, header cells and column widths \u00b7 Tab moves between cells",
-          "gz": 1.85
+          "gz": 1.84
         },
         {
           "name": "tableRow",
@@ -217,17 +217,17 @@
         {
           "name": "tableOfContents",
           "what": "Headings, with their level and position",
-          "gz": 0.25
+          "gz": 0.24
         },
         {
           "name": "uniqueId",
           "what": "A stable id on every block, for comments and anchors",
-          "gz": 0.19
+          "gz": 0.18
         },
         {
           "name": "dragHandle",
           "what": "Drag a block to reorder it",
-          "gz": 0.58
+          "gz": 1.01
         },
         {
           "name": "focus",
@@ -242,17 +242,17 @@
         {
           "name": "fileHandler",
           "what": "Files dropped or pasted, with a marker that survives the upload",
-          "gz": 0.15
+          "gz": 0.14
         },
         {
           "name": "locked",
           "what": "Blocks that refuse every change \u00b7 a template with fixed clauses",
-          "gz": 0.79
+          "gz": 0.8
         },
         {
           "name": "field",
           "what": "A blank in a template \u00b7 fill it in the editor, or in JSON on a server",
-          "gz": 0.54
+          "gz": 0.55
         },
         {
           "name": "imageResize",
@@ -272,7 +272,7 @@
         {
           "name": "footnotes",
           "what": "The list the notes live in, kept last",
-          "gz": 0.05
+          "gz": 0.04
         }
       ]
     },
@@ -282,7 +282,7 @@
         {
           "name": "placeholder",
           "what": "Text in an empty block",
-          "gz": 0.26
+          "gz": 0.27
         },
         {
           "name": "characterCount",
@@ -297,7 +297,7 @@
         {
           "name": "indent",
           "what": "A paragraph or heading moved in and out, a level at a time",
-          "gz": 0.44
+          "gz": 0.45
         },
         {
           "name": "typography",
@@ -312,22 +312,22 @@
         {
           "name": "autolink",
           "what": "A URL becomes a link once a space follows it, or when pasted",
-          "gz": 0.36
+          "gz": 0.35
         },
         {
           "name": "clearFormatting",
           "what": "Every mark off, every block a paragraph \u00b7 one undo step",
-          "gz": 0.22
+          "gz": 0.24
         },
         {
           "name": "search",
           "what": "Find and replace \u00b7 typing rescans one paragraph, not the document",
-          "gz": 1.36
+          "gz": 1.37
         },
         {
           "name": "codeHighlight",
           "what": "Syntax colours as decorations \u00b7 built-in tokeniser, or Shiki, Prism, lowlight",
-          "gz": 0.66
+          "gz": 0.63
         },
         {
           "name": "history",
@@ -337,42 +337,47 @@
         {
           "name": "smartPaste",
           "what": "Tab-separated text becomes a table, Markdown becomes blocks",
-          "gz": 1.78
+          "gz": 1.76
         },
         {
           "name": "textTransform",
           "what": "Upper, lower, title and sentence case on the selection or the word",
-          "gz": 0.95
+          "gz": 0.96
         },
         {
           "name": "selectionHighlight",
           "what": "Every other occurrence of the selected word",
-          "gz": 0.79
+          "gz": 0.81
         },
         {
           "name": "invisibleCharacters",
           "what": "A dot on every space, a pilcrow on every block \u00b7 drawn, never stored",
-          "gz": 0.71
+          "gz": 0.72
         },
         {
           "name": "textDirection",
           "what": "dir on a block, and right-to-left detected from the text",
-          "gz": 0.66
+          "gz": 0.68
         },
         {
           "name": "lineHeight",
           "what": "Line height on a block, as a checked style",
+          "gz": 0.36
+        },
+        {
+          "name": "blockColor",
+          "what": "Colour and background on the block, not on the text",
           "gz": 0.37
         },
         {
           "name": "typewriter",
           "what": "The line being written stays put; the page moves under it",
-          "gz": 0.66
+          "gz": 0.68
         },
         {
           "name": "autosave",
           "what": "Saves once typing pauses, and before the page goes away",
-          "gz": 0.79
+          "gz": 0.81
         },
         {
           "name": "snippets",
@@ -382,12 +387,12 @@
         {
           "name": "hashtag",
           "what": "A tag as a node, listable from the JSON",
-          "gz": 0.26
+          "gz": 0.24
         },
         {
           "name": "mathInline",
           "what": "A formula in the run of text",
-          "gz": 0.78
+          "gz": 0.79
         }
       ]
     },
@@ -417,12 +422,12 @@
         {
           "name": "ghostText",
           "what": "Inline completion \u00b7 grey text after the caret, Tab to take it",
-          "gz": 0.7
+          "gz": 0.71
         },
         {
           "name": "dictation",
           "what": "Speak, and the words arrive at the caret \u00b7 the browser\u2019s own recogniser",
-          "gz": 0.84
+          "gz": 0.85
         }
       ]
     }
