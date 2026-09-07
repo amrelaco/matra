@@ -22,6 +22,7 @@ import { modeById } from '../../data/playground-modes'
  * "headless" is something you can watch rather than a word on the landing page.
  */
 import catalogue from '../../data/playground.json'
+import { renderMath } from '../math'
 import { watchSlash } from '../slash'
 import { attachComments, focusThread, render as renderComments, startThread } from './comments'
 import { closeMentions, watchMentions } from './mentions'
@@ -353,7 +354,7 @@ const CONFIGURED: Record<string, Configured> = {
       core.CONFIGURE.floatingMenu({
         element: menuHost('pg-floating'),
         placement: 'left',
-        offset: 30,
+        offset: 32,
       }),
     code: () => 'floatingMenu({ element })',
   },
@@ -370,6 +371,21 @@ const CONFIGURED: Record<string, Configured> = {
   },
   footnote: { make: () => [], code: () => '', imports: [] },
   footnoteRef: { make: () => [], code: () => '', imports: [] },
+  /*
+    Both maths nodes get a renderer, because without one they show their source
+    in a `<code>` — correct for a headless extension, and indistinguishable from
+    broken next to a caption saying "rendered where it stands". `renderMath` is
+    the site's own hundred-and-fifty-line LaTeX-to-MathML converter: no
+    dependency, and a demonstration that plugging a renderer in is one function.
+  */
+  mathInline: {
+    make: () => core.REGISTRY_FACTORY.mathInline({ render: renderMath }),
+    code: () => 'mathInline({ render })',
+  },
+  mathBlock: {
+    make: () => core.REGISTRY_FACTORY.mathBlock({ render: renderMath }),
+    code: () => 'mathBlock({ render })',
+  },
   snippets: {
     make: () => core.CONFIGURE.snippets([{ trigger: 'sig', content: '— Nahim, Matra' }]),
     code: () => "snippets([{ trigger: 'sig', … }])",

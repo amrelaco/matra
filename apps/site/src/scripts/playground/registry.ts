@@ -111,6 +111,16 @@ export const SHEETS: Record<string, string> = {
   youtubeCSS: core.youtubeCSS,
 }
 
+/**
+ * The extensions the playground needs to call with options rather than take as
+ * they come. Named, like everything else here, so Rollup can still reason about
+ * the graph.
+ */
+export const REGISTRY_FACTORY = {
+  mathInline: core.mathInline,
+  mathBlock: core.mathBlock,
+}
+
 export const { createEditor } = core
 
 /**
