@@ -31,6 +31,7 @@ import Nav from '../components/Nav.astro'
 import Toolbar from '../components/Toolbar.astro'
 import Window from '../components/Window.astro'
 import facts from '../data/facts.json'
+import rivals from '../data/rivals.json'
 import sizes from '../data/sizes.json'
 import Base from '../layouts/Base.astro'
 
@@ -289,20 +290,40 @@ const smaller = Math.round(heaviest / (bundles[0]?.kb ?? 1))
  * for a runtime licence check gets the same tick Matra's does. A table that
  * only awards ticks to one column is not a table, it is a poster.
  */
-const GOOD = new Set(['none', 'inferred', 'built in', 'yes', 'free', 'never'])
+const GOOD = new Set(['none', 'inferred', 'built in', 'yes', 'free', 'never', 'first-class'])
 const BAD = new Set(['paid', 'build it', 'manual', 'no', 'augmentation'])
 const toneOf = (value: string) => (GOOD.has(value) ? 'good' : BAD.has(value) ? 'bad' : 'flat')
 
+/*
+ * Measured where it can be measured, and nothing claimed that is not true.
+ *
+ * Three rows here used to say Tiptap charges for a table of contents, unique
+ * block ids and a drag handle. That was true of Tiptap 2 and stopped being
+ * true of Tiptap 3, which publishes all three as MIT on the public registry —
+ * along with the file handler, emoji, details, invisible characters and
+ * mathematics. A fourth row said Tiptap cannot do Markdown without a DOM;
+ * `@tiptap/markdown` parses and serialises in bare Node, so that was wrong too.
+ * They are gone, and the dependency counts now come from `rivals.json`, which
+ * `scripts/rivals.mjs` writes by asking npm to resolve each install.
+ *
+ * What is left is what survives checking. Comments really are behind a Tiptap
+ * subscription; there really is no official Svelte or Solid binding.
+ */
+const packagesOf = (id: 'matra' | 'tiptap' | 'lexical' | 'slate') =>
+  String(rivals.editors[id].packages)
+const thirdPartyOf = (id: 'matra' | 'tiptap' | 'lexical' | 'slate') => {
+  const n = rivals.editors[id].thirdParty
+  return n === 0 ? 'none' : `${n} packages`
+}
+
 const compare = [
-  ['Runtime dependencies', 'none', '51 packages', '9 packages', 'React'],
+  ['Packages installed', ...(['matra', 'tiptap', 'lexical', 'slate'] as const).map(packagesOf)],
+  ['Third-party code', ...(['matra', 'tiptap', 'lexical', 'slate'] as const).map(thirdPartyOf)],
   ['Engine types in your code', 'none', 'ProseMirror', 'Lexical', 'Slate'],
   ['Command types', 'inferred', 'augmentation', 'manual', 'manual'],
   ['Async position safety', 'built in', 'manual', 'manual', 'manual'],
-  ['Markdown without a DOM', 'yes', 'no', 'no', 'no'],
-  ['Table of contents', 'free', 'paid', 'build it', 'build it'],
-  ['Unique block ids', 'free', 'paid', 'build it', 'build it'],
-  ['Drag handle', 'free', 'paid', 'build it', 'build it'],
   ['Comments', 'free', 'paid', 'build it', 'build it'],
+  ['Svelte and Solid bindings', 'first-class', 'community', 'community', 'community'],
   ['Runtime licence check', 'never', 'none', '·', '·'],
 ]
 
@@ -580,7 +601,7 @@ const coreGroups = groups.filter(([, , pkg]) => pkg === '@matrajs/core').length
       <Window name="messages" flush bleed="right">
         <div class="chat-log" id="chat-log">
           <div class="bubble them">Did the drag handle land?</div>
-          <div class="bubble me">It did · and it is free, which Tiptap's is not.</div>
+          <div class="bubble me">It did · and the whole editor is still 31 kB.</div>
         </div>
         <Fragment slot="foot">
           <div id="ed-chat" class="ed-chat"></div>
@@ -800,9 +821,12 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
       </div>
 
       <p class="foot-note">
-        Where they win: ProseMirror's ecosystem is a decade deep and Tiptap inherits all of it.
-        If you need a mature extension for something exotic today, they have it and this does
-        not.
+        <a href="/compare">The full comparison</a>, including what Tiptap does better · package
+        counts measured on {rivals.measured} by resolving each install with npm · Tiptap {
+          rivals.editors.tiptap.version
+        }, Lexical {rivals.editors.lexical.version}, Slate {rivals.editors.slate.version}. Where
+        they win: ProseMirror's ecosystem is a decade deep and Tiptap inherits all of it. If you
+        need a mature extension for something exotic today, they have it and this does not.
       </p>
     </div>
   </section>
@@ -917,6 +941,7 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     }
     .proof b {
       font-family: var(--font-display);
+      font-weight: var(--display-weight);
       font-size: 38px;
       line-height: 1;
       letter-spacing: -0.02em;
@@ -1037,6 +1062,7 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     }
     .meter b {
       font-family: var(--font-display);
+      font-weight: var(--display-weight);
       font-size: 38px;
       line-height: 1;
       color: var(--indigo);
@@ -1476,6 +1502,7 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     }
     .hang-name {
       font-family: var(--font-display);
+      font-weight: var(--display-weight);
       font-size: 21px;
       letter-spacing: -0.02em;
     }
@@ -1525,6 +1552,7 @@ editor.commands.toggleBold()<span class="c"> // typed, inferred</span></code></p
     }
     .group-name {
       font-family: var(--font-display);
+      font-weight: var(--display-weight);
       font-size: 24px;
       letter-spacing: -0.02em;
     }

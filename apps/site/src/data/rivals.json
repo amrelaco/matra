@@ -1,0 +1,104 @@
+{
+  "measured": "2026-09-07",
+  "editors": {
+    "matra": {
+      "label": "Matra",
+      "install": ["@matrajs/core", "@matrajs/react"],
+      "version": "1.0.3",
+      "resolved": 3,
+      "packages": 2,
+      "thirdParty": 0
+    },
+    "tiptap": {
+      "label": "Tiptap",
+      "install": ["@tiptap/react@3", "@tiptap/starter-kit@3", "@tiptap/pm@3"],
+      "version": "3.31.3",
+      "resolved": 57,
+      "packages": 50,
+      "thirdParty": 22
+    },
+    "lexical": {
+      "label": "Lexical",
+      "install": ["lexical", "@lexical/react"],
+      "version": "0.50.0",
+      "resolved": 38,
+      "packages": 34,
+      "thirdParty": 10
+    },
+    "slate": {
+      "label": "Slate",
+      "install": ["slate", "slate-react", "slate-history"],
+      "version": "0.126.2",
+      "resolved": 15,
+      "packages": 12,
+      "thirdParty": 8
+    }
+  },
+  "tiptap": {
+    "free": [
+      {
+        "name": "@tiptap/extension-table-of-contents",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-unique-id",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-drag-handle",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-file-handler",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-emoji",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-details",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-invisible-characters",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-mathematics",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-node-range",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-collaboration",
+        "license": "MIT",
+        "version": "3.31.3"
+      },
+      {
+        "name": "@tiptap/extension-collaboration-caret",
+        "license": "MIT",
+        "version": "3.31.3"
+      }
+    ],
+    "paid": [
+      "Comments",
+      "Snapshots and version history",
+      "AI Toolkit and AI Agent",
+      "Track changes",
+      "DOCX and ODT import and export",
+      "Pages (pagination)"
+    ]
+  }
+}

@@ -486,19 +486,25 @@ Everything in the box, and everything free unless marked.
 | **Writing** | placeholder, character count, text align, **indent**, **typography**, **emoji shortcodes**, **autolink**, **clear formatting**, **text case**, **invisible characters**, **selection highlight**, **typewriter scrolling**, **autosave**, **smart paste**, **hashtags** | smart quotes, dashes, arrows · `:tada:` · URLs link as you type · tab-separated text becomes a table |
 | **Finding** | **search and replace** | incremental: typing rescans one paragraph |
 | **Code** | **syntax highlighting** as decorations | a built-in tokeniser, or plug in Shiki, Prism or lowlight |
-| **Structure** | **table of contents**, **unique block ids**, **focus class**, **trailing node** | Tiptap charges for the first two |
+| **Structure** | **table of contents**, **unique block ids**, **focus class**, **trailing node** | derived from the document, never stored beside it |
 | **Interchange** | **Markdown in and out**, with no DOM | runs on a server |
-| **Dragging** | block drag and drop, **drag handle**, drop cursor, **files dropped or pasted** | Tiptap charges for the handle and the file handler |
-| **Review** | threaded comments anchored to ranges | Tiptap charges for these |
+| **Dragging** | block drag and drop, **drag handle**, drop cursor, **files dropped or pasted** | the drop cursor is in the engine, not an extension |
+| **Review** | threaded comments anchored to ranges | free here · Tiptap's Comments needs a subscription |
 | **Menus** | `@` mentions and `/` commands, detection only, **bubble and floating menus** for your element | the popup is yours |
 | **Assistance** | **ghost text** completion from any source, **dictation** through the browser's recogniser | Tab takes the suggestion; nothing is sent anywhere the browser does not already send it |
 | **Paid** | AI streaming, collaboration with remote cursors, version history | |
 
-Everything Tiptap puts behind its Pro tier that fits in a week — table of
-contents, unique ids, the drag handle, comments, the file handler, emoji,
-details — is free here. That is the deliberate shape of it: the things that
-take a week are free and drive adoption, and the ones that took months are
-what you pay for.
+Tiptap 3 moved most of its old Pro extensions to MIT — a table of contents,
+unique ids, the drag handle, the file handler, emoji, details, invisible
+characters and mathematics are all free there now, and it is worth saying so
+rather than repeating a comparison that was true of Tiptap 2. What is still
+behind a Tiptap subscription is comments, snapshots and version history, the
+AI toolkit, track changes, DOCX import and export, and pagination.
+
+Of those, comments are free here. Version history, collaboration and AI are
+the three packages this project charges for, and the shape is deliberate: the
+things that take a week are free and drive adoption, and the ones that took
+months are what you pay for.
 
 ### Adding one, step by step
 
@@ -546,21 +552,29 @@ Markdown on a server does not need a DOM polyfill.
 Measured, not asserted — see [BENCHMARKS.md](./BENCHMARKS.md) for the method and
 what the numbers are not.
 
+Package counts are what npm resolves for a React install of each, measured by
+[`scripts/rivals.mjs`](./scripts/rivals.mjs) on 2026-09-07 against Tiptap
+3.31.3, Lexical 0.50.0 and Slate 0.126.2, with React and `@types/*` left out
+of the count.
+
 | | Matra | Tiptap | Lexical | Slate |
 |---|---|---|---|---|
 | Bundle, gzipped | **31 kB** | 117 kB | ~35 kB | ~50 kB |
-| Runtime dependencies | **0** | 51 packages | few | several |
+| Packages installed | **2** | 50 | 34 | 12 |
+| Of those, third-party | **0** | 22 | 10 | 8 |
 | Engine types in your code | **none** | ProseMirror | Lexical | Slate |
 | Command types | **inferred** | module augmentation | manual | manual |
 | Async position safety | **built in** | manual | manual | manual |
-| Vue | **first-class** | community | none | community |
-| Svelte and Solid | **first-class** | community | none | community |
-| Markdown without a DOM | **yes** | no | no | no |
-| Table of contents | **free** | paid | build it | build it |
-| Unique block ids | **free** | paid | build it | build it |
-| Drag handle | **free** | paid | build it | build it |
-| Comments | **free** | paid | build it | build it |
+| Vue binding | first-class | first-class | community | community |
+| Svelte and Solid bindings | **first-class** | community | community | community |
+| Comments | **free** | subscription | build it | build it |
 | Runtime licence check or phone-home | **never** | none | n/a | n/a |
+
+Rows that used to be here and are no longer true: Tiptap 3 publishes its table
+of contents, unique ids, drag handle, file handler, emoji, details, invisible
+characters and mathematics extensions as MIT, and `@tiptap/markdown` parses and
+serialises Markdown in bare Node. Tiptap also ships an official Vue binding,
+which an earlier version of this table called community.
 
 Where the alternatives win, and it is worth saying so: ProseMirror's ecosystem
 is a decade deep and Tiptap inherits all of it, Lexical has been hardened by

@@ -12,8 +12,10 @@ minified, gzipped:
 | **Matra** | 94.6 kB | **31 kB** |
 | Tiptap 3.30 | 370.5 kB | 117.2 kB |
 
-**3.8× smaller.** Matra has no runtime dependencies; Tiptap brings ProseMirror,
-which is 51 packages in `node_modules`. The figure was 25 kB at 0.16; 1.0
+**3.8× smaller.** Matra has no runtime dependencies; a React install of Tiptap
+resolves 50 packages, 22 of them outside the `@tiptap` scope — mostly
+ProseMirror. Counted by [`scripts/rivals.mjs`](./scripts/rivals.mjs), which
+asks npm to resolve the install rather than trusting a number typed here. The figure was 25 kB at 0.16; 1.0
 spent 3.6 kB on the engine doing more — attributes one extension adds to
 another's nodes, paste and drop hooks, files and text dropped from outside,
 blocks inserted into the middle of a paragraph, decorations compared after

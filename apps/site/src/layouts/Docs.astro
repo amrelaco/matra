@@ -76,9 +76,54 @@ const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null
 const source = `https://github.com/amrelaco/matra/edit/main/apps/site/src/pages${
   here === '/docs' ? '/docs/index' : here
 }.astro`
+
+/**
+ * What this page is about, said in a form a machine can quote.
+ *
+ * The site-wide graph in `Base.astro` describes the product and repeats itself
+ * on all thirty pages. An answer engine asked "how do Matra commands work"
+ * needs to know that *this* page is the article about commands, and where it
+ * sits — so every docs page carries a `TechArticle` pointing at the software it
+ * documents, and the breadcrumbs that put it under /docs.
+ */
+const origin = (Astro.site ?? new URL('https://matrajs.com')).origin
+const canonical = new URL(`${here}${here.endsWith('/') ? '' : '/'}`, origin).href
+
+const crumbs = [
+  { name: 'Matra', item: `${origin}/` },
+  { name: 'Docs', item: `${origin}/docs/` },
+  ...(here === '/docs' ? [] : [{ name: heading, item: canonical }]),
+]
+
+const schema = [
+  {
+    '@type': 'TechArticle',
+    '@id': `${canonical}#article`,
+    headline: heading,
+    name: heading,
+    description,
+    url: canonical,
+    articleSection: section,
+    inLanguage: 'en',
+    isPartOf: { '@id': 'https://matrajs.com/#website' },
+    about: { '@id': 'https://matrajs.com/#software' },
+    author: { '@id': 'https://matrajs.com/#org' },
+    publisher: { '@id': 'https://matrajs.com/#org' },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${canonical}#breadcrumbs`,
+    itemListElement: crumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: crumb.item,
+    })),
+  },
+]
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} schema={schema}>
   <Nav />
   <!--
     The same ruled sheet as every other page: a section, with the rails running

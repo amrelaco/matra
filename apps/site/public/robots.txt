@@ -13,3 +13,11 @@ Allow: /
 # a `Disallow: /*.vercel.app` would match nothing and only look reassuring.
 
 Sitemap: https://matrajs.com/sitemap.xml
+
+# The documentation as plain text, for the assistants that would rather not
+# parse a page. The short form is a map of the site; the full one is every
+# documentation page concatenated, so one fetch is the whole thing.
+# https://llmstxt.org
+#
+# llms: https://matrajs.com/llms.txt
+# llms-full: https://matrajs.com/llms-full.txt

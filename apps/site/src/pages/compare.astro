@@ -1,0 +1,506 @@
+---
+import Footer from '../components/Footer.astro'
+import Head from '../components/Head.astro'
+import Nav from '../components/Nav.astro'
+import rivals from '../data/rivals.json'
+import sizes from '../data/sizes.json'
+import Base from '../layouts/Base.astro'
+
+/**
+ * The page somebody lands on after typing "Tiptap alternative".
+ *
+ * It is the hardest page on the site to write honestly, and the most valuable
+ * one to get right: an assistant asked to compare editors will quote whichever
+ * page states the differences plainly, and a page that only lists wins reads
+ * as marketing and gets ignored — or worse, gets quoted and turns out to be
+ * wrong. So the middle column here is what Tiptap has and this does not, and it
+ * is as long as the honest answer requires.
+ *
+ * Every number comes from a file something measured. `rivals.json` is written
+ * by `scripts/rivals.mjs`, which asks npm to resolve each install and asks the
+ * registry which Tiptap extensions are published under an open licence — the
+ * check that caught this site claiming Tiptap charges for a drag handle two
+ * major versions after it stopped doing so.
+ */
+const gz = (id: string) => sizes.rungs.find((rung) => rung.id === id)?.gz ?? 0
+
+const editors = ['matra', 'tiptap', 'lexical', 'slate'] as const
+type Editor = (typeof editors)[number]
+
+const row = (label: string, cells: Record<Editor, string>) => [
+  label,
+  ...editors.map((id) => cells[id]),
+]
+
+const table = [
+  row('Bundle, gzipped, starter kit', {
+    matra: `${gz('starter')} kB`,
+    tiptap: `${sizes.tiptap.starter} kB`,
+    lexical: '~35 kB',
+    slate: '~50 kB',
+  }),
+  row('Packages installed', {
+    matra: String(rivals.editors.matra.packages),
+    tiptap: String(rivals.editors.tiptap.packages),
+    lexical: String(rivals.editors.lexical.packages),
+    slate: String(rivals.editors.slate.packages),
+  }),
+  row('Of those, outside the editor’s own scope', {
+    matra: String(rivals.editors.matra.thirdParty),
+    tiptap: String(rivals.editors.tiptap.thirdParty),
+    lexical: String(rivals.editors.lexical.thirdParty),
+    slate: String(rivals.editors.slate.thirdParty),
+  }),
+  row('Engine underneath', {
+    matra: 'its own',
+    tiptap: 'ProseMirror',
+    lexical: 'its own',
+    slate: 'its own',
+  }),
+  row('Engine types in your code', {
+    matra: 'none',
+    tiptap: 'ProseMirror',
+    lexical: 'Lexical',
+    slate: 'Slate',
+  }),
+  row('Command types', {
+    matra: 'inferred',
+    tiptap: 'augmentation',
+    lexical: 'manual',
+    slate: 'manual',
+  }),
+  row('React binding', {
+    matra: 'first-class',
+    tiptap: 'first-class',
+    lexical: 'first-class',
+    slate: 'first-class',
+  }),
+  row('Vue binding', {
+    matra: 'first-class',
+    tiptap: 'first-class',
+    lexical: 'community',
+    slate: 'community',
+  }),
+  row('Svelte and Solid bindings', {
+    matra: 'first-class',
+    tiptap: 'community',
+    lexical: 'community',
+    slate: 'community',
+  }),
+  row('Threaded comments', {
+    matra: 'free',
+    tiptap: 'subscription',
+    lexical: 'build it',
+    slate: 'build it',
+  }),
+  row('Collaborative cursors', {
+    matra: 'free',
+    tiptap: 'free',
+    lexical: 'free',
+    slate: 'build it',
+  }),
+]
+
+const GOOD = new Set(['none', 'inferred', 'free', 'first-class', 'its own', '0'])
+const BAD = new Set(['subscription', 'build it', 'manual', 'augmentation'])
+const toneOf = (value: string) => (GOOD.has(value) ? 'good' : BAD.has(value) ? 'bad' : 'flat')
+
+/**
+ * Extension by extension.
+ *
+ * The Tiptap column was checked against the public registry on
+ * {rivals.measured}: an extension counts as free there if `@tiptap/extension-…`
+ * resolves under an open licence. Nine that were Pro in Tiptap 2 are MIT in
+ * Tiptap 3, which is why this list is shorter than it used to be.
+ */
+const shared = [
+  'bold, italic, strike, underline, code, link, highlight, subscript, superscript',
+  'colour, background, font family and size',
+  'headings, blockquote, code block, syntax highlighting, rules, hard breaks',
+  'bulleted, numbered and task lists',
+  'tables with header rows, spanning cells and Tab between them',
+  'images, YouTube, collapsible details',
+  'mentions and `/` menus, as detection you draw the popup for',
+  'bubble menu and floating menu positioning',
+  'placeholder, character count, focus class, trailing node, typography',
+  'drag handle, drop cursor, files dropped and pasted',
+  'find and replace, invisible characters, table of contents, unique block ids',
+  'inline and display maths',
+  'undo that groups by word',
+  'collaborative editing with remote cursors',
+]
+
+const onlyMatra = [
+  ['Callouts', 'A note, warning or tip with an emoji attribute that round-trips.'],
+  ['Columns', 'Two to six, as real nodes rather than a CSS class on a paragraph.'],
+  ['Footnotes', 'Numbered by position, renumbering as you watch, with the list at the foot.'],
+  ['Locked blocks', 'Blocks that refuse every change — a contract with fixed clauses.'],
+  ['Fields', 'Named blanks a template fills in, with no editor in the loop.'],
+  ['Snippets', 'Type a trigger and a phrase expands.'],
+  ['Page breaks', 'A labelled line on screen and a real break when printed.'],
+  ['Line height and text direction', 'Both as checked attributes, not style strings.'],
+  ['Block indent', 'An attribute on the block rather than a wrapper node invented to hold it.'],
+  ['Text case', 'Upper, lower, title and sentence case, one text node at a time.'],
+  ['Typewriter scrolling', 'The caret line stays put and the page moves.'],
+  ['Autosave', 'Debounced, with a dirty flag and a flush when the page is hidden.'],
+  ['Ghost text', 'Inline completion from any source, Tab to take it.'],
+  ['Dictation', 'The browser’s own recogniser, with nothing sent anywhere new.'],
+  ['Hashtags', 'A node, so `#release` stays a reference rather than styled text.'],
+  ['Keyboard keys', 'A `kbd` mark, for documentation that names a shortcut.'],
+  ['Image resize', 'A handle on the edge; the width lands in the HTML.'],
+  ['Allow-listed embeds', 'Any approved host in a sandboxed frame, refusing the rest.'],
+  ['Smart paste', 'Tab-separated text arrives as a table.'],
+  ['Threaded comments', 'Free here. Tiptap’s Comments needs a subscription.'],
+  ['An MCP server', 'The documentation, served to Claude, Cursor and Codex as a tool.'],
+]
+
+/**
+ * The column that makes the page worth reading.
+ *
+ * Written the way it would be written if a competitor were checking it, because
+ * one will. Nothing here is softened and nothing is left out to make the
+ * comparison look better.
+ */
+const onlyTiptap = [
+  [
+    'A gap cursor',
+    'A caret in a place no text can go — before a leading table, between two rules. Matra keeps a paragraph at the end of the document, which covers the common case and not the others.',
+  ],
+  ['An audio node', 'Tiptap ships one. Matra does not · it is about fifteen lines to write.'],
+  ['Ruby text', 'Furigana above CJK text.'],
+  [
+    'CRDT collaboration',
+    'Tiptap’s collaboration is Yjs, so it works offline, peer to peer, and with Hocuspocus, Liveblocks or PartyKit. Matra exchanges steps against a central authority, which is simpler to host and cannot merge two clients that were both offline.',
+  ],
+  [
+    'A UI component library',
+    'Tiptap ships styled React components. Matra ships none by design — the toolbars and menus on this site are examples to copy, not a package.',
+  ],
+  [
+    'Track changes',
+    'Suggested edits you accept or reject, with comment threads anchored to them. Tiptap sells it; Matra does not have it.',
+  ],
+  [
+    'DOCX and ODT import and export',
+    'Tiptap runs it as a cloud service. Matra reads and writes Markdown and HTML, and nothing else.',
+  ],
+  [
+    'Pagination',
+    'Page boundaries in the editor, with headers and footers. Matra has a page break node and no page model.',
+  ],
+  [
+    'A decade of ProseMirror behind it',
+    'Every exotic ProseMirror plugin works with Tiptap. Matra’s ecosystem is the extensions in the box.',
+  ],
+]
+
+const questions: [string, string][] = [
+  [
+    'Does Matra have collaborative cursors, like @tiptap/extension-collaboration-caret?',
+    'Yes. `@matrajs/collab` exports `remoteCursors()`, which draws everyone else’s caret and selection as decorations and maps their positions through your own edits, so a remote caret stays on the word it was on while you type in front of it. It ships with `colorFor()` for a stable per-person colour and a stylesheet you can replace. The difference from Tiptap is underneath: Tiptap’s collaboration is Yjs, a CRDT; Matra exchanges ProseMirror-style steps against a central authority you host. Matra’s is simpler to run and cannot merge two clients that were both offline for an hour.',
+  ],
+  [
+    'Is Matra a drop-in replacement for Tiptap?',
+    'No. The document model is the same shape — nodes, marks, a schema, positions as integers — so a document converts, but the API does not match. Extensions are plain objects rather than classes, commands are typed from the array you passed rather than from module augmentation, and there is no ProseMirror underneath to reach into. Moving a small editor across is an afternoon; moving one with custom node views and ProseMirror plugins is not.',
+  ],
+  [
+    'What does Tiptap have that Matra does not?',
+    'A gap cursor, an audio node, ruby text, CRDT collaboration through Yjs, a library of styled React components, and — behind a subscription — track changes, DOCX and ODT import and export, and pagination. Tiptap also inherits ProseMirror’s ecosystem, which is a decade deep. Everything else Tiptap publishes openly has an equivalent here.',
+  ],
+  [
+    'Is Matra smaller than Tiptap?',
+    `Yes, measurably. An application importing the editor and a starter kit, bundled with esbuild and gzipped, is ${gz('starter')} kB with Matra and ${sizes.tiptap.starter} kB with Tiptap ${sizes.tiptap.version}. A React install resolves ${rivals.editors.matra.packages} packages for Matra and ${rivals.editors.tiptap.packages} for Tiptap, of which ${rivals.editors.tiptap.thirdParty} are outside the @tiptap scope — mostly ProseMirror.`,
+  ],
+  [
+    'Does Matra use ProseMirror?',
+    'No. The document model, the transform system, position mapping and the view are its own, with no runtime dependencies at all. The ideas are ProseMirror’s and are credited as such; the code is not.',
+  ],
+  [
+    'Is Matra free?',
+    '`@matrajs/core` and every framework binding are MIT and stay that way, and that includes the extensions other editors charge for — threaded comments, a table of contents, unique block ids, the drag handle. Three packages are source-available and commercial: AI streaming edits, collaboration, and version history. They are free for evaluation, personal projects, education, charities, and organisations with fewer than three developers on the software.',
+  ],
+  [
+    'Matra or Lexical?',
+    `Lexical is Meta’s, has been hardened by Facebook-scale traffic, and has a first-class React story. It also has its own document model, so nothing transfers from a ProseMirror background, and a React install resolves ${rivals.editors.lexical.packages} packages. Matra is smaller, has Vue, Svelte and Solid bindings that are not community projects, and reads and writes Markdown in Node with no DOM.`,
+  ],
+  [
+    'Matra or Slate?',
+    'Slate gives you the least and asks the most: no schema to speak of, no extension model, and the editing behaviour is yours to write. That is the right trade when your document is nothing like a document. When it is a document, a schema and seventy-nine extensions save months.',
+  ],
+]
+
+const faq = {
+  '@type': 'FAQPage',
+  '@id': 'https://matrajs.com/compare/#faq',
+  mainEntity: questions.map(([question, answer]) => ({
+    '@type': 'Question',
+    name: question,
+    acceptedAnswer: { '@type': 'Answer', text: answer },
+  })),
+}
+
+const breadcrumbs = {
+  '@type': 'BreadcrumbList',
+  '@id': 'https://matrajs.com/compare/#breadcrumbs',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Matra', item: 'https://matrajs.com/' },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Comparison',
+      item: 'https://matrajs.com/compare/',
+    },
+  ],
+}
+---
+
+<Base
+  title="Matra vs Tiptap, Lexical and Slate | Matra"
+  description={`A measured comparison of Matra against Tiptap ${sizes.tiptap.version}, Lexical and Slate: bundle size, dependency counts, which extensions each one charges for, and an honest list of what Tiptap has that Matra does not.`}
+  schema={[faq, breadcrumbs]}
+>
+  <Nav />
+  <Head
+    kicker="Comparison"
+    title="Against the alternatives."
+    lede="Measured where it can be measured, and honest where it cannot. Including the column that says what the others do better."
+  />
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span>The numbers</p>
+      <h2>Four editors, one table.</h2>
+      <!-- data-static: the sweep would parse this into prose and lose the table. -->
+      <div class="scroll bleed" data-static>
+        <table class="cmp">
+          <thead>
+            <tr><th></th><th>Matra</th><th>Tiptap</th><th>Lexical</th><th>Slate</th></tr>
+          </thead>
+          <tbody>
+            {
+              table.map(([label, ...cells]) => (
+                <tr>
+                  <td>{label}</td>
+                  {cells.map((cell) => (
+                    <td>
+                      <span class={`mark ${toneOf(cell)}`}>{cell}</span>
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Bundle figures from <a href="/docs/benchmarks">the benchmarks</a>, gzipped. Package
+        counts measured on {rivals.measured} by asking npm to resolve a React install of each, with
+        React itself and <code>@types/*</code> left out · Tiptap {
+          rivals.editors.tiptap.version
+        }, Lexical {rivals.editors.lexical.version}, Slate {rivals.editors.slate.version}.
+        Reproduce it with <code>node scripts/rivals.mjs</code>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span>Extension by extension</p>
+      <h2>What both of them have.</h2>
+      <p class="lede">
+        Tiptap 3 moved most of its old Pro extensions to MIT. This list is shorter than it was,
+        and saying so is cheaper than being caught.
+      </p>
+      <ul class="shared">
+        {shared.map((item) => <li set:html={item.replace(/`([^`]+)`/g, '<code>$1</code>')} />)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="kicker"><span class="dot"></span>Only here</p>
+        <h3>What Matra has and Tiptap does not.</h3>
+        <dl class="pairs">
+          {
+            onlyMatra.map(([term, detail]) => (
+              <>
+                <>
+                  <dt>{term}</dt>
+                  <dd>{detail}</dd>
+                </>
+              </>
+            ))
+          }
+        </dl>
+      </div>
+      <div>
+        <p class="kicker"><span class="dot"></span>Only there</p>
+        <h3>What Tiptap has and Matra does not.</h3>
+        <dl class="pairs">
+          {
+            onlyTiptap.map(([term, detail]) => (
+              <>
+                <>
+                  <dt>{term}</dt>
+                  <dd>{detail}</dd>
+                </>
+              </>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span>Questions</p>
+      <h2>Answered plainly.</h2>
+      <div class="faq">
+        {
+          questions.map(([question, answer]) => (
+            <details>
+              <>
+                <summary>{question}</summary>
+                <p>{answer}</p>
+              </>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+
+  <style>
+    .dot {
+      width: 5px;
+      height: 5px;
+      background: var(--indigo);
+      display: inline-block;
+    }
+
+    .cmp {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14.5px;
+    }
+
+    .cmp th,
+    .cmp td {
+      padding: 10px 14px;
+      text-align: left;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .cmp th {
+      font-weight: 500;
+      color: var(--ink-faint);
+    }
+
+    /* The column the page is about, lifted off the ones beside it. */
+    .cmp td:nth-child(2),
+    .cmp th:nth-child(2) {
+      background-color: var(--surface);
+    }
+
+    .mark.good {
+      color: var(--indigo-deep);
+      font-weight: 500;
+    }
+
+    .mark.bad {
+      color: var(--ink-faint);
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--ink-faint);
+    }
+
+    .shared {
+      columns: 2;
+      column-gap: 40px;
+      margin: 20px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .shared li {
+      break-inside: avoid;
+      padding: 7px 0 7px 18px;
+      position: relative;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .shared li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: var(--indigo);
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 48px;
+    }
+
+    .pairs {
+      margin: 18px 0 0;
+    }
+
+    .pairs dt {
+      margin-top: 16px;
+      font-weight: 500;
+      color: var(--ink-strong);
+    }
+
+    .pairs dd {
+      margin: 4px 0 0;
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+
+    .faq details {
+      padding: 14px 0;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .faq summary {
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .faq p {
+      margin: 10px 0 0;
+      color: var(--ink-soft);
+      line-height: 1.7;
+      max-width: 68ch;
+    }
+
+    @media (max-width: 860px) {
+      .two {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+      }
+
+      .shared {
+        columns: 1;
+      }
+    }
+  </style>
+</Base>
