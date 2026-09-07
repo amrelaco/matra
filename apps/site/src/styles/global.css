@@ -2043,38 +2043,50 @@ html[data-theme-changing] {
  * the brand link in the header of every page.
  *
  * Deleting it and stopping there is the worse bug — a keyboard user needs to
- * know where they are. So it moves into the system instead: `--rule-strong`
- * goes indigo and every dashed edge on the control follows, because all four
- * gradients read that variable. That is the same device `:checked` and
- * `[aria-pressed]` already use here.
+ * know where they are. So it moves into the system instead.
+ */
+
+/*
+ * Every focusable thing: drop the ring, turn the dashes indigo.
  *
- * A link in a paragraph has no edges to recolour, so it takes a dashed
- * underline of its own — visible on a line of text, where a background tint
- * alone is not.
+ * This one declaration is the whole mechanism, now that the gradients are
+ * declared per element. Anything that draws an edge already reads
+ * `--rule-strong` for it — a prose link's underline, a ghost button's four
+ * sides, the docs pager's box — so each one lights up in its own shape
+ * without a single rule naming it.
  */
 :is(a, button, summary, input, select, textarea, [role="button"]):focus-visible {
   outline: none;
   --rule-strong: var(--indigo);
 }
 
-/* Anything with a box takes the wash; its dashes have already turned. */
-:is(button, summary, input, select, textarea, [role="button"]):focus-visible,
-a.btn:focus-visible {
+/*
+ * And a wash behind it, for the ones with no edge to turn: a nav link, a
+ * bare icon button.
+ *
+ * Nothing here touches `background-image`. The first version of this drew the
+ * underline itself by setting one, which works on a plain link and quietly
+ * destroys anything painting more than one layer — `.docs-pager-link` puts
+ * four gradients on an <a> to box it, and a single underline would have
+ * replaced all four. Recolouring is the only safe move; the shapes belong to
+ * whoever drew them.
+ */
+:is(a, button, summary, input, select, textarea, [role="button"]):not(.btn):focus-visible,
+.btn.ghost:focus-visible {
   background-color: var(--indigo-wash);
+  color: var(--indigo);
 }
 
 /*
- * Links, underlined rather than tinted.
+ * The filled button changes its fill, because it has neither.
  *
- * Last in the file on purpose: `.btn` is an <a> and sets its own four
- * gradients at the same specificity, so an earlier rule here would lose the
- * cascade to it and leave the site's main call to action with no focus state
- * at all.
+ * `.btn` is `--ink` behind `--paper`, with no dash anywhere on it to turn —
+ * and the wash above would have put near-white text on pale lavender and made
+ * the label vanish. Indigo is the state and `--paper` still reads on it, in
+ * both themes: cream on deep indigo in light, near-black on periwinkle in
+ * dark.
  */
-a:not(.btn):focus-visible {
-  color: var(--indigo);
-  background-image: var(--dash-h);
-  background-size: 100% 2px;
-  background-position: 0 100%;
-  background-repeat: no-repeat;
+.btn:not(.ghost):focus-visible {
+  background-color: var(--indigo);
+  color: var(--paper);
 }
