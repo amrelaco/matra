@@ -332,27 +332,11 @@ const CONFIGURED: Record<string, Configured> = {
     make: () => {
       const slash = core.CONFIGURE.suggestion({ char: '/', name: 'slash' })
       if (!selected.has('mention')) return [slash]
-
-      /*
-        The second instance gives up its commands, and that is a workaround.
-
-        `suggestion` documents that two of them on one editor need two names,
-        and two of them do work — separate state, separate decorations. What
-        does not work is the pair of commands they both declare:
-        `acceptSuggestion` and `cancelSuggestion` are not namespaced by the
-        extension's name, so the second instance trips the "two extensions both
-        define this command" guard and the whole editor refuses to build.
-
-        Dropping the duplicates leaves the first instance's pair standing, which
-        is the right answer anyway — only one suggestion can be open at a time.
-        The proper fix belongs in core, either by namespacing those two names or
-        by letting the generic pair act on whichever suggestion is active.
-      */
-      const at = core.CONFIGURE.suggestion({ char: '@', name: 'mention' }) as {
-        commands?: Record<string, unknown>
-      }
-      const { acceptSuggestion: _a, cancelSuggestion: _c, ...rest } = at.commands ?? {}
-      return [slash, { ...at, commands: rest }]
+      // Both instances, whole. The second used to have to give up its commands
+      // to build at all, because the pair they declared was not named after
+      // them; core names them now, so `slash` and `mention` each bring their
+      // own accept and cancel.
+      return [slash, core.CONFIGURE.suggestion({ char: '@', name: 'mention' })]
     },
     code: () =>
       selected.has('mention')

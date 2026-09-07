@@ -343,7 +343,8 @@ function keys(event: KeyboardEvent): void {
     case 'Escape':
       event.preventDefault()
       event.stopPropagation()
-      owner?.commands.cancelSuggestion?.()
+      // Named after the extension · every slash menu here is `name: 'slash'`.
+      owner?.commands.cancelSlash?.()
       hide()
       break
     default:

@@ -8,9 +8,17 @@
 import { describe, expect, it } from 'vitest'
 import { createEditor } from './editor'
 import { activeSuggestion, mention, starterKit, suggestion } from './extensions'
+import type { SuggestionOptions } from './extensions'
 import type { Pos } from './types'
 
-const build = (options: Parameters<typeof suggestion>[0] = { char: '@' }) => {
+/*
+  Typed without `name`, so the commands stay concretely `acceptSuggestion` and
+  `cancelSuggestion`. `Parameters<typeof suggestion>[0]` widens the name to
+  `string`, and the command names are derived from it — a `string` name gives a
+  template index signature rather than two known keys, which is correct and
+  useless here.
+*/
+const build = (options: Omit<SuggestionOptions, 'name'> = { char: '@' }) => {
   const editor = createEditor({
     extensions: [...starterKit, suggestion(options), mention()] as const,
     content: '<p></p>',
@@ -192,5 +200,68 @@ describe('the mention node', () => {
     // An atom has size one: there is no position inside it to delete into.
     expect(before).toBe(1)
     expect(editor.getJSON().content?.[0]?.content?.[0]?.type).toBe('mention')
+  })
+})
+
+/*
+  Two of them at once — a slash menu and a mention menu, which is what any
+  Notion-shaped editor needs and what this used to make impossible.
+*/
+describe('two suggestions on one editor', () => {
+  const both = () =>
+    createEditor({
+      extensions: [
+        ...starterKit,
+        suggestion({ char: '/', name: 'slash' }),
+        suggestion({ char: '@', name: 'mention' }),
+        mention(),
+      ] as const,
+      content: '<p></p>',
+    })
+
+  const write = (editor: ReturnType<typeof both>, text: string) => {
+    for (const character of text) {
+      const at = editor.getJSON().content?.[0]?.content?.[0]?.text?.length ?? 0
+      editor.commands.select((at + 1) as Pos)
+      editor.commands.insert({ type: 'text', text: character })
+    }
+  }
+
+  it('constructs, where it used to throw on a duplicate command', () => {
+    expect(() => both()).not.toThrow()
+  })
+
+  it('names each pair of commands after its own extension', () => {
+    const editor = both()
+    for (const name of ['acceptSlash', 'cancelSlash', 'acceptMention', 'cancelMention']) {
+      expect(typeof editor.commands[name as 'acceptSlash']).toBe('function')
+    }
+    // and not the generic pair, which now belongs to neither of them
+    expect(editor.commands).not.toHaveProperty('acceptSuggestion')
+  })
+
+  it('tracks the two independently', () => {
+    const editor = both()
+    write(editor, '@na')
+    expect(activeSuggestion(editor, 'mention')?.query).toBe('na')
+    expect(activeSuggestion(editor, 'slash')).toBeNull()
+  })
+
+  it('accepts through the command belonging to the open one', () => {
+    const editor = both()
+    write(editor, 'hi @na')
+    expect(
+      editor.commands.acceptMention({ type: 'mention', attrs: { id: 'u1', label: 'Nahim' } }),
+    ).toBe(true)
+    const inline = editor.getJSON().content?.[0]?.content
+    expect(inline?.[1]?.type).toBe('mention')
+  })
+
+  it('refuses the command whose suggestion is not open', () => {
+    const editor = both()
+    write(editor, '@na')
+    expect(editor.commands.acceptSlash({ type: 'text', text: 'x' })).toBe(false)
+    expect(editor.commands.cancelSlash()).toBe(false)
+    expect(editor.commands.cancelMention()).toBe(true)
   })
 })

@@ -188,7 +188,8 @@ function keys(event: KeyboardEvent): void {
     case 'Escape':
       event.preventDefault()
       event.stopPropagation()
-      owner?.commands.cancelSuggestion?.()
+      // The @ suggestion is `name: 'mention'`, so its cancel is named for it.
+      owner?.commands.cancelMention?.()
       hide()
       break
     default:

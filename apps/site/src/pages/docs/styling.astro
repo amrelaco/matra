@@ -109,8 +109,12 @@ document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]`}</code></
   <p>
     This is the one that catches people. <code>suggestion()</code> does not draw a menu. It watches
     for the trigger character, tracks the query as you type, exposes the range it covers, and gives
-    you <code>acceptSuggestion</code> and <code>cancelSuggestion</code>. What it hands you is a
-    piece of state:
+    you a pair of commands named after it · <code>acceptSlash</code> and <code>cancelSlash</code
+    >
+    for <code>suggestion(&#123; char: '/', name: 'slash' &#125;)</code>, and
+    <code>acceptSuggestion</code> and <code>cancelSuggestion</code> when you leave the name alone.
+    That is what lets a slash menu and an @ menu sit on one editor. What it hands you is a piece of
+    state:
   </p>
 
   <pre><code>{`import { activeSuggestion } from '@matrajs/core'

@@ -372,6 +372,28 @@ const CHECKS = [
     },
   },
   {
+    name: 'block colour',
+    covers: ['blockColor'],
+    run: (t) => {
+      t.set('<p>x</p>')
+      t.cmd('setBlockBackground', '#fdecc8')
+      must(t.html().includes('background-color: #fdecc8'), `background: ${t.html()}`)
+      must(t.html().includes('data-block-background'), `hook: ${t.html()}`)
+      t.cmd('setBlockColor', '#d44c47')
+      // Both on one block · the two globals compose rather than replace.
+      must(t.html().includes('color: #d44c47'), `colour: ${t.html()}`)
+      must(t.html().includes('background-color: #fdecc8'), `both: ${t.html()}`)
+      t.cmd('unsetBlockBackground')
+      must(!t.html().includes('background-color'), `background off: ${t.html()}`)
+      t.cmd('unsetBlockColors')
+      must(!t.html().includes('style='), `all off: ${t.html()}`)
+      // A style attribute is an injection surface · this has to be refused.
+      must(t.editor.commands.setBlockColor('red; background: url(x)') === false, 'refuses')
+      must(t.core.colorOf('#fdecc8') === '#fdecc8', 'colorOf')
+      must(t.core.colorOf('url(x)') === null, 'colorOf refuses')
+    },
+  },
+  {
     name: 'placeholder',
     covers: ['placeholder'],
     run: (t) => {

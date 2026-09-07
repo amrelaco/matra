@@ -2,7 +2,7 @@
 
 All packages share one version number and are released together.
 
-## Unreleased
+## 1.1.1 — 2026-09-08
 
 **`blockColor` · colour on the block, the way Notion means it.** `textStyle`
 already colours text, and a mark is the right model for three words in a
@@ -22,6 +22,18 @@ only the last to run reached the HTML. Centring a paragraph and then setting
 its line height silently dropped the centring — and since that HTML is what
 gets stored and parsed back, it was data leaving the document rather than a
 rendering quirk. Found while adding a fourth extension that renders a style.
+
+**A slash menu and an @ menu can finally sit on one editor.** `suggestion`
+documented that two of them need two names, and two of them did work — separate
+state, separate decorations. The pair of commands they declared did not:
+`acceptSuggestion` and `cancelSuggestion` were literals whatever the name was,
+so the second instance tripped the "two extensions both define the command"
+guard and the editor refused to build. The only way to have both was to strip
+the commands off one of them. The names are derived from the extension's name
+now — `suggestion({ char: '/', name: 'slash' })` brings `acceptSlash` and
+`cancelSlash`, and the default name yields exactly the two names it always did,
+so nothing that worked before reads differently. The types follow, so
+`editor.commands.cancelSlash` is known rather than guessed.
 
 **`colorOf` is exported, and is now the only thing that decides what a colour
 is.** The check had been copied into a second extension and a third was about

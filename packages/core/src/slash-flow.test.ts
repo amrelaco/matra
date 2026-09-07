@@ -17,7 +17,7 @@ import type { Pos } from './types'
 describe('driving a slash menu', () => {
   const open = (content = '<p></p>') => {
     const editor = createEditor({
-      extensions: [...starterKit, suggestion({ char: '/', name: 'slash' })],
+      extensions: [...starterKit, suggestion({ char: '/', name: 'slash' })] as const,
       content,
     })
     editor.mount(document.createElement('div'))
@@ -77,8 +77,10 @@ describe('driving a slash menu', () => {
     editor.commands.insert('/h')
     expect(activeSuggestion(editor, 'slash')).not.toBeNull()
 
-    const commands = editor.commands as unknown as Record<string, () => boolean>
-    commands.cancelSuggestion?.()
+    // Called straight off `editor.commands`, with no cast: if the name the
+    // extension derives ever stops being `cancelSlash`, this stops compiling
+    // rather than silently doing nothing.
+    editor.commands.cancelSlash()
     expect(activeSuggestion(editor, 'slash')).toBeNull()
 
     // An arrow key produces a transaction, and the menu must not come back.

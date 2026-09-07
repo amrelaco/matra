@@ -68,18 +68,40 @@ export interface SuggestionState {
  * marks exactly the text being replaced, so a `getBoundingClientRect` on it is
  * the anchor you want.
  */
-export function suggestion(options: SuggestionOptions): ExtensionDef<
-  {
-    acceptSuggestion: Command<[replacement: unknown]>
-    cancelSuggestion: Command
-  },
-  SuggestionStore
-> {
+/**
+ * The two commands one suggestion contributes, named after it.
+ *
+ * `suggestion({ char: '@' })` gives `acceptSuggestion` and `cancelSuggestion`,
+ * because the default name is `suggestion` and this is that rule applied to
+ * it. `suggestion({ char: '/', name: 'slash' })` gives `acceptSlash` and
+ * `cancelSlash`, and the two can therefore sit on one editor.
+ */
+export type SuggestionCommands<Name extends string> = {
+  [K in `accept${Capitalize<Name>}`]: Command<[replacement: unknown]>
+} & {
+  [K in `cancel${Capitalize<Name>}`]: Command
+}
+
+export function suggestion<Name extends string = 'suggestion'>(
+  options: SuggestionOptions & { name?: Name },
+): ExtensionDef<SuggestionCommands<Name>, SuggestionStore> {
   const char = options.char
-  const name = options.name ?? 'suggestion'
+  const name = (options.name ?? 'suggestion') as Name
   const maxLength = options.maxLength ?? 60
   const decorationClass = options.decorationClass ?? 'matra-suggestion'
   const CANCELLED = `${name}:cancelled`
+  /*
+    Commands are named after the extension, which is what makes two of these
+    possible at once. They used to be the literals `acceptSuggestion` and
+    `cancelSuggestion` whatever the name was, so a slash menu and a mention
+    menu on one editor threw at construction — `two extensions both define the
+    command` — and the only way to have both was to strip the commands off one
+    of them and drive it by hand. The default name yields exactly the old two
+    names, so nothing that worked before reads any differently.
+  */
+  const suffix = `${name.charAt(0).toUpperCase()}${name.slice(1)}` as Capitalize<Name>
+  const acceptName = `accept${suffix}` as const
+  const cancelName = `cancel${suffix}` as const
 
   return {
     kind: 'extension',
@@ -128,7 +150,7 @@ export function suggestion(options: SuggestionOptions): ExtensionDef<
        * Takes content rather than a string so a mention can be a node — a
        * mention that is only text is one a user can half-delete into nonsense.
        */
-      acceptSuggestion: (ctx, replacement) => {
+      [acceptName]: (ctx: Parameters<Command<[unknown]>>[0], replacement: unknown) => {
         const active = (engine(ctx).state.pluginState(name) as SuggestionStore | undefined)
           ?.active
         if (!active) return false
@@ -136,16 +158,21 @@ export function suggestion(options: SuggestionOptions): ExtensionDef<
         return ctx.replace(active.range, replacement as never)
       },
 
-      cancelSuggestion: (ctx) => {
+      [cancelName]: (ctx: Parameters<Command>[0]) => {
         const active = (engine(ctx).state.pluginState(name) as SuggestionStore | undefined)
           ?.active
         if (!active) return false
         engine(ctx).tr.setMeta(CANCELLED, true)
         return true
       },
-    },
+    } as SuggestionCommands<Name>,
 
-    keys: { Escape: 'cancelSuggestion' },
+    /*
+      Escape cancels whichever suggestion is open. Both instances bind it and
+      both return false when they are not the active one, so the binding that
+      matters is the one that answers.
+    */
+    keys: { Escape: cancelName },
   }
 }
 
