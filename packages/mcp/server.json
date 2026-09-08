@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.amrelaco/matra",
+  "title": "Matra",
+  "description": "The Matra rich text editor's documentation as an MCP server: every extension, command and API.",
+  "version": "1.1.1",
+  "websiteUrl": "https://matrajs.com/docs/mcp",
+  "repository": {
+    "url": "https://github.com/amrelaco/matra",
+    "source": "github",
+    "subfolder": "packages/mcp"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@matrajs/mcp",
+      "version": "1.1.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
