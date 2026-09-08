@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import extensionsApi from '../data/extensions-api.json'
 
 /**
  * The sitemap is generated from the pages that exist, not from a list someone
@@ -17,6 +18,19 @@ const pages = (
 
 /** Pages that exist for humans who took a wrong turn, not for the index. */
 const EXCLUDE = new Set(['/404/'])
+
+/**
+ * Routes the glob cannot resolve on its own.
+ *
+ * `import.meta.glob` sees source files, and a dynamic route is one file. The
+ * extension reference shipped `/docs/extension-reference/[slug]/` to Google as
+ * a literal URL — a 404 offered to a crawler, with the eighty-one real pages
+ * missing behind it. Dynamic routes are dropped below and their real paths
+ * added here, from the same data `getStaticPaths` builds them from.
+ */
+const DYNAMIC = extensionsApi.extensions.map(
+  (extension) => `/docs/extension-reference/${extension.importName}/`,
+)
 
 /**
  * Crawlers ration attention. These say where to spend it: the landing page and
@@ -54,9 +68,8 @@ export const GET: APIRoute = ({ site }) => {
   const origin = (site ?? new URL('https://matrajs.com')).origin
   const lastmod = new Date().toISOString().slice(0, 10)
 
-  const urls = Object.keys(pages)
-    .map(toRoute)
-    .filter((route) => !EXCLUDE.has(route))
+  const urls = [...Object.keys(pages).map(toRoute), ...DYNAMIC]
+    .filter((route) => !EXCLUDE.has(route) && !route.includes('['))
     .sort()
     .map(
       (route) => `  <url>
