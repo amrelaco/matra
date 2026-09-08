@@ -2090,3 +2090,56 @@ html[data-theme-changing] {
   background-color: var(--indigo);
   color: var(--paper);
 }
+
+/* --- the extension submenus ------------------------------------------------
+   A third level in the docs sidebar. Eighty-one links would bury the twenty
+   pages above them, so each kind collapses and only the group holding the
+   current page is open. */
+.docs-sub {
+  margin: 2px 0 2px 10px;
+}
+
+.docs-sub > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-faint);
+  padding: 4px 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.docs-sub > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Drawn rather than a glyph, so it turns with the disclosure. */
+.docs-sub > summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 120ms;
+}
+
+.docs-sub[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.docs-sub > summary:hover {
+  color: var(--ink);
+}
+
+.docs-sub-count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+
+.docs-sub > a {
+  padding-left: 15px;
+  font-size: 13px;
+}

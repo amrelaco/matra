@@ -243,7 +243,7 @@ const domOf = (def) => {
 }
 
 const describe = (exportName, def, { configurable }) => ({
-  export: exportName,
+  importName: exportName,
   name: def.name,
   kind: def.kind,
   dom: domOf(def),
@@ -279,7 +279,19 @@ for (const [exportName, value] of Object.entries(core)) {
   extensions.push(describe(exportName, def, { configurable: true }))
 }
 
-extensions.sort((a, b) => a.export.localeCompare(b.export))
+extensions.sort((a, b) => a.importName.localeCompare(b.importName))
+
+/**
+ * Kits list their members by the definition's own name, which is not always
+ * what you import: `document` is the export, `doc` is the node. The reference
+ * links by export name, so the two are reconciled here rather than leaving a
+ * page of links to routes that do not exist.
+ */
+const importNameOf = new Map(extensions.map((e) => [e.name, e.importName]))
+const kitsOut = [...kits].map(([name, members]) => ({
+  name,
+  members: members.map((m) => importNameOf.get(m) ?? m),
+}))
 
 const payload = {
   measured: new Date().toISOString().slice(0, 10),
@@ -290,7 +302,7 @@ const payload = {
     commands: new Set(extensions.flatMap((e) => e.commands)).size,
     documented: extensions.filter((e) => e.doc.length).length,
   },
-  kits: [...kits].map(([name, members]) => ({ name, members })),
+  kits: kitsOut,
   extensions,
 }
 
@@ -342,7 +354,7 @@ for (const kind of ['node', 'mark', 'extension']) {
   const items = extensions.filter((e) => e.kind === kind)
   md.push(`## ${KIND_TITLES[kind]}\n`)
   for (const e of items) {
-    md.push(`### ${e.export}\n`)
+    md.push(`### ${e.importName}\n`)
     const tags = [
       e.configurable ? 'takes options' : null,
       ...e.kits.map((k) => `in ${k}`),
@@ -356,7 +368,7 @@ for (const kind of ['node', 'mark', 'extension']) {
           : `${block.text}\n`,
       )
     }
-    md.push(`\`\`\`ts\nimport { ${e.export} } from '@matrajs/core'\n\`\`\`\n`)
+    md.push(`\`\`\`ts\nimport { ${e.importName} } from '@matrajs/core'\n\`\`\`\n`)
     if (e.options?.fields.length) {
       md.push('| Option | Type | |')
       md.push('| --- | --- | --- |')
@@ -407,5 +419,5 @@ console.log(
   `wrote ${out} · ${payload.counts.extensions} extensions, ${payload.counts.commands} commands, ${payload.counts.documented} with prose`,
 )
 
-const undocumented = extensions.filter((e) => !e.doc.length).map((e) => e.export)
+const undocumented = extensions.filter((e) => !e.doc.length).map((e) => e.importName)
 if (undocumented.length) console.log(`no doc comment: ${undocumented.join(', ')}`)

@@ -3,6 +3,7 @@ import { ArrowLeft02Icon, ArrowRight02Icon } from '@hugeicons/core-free-icons'
 import Footer from '../components/Footer.astro'
 import Icon from '../components/Icon.astro'
 import Nav from '../components/Nav.astro'
+import api from '../data/extensions-api.json'
 import Base from '../layouts/Base.astro'
 
 interface Props {
@@ -69,8 +70,34 @@ const nav = [
   ],
 ] as const
 
+/**
+ * The extension pages are a third level in the sidebar.
+ *
+ * Eighty-one flat links would bury the twenty pages above them, so they are
+ * grouped and collapsed, and only the group holding the current page is open.
+ * Built from the generated data for the same reason the pages are: a list typed
+ * here would drift from the extensions that actually ship.
+ */
+const { extensions } = api
+
+const EXT_BASE = '/docs/extension-reference'
+const extGroups = [
+  ['Nodes', 'node'],
+  ['Marks', 'mark'],
+  ['Behaviour', 'extension'],
+].map(([title, kind]) => ({
+  title,
+  items: extensions
+    .filter((e) => e.kind === kind)
+    .map((e) => [e.importName, `${EXT_BASE}/${e.importName}`] as [string, string]),
+}))
+
 const here = Astro.url.pathname.replace(/\/$/, '') || '/docs'
-const flat = nav.flatMap(([, items]) => items as unknown as [string, string][])
+const flat = nav.flatMap(([, items]) =>
+  (items as unknown as [string, string][]).flatMap((item) =>
+    item[1] === EXT_BASE ? [item, ...extGroups.flatMap((g) => g.items)] : [item],
+  ),
+)
 const index = flat.findIndex(([, href]) => href === here)
 const previous = index > 0 ? flat[index - 1] : null
 const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : null
@@ -140,13 +167,32 @@ const schema = [
             <div class="docs-group">
               <div class="docs-group-name mono">{group}</div>
               {items.map(([label, href]) => (
-                <a
-                  href={href}
-                  class={href === here ? 'on' : ''}
-                  aria-current={href === here ? 'page' : undefined}
-                >
-                  {label}
-                </a>
+                <>
+                  <a
+                    href={href}
+                    class={href === here ? 'on' : ''}
+                    aria-current={href === here ? 'page' : undefined}
+                  >
+                    {label}
+                  </a>
+                  {href === EXT_BASE &&
+                    extGroups.map((sub) => (
+                      <details class="docs-sub" open={sub.items.some(([, h]) => h === here)}>
+                        <summary>
+                          {sub.title} <span class="docs-sub-count">{sub.items.length}</span>
+                        </summary>
+                        {sub.items.map(([subLabel, subHref]) => (
+                          <a
+                            href={subHref}
+                            class={subHref === here ? 'on' : ''}
+                            aria-current={subHref === here ? 'page' : undefined}
+                          >
+                            {subLabel}
+                          </a>
+                        ))}
+                      </details>
+                    ))}
+                </>
               ))}
             </div>
           ))

@@ -29,7 +29,7 @@ A kit is an array of definitions, spread with `...`.
 
 - `columnsKit` — `columnList`, `column`
 - `detailsKit` — `details`, `detailsSummary`
-- `starterKit` — `doc`, `paragraph`, `text`, `heading`, `blockquote`, `codeBlock`, `bulletList`, `orderedList`, `listItem`, `horizontalRule`, `hardBreak`, `bold`, `italic`, `strike`, `code`, `link`, `history`
+- `starterKit` — `document`, `paragraph`, `text`, `heading`, `blockquote`, `codeBlock`, `bulletList`, `orderedList`, `listItem`, `horizontalRule`, `hardBreak`, `bold`, `italic`, `strike`, `code`, `link`, `history`
 - `tableKit` — `table`, `tableRow`, `tableCell`, `tableHeader`
 
 ## Nodes

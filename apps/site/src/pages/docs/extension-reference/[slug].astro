@@ -1,0 +1,298 @@
+---
+import api from '../../../data/extensions-api.json'
+import Docs from '../../../layouts/Docs.astro'
+
+/**
+ * One page per extension.
+ *
+ * These were one page of eighty-one entries, which is the right shape for a
+ * crawler and the wrong one for a person: nobody scrolls past sixty extensions
+ * to read about the one they came for. The single page survives as the index —
+ * it is still what `llms-full.txt` and the MCP server carry, because a reader
+ * that fetches once wants everything in that fetch.
+ *
+ * Nothing here is written by hand either. `scripts/extension-api.mjs` produces
+ * the data; this renders one route from each entry.
+ */
+export function getStaticPaths() {
+  return api.extensions.map((extension) => ({
+    params: { slug: extension.importName },
+    props: { extension },
+  }))
+}
+
+const { extension: e } = Astro.props
+
+const KIND_LABEL = { node: 'Node', mark: 'Mark', extension: 'Behaviour' } as const
+
+/** The first sentence of the prose, or a fact about the definition instead. */
+function summarise(): string {
+  const first = e.doc.find((block) => block.type === 'text')
+  if (first) return first.text
+  const bits: string[] = []
+  if (e.dom.parses.length) bits.push(`Parses ${e.dom.parses.join(', ')}`)
+  if (e.dom.renders) bits.push(`renders ${e.dom.renders}`)
+  if (bits.length) return `${bits.join(' · ')}.`
+  return `A ${KIND_LABEL[e.kind].toLowerCase()} in @matrajs/core.`
+}
+
+const summary = summarise()
+
+const call = e.configurable ? `${e.importName}({ … })` : e.importName
+---
+
+<Docs
+  title={`${e.importName} | Matra extensions`}
+  description={`${e.importName} · ${summary}`}
+  section="Every extension"
+  heading={e.importName}
+>
+  <p class="tags" data-static>
+    <span class="tag">{KIND_LABEL[e.kind]}</span>
+    {e.configurable && <span class="tag">takes options</span>}
+    {e.kits.map((k) => <span class="tag soft">in {k}</span>)}
+    {e.gz != null && <span class="tag soft">{e.gz} kB gzipped</span>}
+  </p>
+
+  {
+    e.doc.length ? (
+      e.doc.map((block) =>
+        block.type === 'code' ? (
+          <pre>
+            <code set:text={block.text} />
+          </pre>
+        ) : (
+          <p set:text={block.text} />
+        ),
+      )
+    ) : (
+      <p>{summary}</p>
+    )
+  }
+
+  <h2>Adding it</h2>
+  <pre><code>{`import { createEditor, document, paragraph, text, ${e.importName} } from '@matrajs/core'
+
+const editor = createEditor({
+  extensions: [document, paragraph, text, ${call}],
+  element: document.querySelector('#editor'),
+})`}</code></pre>
+  <p>
+    There is no separate package · <code>{e.importName}</code> is already in <code
+      >@matrajs/core</code
+    >, and an extension you do not import is not in your bundle. <code>document</code>, <code
+      >paragraph</code
+    > and <code>text</code> are the floor every document needs.
+  </p>
+
+  {
+    e.options?.fields.length ? (
+      <>
+        <h2>Options</h2>
+        <div class="scroll" data-static>
+          <table class="ref">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {e.options.fields.map((f) => (
+                <tr>
+                  <td>
+                    <code>{f.name}</code>
+                    {f.required && <span class="req">required</span>}
+                  </td>
+                  <td>
+                    <code class="type">{f.type}</code>
+                  </td>
+                  <td class="fdoc">
+                    {f.doc
+                      .filter((b) => b.type === 'text')
+                      .map((b) => b.text)
+                      .join(' ')}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    ) : null
+  }
+
+  {
+    e.commands.length ? (
+      <>
+        <h2>Commands</h2>
+        <ul data-static>
+          {e.commands.map((c) => (
+            <li>
+              <code>editor.commands.{c}()</code>
+            </li>
+          ))}
+        </ul>
+      </>
+    ) : null
+  }
+
+  {
+    e.keys.length ? (
+      <>
+        <h2>Keys</h2>
+        <ul data-static>
+          {e.keys.map((k) => (
+            <li>
+              <kbd>{k.combo}</kbd> · <code>{k.command}</code>
+            </li>
+          ))}
+        </ul>
+      </>
+    ) : null
+  }
+
+  {
+    e.attrs.length ? (
+      <>
+        <h2>Attributes</h2>
+        <ul data-static>
+          {e.attrs.map((a) => (
+            <li>
+              <code>{a.name}</code>
+              {a.default != null && (
+                <>
+                  {' '}
+                  · defaults to <code>{JSON.stringify(a.default)}</code>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      </>
+    ) : null
+  }
+
+  {
+    e.dom.parses.length || e.dom.renders ? (
+      <>
+        <h2>HTML</h2>
+        <ul data-static>
+          {e.dom.parses.length ? (
+            <li>
+              Parses{' '}
+              {e.dom.parses.map((t) => (
+                <code>{t}</code>
+              ))}
+            </li>
+          ) : null}
+          {e.dom.renders ? (
+            <li>
+              Renders <code>{e.dom.renders}</code>
+            </li>
+          ) : null}
+        </ul>
+      </>
+    ) : null
+  }
+
+  {
+    e.css ? (
+      <>
+        <h2>Styles</h2>
+        <p>
+          This one needs a stylesheet to look right, and ships the minimum as a string rather
+          than a file · nothing is loaded unless you load it.
+        </p>
+        <pre>
+          <code>{`import { ${e.css} } from '@matrajs/core'
+
+const style = document.createElement('style')
+style.textContent = ${e.css}
+document.head.append(style)`}</code>
+        </pre>
+      </>
+    ) : null
+  }
+
+  <p class="back">
+    <a href="/docs/extension-reference">← All {api.counts.extensions} extensions</a>
+  </p>
+
+  <style>
+    .tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 0;
+    }
+
+    .tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--indigo-deep);
+      padding: 3px 7px;
+      background-color: var(--surface);
+    }
+
+    .tag.soft {
+      color: var(--ink-faint);
+    }
+
+    .scroll {
+      overflow-x: auto;
+      margin-top: var(--s3);
+    }
+
+    .ref {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .ref th,
+    .ref td {
+      padding: 9px 14px 9px 0;
+      text-align: left;
+      vertical-align: top;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .ref th {
+      font-weight: 500;
+      color: var(--ink-faint);
+      font-size: 12.5px;
+    }
+
+    .req {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      margin-left: 8px;
+    }
+
+    .type,
+    .fdoc {
+      color: var(--ink-soft);
+    }
+
+    .fdoc {
+      font-size: 13.5px;
+      line-height: 1.6;
+      max-width: 46ch;
+    }
+
+    .back {
+      margin-top: var(--s4);
+      font-size: 14px;
+    }
+  </style>
+</Docs>

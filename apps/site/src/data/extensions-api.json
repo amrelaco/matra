@@ -19,7 +19,7 @@
     {
       "name": "starterKit",
       "members": [
-        "doc",
+        "document",
         "paragraph",
         "text",
         "heading",
@@ -45,7 +45,7 @@
   ],
   "extensions": [
     {
-      "export": "autolink",
+      "importName": "autolink",
       "name": "autolink",
       "kind": "extension",
       "dom": {
@@ -100,7 +100,7 @@
       ]
     },
     {
-      "export": "autosave",
+      "importName": "autosave",
       "name": "autosave",
       "kind": "extension",
       "dom": {
@@ -201,7 +201,7 @@
       ]
     },
     {
-      "export": "blockColor",
+      "importName": "blockColor",
       "name": "blockColor",
       "kind": "extension",
       "dom": {
@@ -253,7 +253,7 @@
       ]
     },
     {
-      "export": "blockquote",
+      "importName": "blockquote",
       "name": "blockquote",
       "kind": "node",
       "dom": {
@@ -282,7 +282,7 @@
       "doc": []
     },
     {
-      "export": "bold",
+      "importName": "bold",
       "name": "bold",
       "kind": "mark",
       "dom": {
@@ -307,7 +307,7 @@
       "doc": []
     },
     {
-      "export": "bubbleMenu",
+      "importName": "bubbleMenu",
       "name": "bubbleMenu",
       "kind": "extension",
       "dom": {
@@ -384,7 +384,7 @@
       ]
     },
     {
-      "export": "bulletList",
+      "importName": "bulletList",
       "name": "bulletList",
       "kind": "node",
       "dom": {
@@ -409,7 +409,7 @@
       "doc": []
     },
     {
-      "export": "callout",
+      "importName": "callout",
       "name": "callout",
       "kind": "node",
       "dom": {
@@ -452,7 +452,7 @@
       ]
     },
     {
-      "export": "characterCount",
+      "importName": "characterCount",
       "name": "characterCount",
       "kind": "extension",
       "dom": {
@@ -500,7 +500,7 @@
       ]
     },
     {
-      "export": "clearFormatting",
+      "importName": "clearFormatting",
       "name": "clearFormatting",
       "kind": "extension",
       "dom": {
@@ -534,7 +534,7 @@
       ]
     },
     {
-      "export": "code",
+      "importName": "code",
       "name": "code",
       "kind": "mark",
       "dom": {
@@ -559,7 +559,7 @@
       "doc": []
     },
     {
-      "export": "codeBlock",
+      "importName": "codeBlock",
       "name": "codeBlock",
       "kind": "node",
       "dom": {
@@ -589,7 +589,7 @@
       "doc": []
     },
     {
-      "export": "codeHighlight",
+      "importName": "codeHighlight",
       "name": "codeHighlight",
       "kind": "extension",
       "dom": {
@@ -644,7 +644,7 @@
       ]
     },
     {
-      "export": "column",
+      "importName": "column",
       "name": "column",
       "kind": "node",
       "dom": {
@@ -669,7 +669,7 @@
       ]
     },
     {
-      "export": "columnList",
+      "importName": "columnList",
       "name": "columnList",
       "kind": "node",
       "dom": {
@@ -707,7 +707,7 @@
       ]
     },
     {
-      "export": "comment",
+      "importName": "comment",
       "name": "comment",
       "kind": "mark",
       "dom": {
@@ -745,7 +745,7 @@
       ]
     },
     {
-      "export": "core",
+      "importName": "core",
       "name": "core",
       "kind": "extension",
       "dom": {
@@ -774,7 +774,7 @@
       ]
     },
     {
-      "export": "details",
+      "importName": "details",
       "name": "details",
       "kind": "node",
       "dom": {
@@ -812,7 +812,7 @@
       ]
     },
     {
-      "export": "detailsSummary",
+      "importName": "detailsSummary",
       "name": "detailsSummary",
       "kind": "node",
       "dom": {
@@ -837,7 +837,7 @@
       ]
     },
     {
-      "export": "dictation",
+      "importName": "dictation",
       "name": "dictation",
       "kind": "extension",
       "dom": {
@@ -918,7 +918,7 @@
       ]
     },
     {
-      "export": "document",
+      "importName": "document",
       "name": "doc",
       "kind": "node",
       "dom": {
@@ -938,7 +938,7 @@
       "doc": []
     },
     {
-      "export": "dragHandle",
+      "importName": "dragHandle",
       "name": "dragHandle",
       "kind": "extension",
       "dom": {
@@ -997,7 +997,7 @@
       ]
     },
     {
-      "export": "embed",
+      "importName": "embed",
       "name": "embed",
       "kind": "node",
       "dom": {
@@ -1058,7 +1058,7 @@
       ]
     },
     {
-      "export": "emoji",
+      "importName": "emoji",
       "name": "emoji",
       "kind": "extension",
       "dom": {
@@ -1113,7 +1113,7 @@
       ]
     },
     {
-      "export": "field",
+      "importName": "field",
       "name": "field",
       "kind": "node",
       "dom": {
@@ -1155,7 +1155,7 @@
       ]
     },
     {
-      "export": "fileHandler",
+      "importName": "fileHandler",
       "name": "fileHandler",
       "kind": "extension",
       "dom": {
@@ -1216,7 +1216,7 @@
       ]
     },
     {
-      "export": "floatingMenu",
+      "importName": "floatingMenu",
       "name": "floatingMenu",
       "kind": "extension",
       "dom": {
@@ -1283,7 +1283,7 @@
       ]
     },
     {
-      "export": "focus",
+      "importName": "focus",
       "name": "focus",
       "kind": "extension",
       "dom": {
@@ -1338,7 +1338,7 @@
       ]
     },
     {
-      "export": "footnote",
+      "importName": "footnote",
       "name": "footnote",
       "kind": "node",
       "dom": {
@@ -1368,7 +1368,7 @@
       ]
     },
     {
-      "export": "footnoteRef",
+      "importName": "footnoteRef",
       "name": "footnoteRef",
       "kind": "node",
       "dom": {
@@ -1402,7 +1402,7 @@
       ]
     },
     {
-      "export": "footnotes",
+      "importName": "footnotes",
       "name": "footnotes",
       "kind": "node",
       "dom": {
@@ -1427,7 +1427,7 @@
       ]
     },
     {
-      "export": "footnotesKit",
+      "importName": "footnotesKit",
       "name": "footnoteRef",
       "kind": "node",
       "dom": {
@@ -1466,7 +1466,7 @@
       ]
     },
     {
-      "export": "ghostText",
+      "importName": "ghostText",
       "name": "ghostText",
       "kind": "extension",
       "dom": {
@@ -1560,7 +1560,7 @@
       ]
     },
     {
-      "export": "hardBreak",
+      "importName": "hardBreak",
       "name": "hardBreak",
       "kind": "node",
       "dom": {
@@ -1585,7 +1585,7 @@
       "doc": []
     },
     {
-      "export": "hashtag",
+      "importName": "hashtag",
       "name": "hashtag",
       "kind": "node",
       "dom": {
@@ -1645,7 +1645,7 @@
       ]
     },
     {
-      "export": "heading",
+      "importName": "heading",
       "name": "heading",
       "kind": "node",
       "dom": {
@@ -1689,7 +1689,7 @@
       "doc": []
     },
     {
-      "export": "highlight",
+      "importName": "highlight",
       "name": "highlight",
       "kind": "mark",
       "dom": {
@@ -1719,7 +1719,7 @@
       "doc": []
     },
     {
-      "export": "history",
+      "importName": "history",
       "name": "history",
       "kind": "extension",
       "dom": {
@@ -1748,7 +1748,7 @@
       ]
     },
     {
-      "export": "horizontalRule",
+      "importName": "horizontalRule",
       "name": "horizontalRule",
       "kind": "node",
       "dom": {
@@ -1768,7 +1768,7 @@
       "doc": []
     },
     {
-      "export": "image",
+      "importName": "image",
       "name": "image",
       "kind": "node",
       "dom": {
@@ -1801,7 +1801,7 @@
       "doc": []
     },
     {
-      "export": "imageResize",
+      "importName": "imageResize",
       "name": "imageResize",
       "kind": "extension",
       "dom": {
@@ -1856,7 +1856,7 @@
       ]
     },
     {
-      "export": "indent",
+      "importName": "indent",
       "name": "indent",
       "kind": "extension",
       "dom": {
@@ -1931,7 +1931,7 @@
       ]
     },
     {
-      "export": "invisibleCharacters",
+      "importName": "invisibleCharacters",
       "name": "invisibleCharacters",
       "kind": "extension",
       "dom": {
@@ -1988,7 +1988,7 @@
       ]
     },
     {
-      "export": "italic",
+      "importName": "italic",
       "name": "italic",
       "kind": "mark",
       "dom": {
@@ -2013,7 +2013,7 @@
       "doc": []
     },
     {
-      "export": "kbd",
+      "importName": "kbd",
       "name": "kbd",
       "kind": "mark",
       "dom": {
@@ -2047,7 +2047,7 @@
       ]
     },
     {
-      "export": "lineHeight",
+      "importName": "lineHeight",
       "name": "lineHeight",
       "kind": "extension",
       "dom": {
@@ -2081,7 +2081,7 @@
       ]
     },
     {
-      "export": "link",
+      "importName": "link",
       "name": "link",
       "kind": "mark",
       "dom": {
@@ -2114,7 +2114,7 @@
       "doc": []
     },
     {
-      "export": "listItem",
+      "importName": "listItem",
       "name": "listItem",
       "kind": "node",
       "dom": {
@@ -2147,7 +2147,7 @@
       "doc": []
     },
     {
-      "export": "locked",
+      "importName": "locked",
       "name": "locked",
       "kind": "extension",
       "dom": {
@@ -2203,7 +2203,7 @@
       ]
     },
     {
-      "export": "mathBlock",
+      "importName": "mathBlock",
       "name": "mathBlock",
       "kind": "node",
       "dom": {
@@ -2237,7 +2237,7 @@
       ]
     },
     {
-      "export": "mathInline",
+      "importName": "mathInline",
       "name": "mathInline",
       "kind": "node",
       "dom": {
@@ -2275,7 +2275,7 @@
       ]
     },
     {
-      "export": "mathKit",
+      "importName": "mathKit",
       "name": "mathInline",
       "kind": "node",
       "dom": {
@@ -2305,7 +2305,7 @@
       ]
     },
     {
-      "export": "mention",
+      "importName": "mention",
       "name": "mention",
       "kind": "node",
       "dom": {
@@ -2379,7 +2379,7 @@
       ]
     },
     {
-      "export": "orderedList",
+      "importName": "orderedList",
       "name": "orderedList",
       "kind": "node",
       "dom": {
@@ -2409,7 +2409,7 @@
       "doc": []
     },
     {
-      "export": "pageBreak",
+      "importName": "pageBreak",
       "name": "pageBreak",
       "kind": "node",
       "dom": {
@@ -2447,7 +2447,7 @@
       ]
     },
     {
-      "export": "paragraph",
+      "importName": "paragraph",
       "name": "paragraph",
       "kind": "node",
       "dom": {
@@ -2472,7 +2472,7 @@
       "doc": []
     },
     {
-      "export": "placeholder",
+      "importName": "placeholder",
       "name": "placeholder",
       "kind": "extension",
       "dom": {
@@ -2522,7 +2522,7 @@
       ]
     },
     {
-      "export": "search",
+      "importName": "search",
       "name": "search",
       "kind": "extension",
       "dom": {
@@ -2604,7 +2604,7 @@
       ]
     },
     {
-      "export": "selectionHighlight",
+      "importName": "selectionHighlight",
       "name": "selectionHighlight",
       "kind": "extension",
       "dom": {
@@ -2690,7 +2690,7 @@
       ]
     },
     {
-      "export": "smartPaste",
+      "importName": "smartPaste",
       "name": "smartPaste",
       "kind": "extension",
       "dom": {
@@ -2771,7 +2771,7 @@
       ]
     },
     {
-      "export": "strike",
+      "importName": "strike",
       "name": "strike",
       "kind": "mark",
       "dom": {
@@ -2796,7 +2796,7 @@
       "doc": []
     },
     {
-      "export": "subscript",
+      "importName": "subscript",
       "name": "subscript",
       "kind": "mark",
       "dom": {
@@ -2816,7 +2816,7 @@
       "doc": []
     },
     {
-      "export": "suggestion",
+      "importName": "suggestion",
       "name": "suggestion",
       "kind": "extension",
       "dom": {
@@ -2911,7 +2911,7 @@
       "doc": []
     },
     {
-      "export": "superscript",
+      "importName": "superscript",
       "name": "superscript",
       "kind": "mark",
       "dom": {
@@ -2931,7 +2931,7 @@
       "doc": []
     },
     {
-      "export": "table",
+      "importName": "table",
       "name": "table",
       "kind": "node",
       "dom": {
@@ -2972,7 +2972,7 @@
       "doc": []
     },
     {
-      "export": "tableCell",
+      "importName": "tableCell",
       "name": "tableCell",
       "kind": "node",
       "dom": {
@@ -3005,7 +3005,7 @@
       "doc": []
     },
     {
-      "export": "tableHeader",
+      "importName": "tableHeader",
       "name": "tableHeader",
       "kind": "node",
       "dom": {
@@ -3038,7 +3038,7 @@
       "doc": []
     },
     {
-      "export": "tableRow",
+      "importName": "tableRow",
       "name": "tableRow",
       "kind": "node",
       "dom": {
@@ -3058,7 +3058,7 @@
       "doc": []
     },
     {
-      "export": "taskItem",
+      "importName": "taskItem",
       "name": "taskItem",
       "kind": "node",
       "dom": {
@@ -3100,7 +3100,7 @@
       "doc": []
     },
     {
-      "export": "taskList",
+      "importName": "taskList",
       "name": "taskList",
       "kind": "node",
       "dom": {
@@ -3134,7 +3134,7 @@
       ]
     },
     {
-      "export": "text",
+      "importName": "text",
       "name": "text",
       "kind": "node",
       "dom": {
@@ -3154,7 +3154,7 @@
       "doc": []
     },
     {
-      "export": "textAlign",
+      "importName": "textAlign",
       "name": "textAlign",
       "kind": "extension",
       "dom": {
@@ -3193,7 +3193,7 @@
       ]
     },
     {
-      "export": "textDirection",
+      "importName": "textDirection",
       "name": "textDirection",
       "kind": "extension",
       "dom": {
@@ -3257,7 +3257,7 @@
       ]
     },
     {
-      "export": "textStyle",
+      "importName": "textStyle",
       "name": "textStyle",
       "kind": "mark",
       "dom": {
@@ -3313,7 +3313,7 @@
       ]
     },
     {
-      "export": "textTransform",
+      "importName": "textTransform",
       "name": "textTransform",
       "kind": "extension",
       "dom": {
@@ -3346,7 +3346,7 @@
       ]
     },
     {
-      "export": "trailingNode",
+      "importName": "trailingNode",
       "name": "trailingNode",
       "kind": "extension",
       "dom": {
@@ -3390,7 +3390,7 @@
       ]
     },
     {
-      "export": "typewriter",
+      "importName": "typewriter",
       "name": "typewriter",
       "kind": "extension",
       "dom": {
@@ -3465,7 +3465,7 @@
       ]
     },
     {
-      "export": "typography",
+      "importName": "typography",
       "name": "typography",
       "kind": "extension",
       "dom": {
@@ -3485,7 +3485,7 @@
       "doc": []
     },
     {
-      "export": "underline",
+      "importName": "underline",
       "name": "underline",
       "kind": "mark",
       "dom": {
@@ -3510,7 +3510,7 @@
       "doc": []
     },
     {
-      "export": "uniqueId",
+      "importName": "uniqueId",
       "name": "uniqueId",
       "kind": "extension",
       "dom": {
@@ -3576,7 +3576,7 @@
       ]
     },
     {
-      "export": "youtube",
+      "importName": "youtube",
       "name": "youtube",
       "kind": "node",
       "dom": {

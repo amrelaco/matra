@@ -18,6 +18,37 @@ import { join, resolve } from 'node:path'
 const ROOT = resolve(import.meta.dirname, '..')
 const OUT = join(ROOT, 'packages/mcp/docs')
 const SITE_DOCS = join(ROOT, 'apps/site/src/pages/docs')
+const SITE_DIST = join(ROOT, 'apps/site/dist/docs')
+
+/**
+ * The rendered page, when the site has been built.
+ *
+ * Converting the `.astro` source means converting markup whose `{expr}` has no
+ * data behind it: a page built from a `.map()` arrives as the literal text
+ * `groups.map(...)`, which is how the shortcuts page came to ship no shortcuts
+ * to the MCP server and to `llms-full.txt`. The built HTML has none of that
+ * problem — Astro already ran the loops.
+ *
+ * It is optional because of the order: the packages build before the site, so
+ * on a clean checkout `dist` does not exist on the first pass and the source is
+ * all there is. `vercel.json` runs the site build, then this again, then the
+ * site once more, so the deployed bundle is always the rendered one.
+ */
+async function renderedBody(slug) {
+  const file = join(SITE_DIST, slug === 'index' ? '' : slug, 'index.html')
+  let html
+  try {
+    html = await readFile(file, 'utf8')
+  } catch {
+    return null
+  }
+  // Between the page heading and the previous/next pager: the slot, and nothing
+  // the layout wraps around it.
+  const start = html.indexOf('</h1>')
+  const end = html.indexOf('<nav class="docs-pager"')
+  if (start === -1 || end === -1 || end <= start) return null
+  return html.slice(start + '</h1>'.length, end)
+}
 
 /**
  * Pages whose body is rendered from data rather than written out as HTML.
@@ -110,7 +141,7 @@ const absolute = (href) => (href.startsWith('/') ? `https://matrajs.com${href}` 
  */
 function toMarkdown(html) {
   const blocks = []
-  let text = html.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (_, code) => {
+  let text = html.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g, (_, code) => {
     blocks.push(`\n\n\`\`\`\n${decode(code).replace(/\s+$/, '')}\n\`\`\`\n\n`)
     return `${blocks.length - 1}`
   })
@@ -119,7 +150,11 @@ function toMarkdown(html) {
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/g, (_, t) => `\n\n## ${inline(t)}\n\n`)
     .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/g, (_, t) => `\n\n### ${inline(t)}\n\n`)
-    .replace(/<div class="note">([\s\S]*?)<\/div>/g, (_, t) => `\n\n> Note: ${inline(t)}\n\n`)
+    .replace(
+      /<div class="note"[^>]*>([\s\S]*?)<\/div>/g,
+      (_, t) => `\n\n> Note: ${inline(t)}\n\n`,
+    )
+    .replace(/<div class="row"[^>]*>([\s\S]*?)<\/div>/g, (_, t) => `\n- ${inline(t)}`)
     .replace(/<li[^>]*>([\s\S]*?)<\/li>/g, (_, t) => `\n- ${inline(t)}`)
     .replace(/<(?:ul|ol)[^>]*>|<\/(?:ul|ol)>/g, '\n')
     .replace(/<tr[^>]*>([\s\S]*?)<\/tr>/g, (_, row) => {
@@ -148,9 +183,10 @@ function toMarkdown(html) {
           /<a [^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g,
           (_, href, t) => `[${strip(t)}](${absolute(href)})`,
         )
-        .replace(/<code>([\s\S]*?)<\/code>/g, (_, t) => `\`${strip(t)}\``)
-        .replace(/<(?:strong|b)>([\s\S]*?)<\/(?:strong|b)>/g, (_, t) => `**${strip(t)}**`)
-        .replace(/<(?:em|i)>([\s\S]*?)<\/(?:em|i)>/g, (_, t) => `*${strip(t)}*`)
+        .replace(/<kbd[^>]*>([\s\S]*?)<\/kbd>/g, (_, t) => `\`${strip(t)}\``)
+        .replace(/<code[^>]*>([\s\S]*?)<\/code>/g, (_, t) => `\`${strip(t)}\``)
+        .replace(/<(?:strong|b)[^>]*>([\s\S]*?)<\/(?:strong|b)>/g, (_, t) => `**${strip(t)}**`)
+        .replace(/<(?:em|i)[^>]*>([\s\S]*?)<\/(?:em|i)>/g, (_, t) => `*${strip(t)}*`)
         .replace(/<br\s*\/?>/g, '\n')
         .replace(/<[^>]+>/g, ''),
     ).trim()
@@ -192,10 +228,11 @@ async function main() {
     const description = prop(source, 'description')
     const heading = prop(source, 'heading') || title
     const prerendered = PRERENDERED[slug]
-    const rendered = prerendered ? await readFile(prerendered, 'utf8') : null
-    const text = rendered
-      ? `${rendered.trimEnd()}\n`
-      : `# ${heading}\n\n${description ? `${description}\n\n` : ''}${toMarkdown(body)}\n`
+    const markdown = prerendered ? await readFile(prerendered, 'utf8') : null
+    const html = markdown ? null : ((await renderedBody(slug)) ?? body)
+    const text = markdown
+      ? `${markdown.trimEnd()}\n`
+      : `# ${heading}\n\n${description ? `${description}\n\n` : ''}${toMarkdown(html)}\n`
     const outFile = `docs-${slug}.md`
     await writeFile(join(OUT, outFile), text)
     manifest.push({
