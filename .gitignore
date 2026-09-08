@@ -15,3 +15,8 @@ packages/mcp/docs/
 .vitest.json
 .vercel
 .env*
+
+# mcp-publisher writes its registry token beside server.json, which is inside
+# the repo. Ignored before the first `login`, not after: a credential that has
+# already been committed once is a credential that has to be revoked.
+.mcpregistry_registry_token
