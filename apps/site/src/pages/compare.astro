@@ -383,6 +383,23 @@ const breadcrumbs = {
       display: inline-block;
     }
 
+    /* --- tables ------------------------------------------------------------- */
+
+    /*
+     * `.scroll` is markup this page shares with the landing page, but not a
+     * rule: Astro scopes a component's styles to that component, so the
+     * definition in index.astro reaches its own table and nothing else. The
+     * class was carried over here and quietly did nothing — the table sat
+     * flush against the heading with no `margin-top`, and without `overflow-x`
+     * a 527 px table inside a 457 px column pushed the whole document 43 px
+     * sideways on a phone. Duplicated rather than lifted into global.css
+     * because two pages is not yet a pattern; if a third table appears, move it.
+     */
+    .scroll {
+      overflow-x: auto;
+      margin-top: var(--s4);
+    }
+
     .cmp {
       width: 100%;
       border-collapse: collapse;
@@ -420,7 +437,7 @@ const breadcrumbs = {
     }
 
     .note {
-      margin-top: 14px;
+      margin-top: var(--s3);
       font-size: 13px;
       line-height: 1.7;
       color: var(--ink-faint);
@@ -470,6 +487,14 @@ const breadcrumbs = {
       font-size: 14.5px;
       line-height: 1.65;
       color: var(--ink-soft);
+    }
+
+    .faq {
+      margin-top: var(--s3);
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
     }
 
     .faq details {
