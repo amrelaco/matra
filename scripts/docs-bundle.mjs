@@ -19,6 +19,23 @@ const ROOT = resolve(import.meta.dirname, '..')
 const OUT = join(ROOT, 'packages/mcp/docs')
 const SITE_DOCS = join(ROOT, 'apps/site/src/pages/docs')
 
+/**
+ * Pages whose body is rendered from data rather than written out as HTML.
+ *
+ * The conversion below reads the `.astro` source, where an `{expr}` has no data
+ * behind it — a page built from a `.map()` arrives as the literal text
+ * `groups.map(...)`, which is why `docs-shortcuts.md` ships no shortcuts.
+ * Reading the built HTML would fix every such page at once, but this runs
+ * during the packages build, before `apps/site/dist` exists.
+ *
+ * So a generator that already holds the data writes the Markdown as well, and
+ * it is used verbatim. One source, two renderers, rather than a converter
+ * guessing at values it cannot see.
+ */
+const PRERENDERED = {
+  'extension-reference': join(ROOT, 'apps/site/src/data/extension-reference.md'),
+}
+
 /** Repository Markdown, in reading order. */
 const MARKDOWN = [
   [
@@ -174,7 +191,11 @@ async function main() {
     const title = prop(source, 'title').replace(/\s*·\s*Matra docs$/, '') || slug
     const description = prop(source, 'description')
     const heading = prop(source, 'heading') || title
-    const text = `# ${heading}\n\n${description ? `${description}\n\n` : ''}${toMarkdown(body)}\n`
+    const prerendered = PRERENDERED[slug]
+    const rendered = prerendered ? await readFile(prerendered, 'utf8') : null
+    const text = rendered
+      ? `${rendered.trimEnd()}\n`
+      : `# ${heading}\n\n${description ? `${description}\n\n` : ''}${toMarkdown(body)}\n`
     const outFile = `docs-${slug}.md`
     await writeFile(join(OUT, outFile), text)
     manifest.push({

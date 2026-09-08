@@ -74,6 +74,9 @@ npm install @matrajs/react   # or /vue, /svelte, /solid
 - [Position mapping](https://matrajs.com/docs/position-mapping): positions across edits.
 - [Writing an extension](https://matrajs.com/docs/extensions): the extension API.
 - [API reference](https://matrajs.com/docs/api): the full public surface.
+- [Every extension](https://matrajs.com/docs/extension-reference): all ${facts.extensions} of them · what to
+  import, options, commands, keys and gzipped cost. There is no per-extension package.
+  This is the page that answers "how do I add only a table".
 - [Styling](https://matrajs.com/docs/styling): bring your own CSS.
 - [Keyboard shortcuts](https://matrajs.com/docs/shortcuts): defaults and rebinding.
 - [Recipes](https://matrajs.com/docs/recipes): common editor requirements, solved.

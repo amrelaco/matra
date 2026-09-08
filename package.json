@@ -20,6 +20,7 @@
     "packaging": "node scripts/packaging.mjs",
     "wiring": "node scripts/wiring.mjs",
     "facts": "node scripts/facts.mjs",
+    "extensions": "node scripts/extension-api.mjs",
     "install:matrix": "node scripts/install-matrix.mjs",
     "exercise": "node scripts/exercise.mjs"
   },

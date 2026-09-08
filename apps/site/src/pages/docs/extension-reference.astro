@@ -1,0 +1,405 @@
+---
+import api from '../../data/extensions-api.json'
+import Docs from '../../layouts/Docs.astro'
+
+/**
+ * Every extension that ships, in one page.
+ *
+ * The complaint this answers is specific: someone who wants a table and nothing
+ * else could not find out how. The showcase at /extensions shows what the
+ * extensions *do* — it is a demo, not a reference — and /docs/extensions
+ * teaches you to write your own. Neither told you what to import.
+ *
+ * Nothing on this page is typed by hand. `scripts/extension-api.mjs` imports
+ * the built package, reflects over every definition for its commands, keys,
+ * attributes and DOM behaviour, reads option fields out of the emitted `.d.ts`,
+ * and lifts the prose from the doc comment above each export. A reference
+ * kept by hand is a reference that lies after the next release, and a command
+ * that no longer exists reads to a developer as their own mistake.
+ */
+const { extensions, kits, counts, measured } = api
+
+const KINDS = [
+  ['node', 'Nodes', 'Blocks and inline elements the document is made of.'],
+  ['mark', 'Marks', 'Formatting applied across a range of text.'],
+  [
+    'extension',
+    'Behaviour',
+    'No node or mark of their own · they add commands, keys or decorations.',
+  ],
+] as const
+
+const byKind = KINDS.map(([kind, title, blurb]) => ({
+  kind,
+  title,
+  blurb,
+  items: extensions.filter((e) => e.kind === kind),
+}))
+
+/** `Mod` is ⌘ on a Mac and Ctrl everywhere else; the extensions write it once. */
+const prettyKey = (combo: string) => combo.replace(/\bMod\b/, 'Mod')
+---
+
+<Docs
+  title="Every extension | Matra docs"
+  description={`Reference for all ${counts.extensions} extensions in @matrajs/core: what to import, the options each takes, its commands, keyboard shortcuts and gzipped cost.`}
+  section="Reference"
+  heading="Every extension"
+>
+  <p>
+    All {counts.extensions} of them live in <code>@matrajs/core</code> and carry {
+      counts.commands
+    } commands between them. There is no separate package to install for any one of them.
+  </p>
+
+  <h2>Installing only what you want</h2>
+  <p>
+    This is the question the rest of the docs did not answer. There is no <code
+      >@matrajs/table</code
+    > to install · you already have the table, and you turn it on by importing it.
+  </p>
+  <pre><code>{`npm install @matrajs/core`}</code></pre>
+  <p>Then pass only the extensions you want. A table and nothing else:</p>
+  <pre><code>{`import { createEditor, document, paragraph, text, tableKit } from '@matrajs/core'
+
+const editor = createEditor({
+  extensions: [document, paragraph, text, ...tableKit],
+  element: document.querySelector('#editor'),
+})`}</code></pre>
+  <div class="note">
+    <p>
+      <code>document</code>, <code>paragraph</code> and <code>text</code> are the floor. Every document
+      is a <code>document</code> holding blocks, and a table cell holds blocks, so a table without
+      them has nothing legal to contain.
+    </p>
+  </div>
+  <p>
+    The array is the whole feature list, and it is also the bundle. Extensions you do not import
+    are not in the build · that is ordinary tree-shaking, not a plugin system, which is why the
+    gzipped figures below add rather than multiply.
+  </p>
+  <pre><code>{`// the usual starting point
+createEditor({ extensions: starterKit })
+
+// the kit, plus tables and checklists
+createEditor({ extensions: [...starterKit, ...tableKit, taskList, taskItem] })
+
+// a comment box that can never become anything else
+createEditor({ extensions: [document, paragraph, text, bold, italic, link] })`}</code></pre>
+
+  <h2>Kits</h2>
+  <p>
+    A kit is an array of definitions, spread with <code>...</code>. Nothing more · there is no
+    configuration object and no ordering rule.
+  </p>
+  <div class="scroll">
+    <table class="ref">
+      <thead>
+        <tr><th>Kit</th><th>Holds</th></tr>
+      </thead>
+      <tbody>
+        {
+          kits.map((kit) => (
+            <tr>
+              <td>
+                <code>{kit.name}</code>
+              </td>
+              <td class="members">
+                {kit.members.map((m) => (
+                  <code>{m}</code>
+                ))}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Reading an entry</h2>
+  <p>
+    Every extension below carries the line you import, what it parses and renders in HTML, its
+    commands, its keys, and its gzipped cost measured on its own. An extension marked <b
+      >takes options</b
+    > is a function you call; the rest are plain objects you pass as they are.
+  </p>
+
+  {
+    byKind.map((group) => (
+      <>
+        <h2>
+          {group.title} <span class="count">{group.items.length}</span>
+        </h2>
+        <p>{group.blurb}</p>
+        {group.items.map((e) => (
+          <section class="ext" id={e.export}>
+            <div class="ext-head">
+              <h3>
+                <code>{e.export}</code>
+              </h3>
+              <div class="tags">
+                {e.configurable && <span class="tag">takes options</span>}
+                {e.kits.map((k) => (
+                  <span class="tag soft">in {k}</span>
+                ))}
+                {e.gz != null && <span class="tag soft">{e.gz} kB gz</span>}
+              </div>
+            </div>
+
+            {e.doc.map((block) =>
+              block.type === 'code' ? (
+                <pre>
+                  <code set:text={block.text} />
+                </pre>
+              ) : (
+                <p set:text={block.text} />
+              ),
+            )}
+
+            <pre>
+              <code>{`import { ${e.export} } from '@matrajs/core'`}</code>
+            </pre>
+
+            {e.options?.fields.length ? (
+              <>
+                <p class="label">Options</p>
+                <div class="scroll">
+                  <table class="ref">
+                    <thead>
+                      <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {e.options.fields.map((f) => (
+                        <tr>
+                          <td>
+                            <code>{f.name}</code>
+                            {f.required && <span class="req">required</span>}
+                          </td>
+                          <td>
+                            <code class="type">{f.type}</code>
+                          </td>
+                          <td class="fdoc">
+                            {f.doc
+                              .filter((b) => b.type === 'text')
+                              .map((b) => b.text)
+                              .join(' ')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+
+            {e.commands.length ? (
+              <p class="line">
+                <span class="label">Commands</span>
+                {e.commands.map((c) => (
+                  <code>editor.commands.{c}()</code>
+                ))}
+              </p>
+            ) : null}
+
+            {e.keys.length ? (
+              <p class="line">
+                <span class="label">Keys</span>
+                {e.keys.map((k) => (
+                  <span class="key">
+                    <kbd>{prettyKey(k.combo)}</kbd> {k.command}
+                  </span>
+                ))}
+              </p>
+            ) : null}
+
+            {e.attrs.length ? (
+              <p class="line">
+                <span class="label">Attributes</span>
+                {e.attrs.map((a) => (
+                  <code>
+                    {a.name}
+                    {a.default != null && ` = ${JSON.stringify(a.default)}`}
+                  </code>
+                ))}
+              </p>
+            ) : null}
+
+            {e.dom.parses.length || e.dom.renders ? (
+              <p class="line">
+                <span class="label">HTML</span>
+                {e.dom.parses.length ? (
+                  <span class="dom">
+                    parses{' '}
+                    {e.dom.parses.map((t) => (
+                      <code>{t}</code>
+                    ))}
+                  </span>
+                ) : null}
+                {e.dom.renders ? (
+                  <span class="dom">
+                    renders <code>{e.dom.renders}</code>
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
+
+            {e.css ? (
+              <p class="line">
+                <span class="label">Styles</span>
+                <code>import &#123; {e.css} &#125; from '@matrajs/core'</code>
+                <span class="dom">a stylesheet string · it needs one to look right</span>
+              </p>
+            ) : null}
+          </section>
+        ))}
+      </>
+    ))
+  }
+
+  <p class="stamp">
+    Generated from <code>@matrajs/core</code> by <code>node scripts/extension-api.mjs</code> on {
+      measured
+    } · {counts.documented} of {counts.extensions} carry prose from their own source.
+  </p>
+
+  <style>
+    .scroll {
+      overflow-x: auto;
+      margin-top: var(--s3);
+    }
+
+    .ref {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .ref th,
+    .ref td {
+      padding: 9px 14px 9px 0;
+      text-align: left;
+      vertical-align: top;
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+    }
+
+    .ref th {
+      font-weight: 500;
+      color: var(--ink-faint);
+      font-size: 12.5px;
+    }
+
+    .members code,
+    .line code {
+      margin: 0 6px 4px 0;
+      display: inline-block;
+    }
+
+    .count {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ink-faint);
+      font-weight: 400;
+    }
+
+    /* One entry, boxed on its top edge so the list reads as a list. */
+    .ext {
+      padding: var(--s3) 0 var(--s2);
+      background-image: var(--dash-h);
+      background-size: 100% 1px;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+    }
+
+    .ext-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ext h3 {
+      margin: 0;
+    }
+
+    .tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--indigo-deep);
+      padding: 3px 7px;
+      background-color: var(--surface);
+    }
+
+    .tag.soft {
+      color: var(--ink-faint);
+    }
+
+    .label {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-right: 10px;
+    }
+
+    .line {
+      margin: 12px 0 0;
+      line-height: 2;
+    }
+
+    .key {
+      margin-right: 14px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .dom {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      margin-right: 12px;
+    }
+
+    .req {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      margin-left: 8px;
+    }
+
+    .type {
+      color: var(--ink-soft);
+    }
+
+    .fdoc {
+      color: var(--ink-soft);
+      font-size: 13.5px;
+      line-height: 1.6;
+      max-width: 46ch;
+    }
+
+    .stamp {
+      margin-top: var(--s4);
+      font-size: 13px;
+      color: var(--ink-faint);
+    }
+  </style>
+</Docs>

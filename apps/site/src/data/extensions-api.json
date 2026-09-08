@@ -1,0 +1,3625 @@
+{
+  "measured": "2026-09-08",
+  "package": "@matrajs/core",
+  "counts": {
+    "extensions": 81,
+    "configurable": 35,
+    "commands": 137,
+    "documented": 53
+  },
+  "kits": [
+    {
+      "name": "columnsKit",
+      "members": ["columnList", "column"]
+    },
+    {
+      "name": "detailsKit",
+      "members": ["details", "detailsSummary"]
+    },
+    {
+      "name": "starterKit",
+      "members": [
+        "doc",
+        "paragraph",
+        "text",
+        "heading",
+        "blockquote",
+        "codeBlock",
+        "bulletList",
+        "orderedList",
+        "listItem",
+        "horizontalRule",
+        "hardBreak",
+        "bold",
+        "italic",
+        "strike",
+        "code",
+        "link",
+        "history"
+      ]
+    },
+    {
+      "name": "tableKit",
+      "members": ["table", "tableRow", "tableCell", "tableHeader"]
+    }
+  ],
+  "extensions": [
+    {
+      "export": "autolink",
+      "name": "autolink",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.35,
+      "options": {
+        "interface": "AutolinkOptions",
+        "fields": [
+          {
+            "name": "onPaste",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Turn a pasted URL into a link, or link the selection to it. Default true."
+              }
+            ]
+          },
+          {
+            "name": "onType",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Turn a URL into a link once a space is typed after it. Default true."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "URLs become links as they are typed and as they are pasted."
+        },
+        {
+          "type": "text",
+          "text": "Typing: once a space follows something that looks like a URL, the URL gets the link mark and the space is inserted as usual. Pasting a URL over a selection links the selection to it; pasting one with nothing selected inserts it already linked. Needs the `link` mark in the editor."
+        }
+      ]
+    },
+    {
+      "export": "autosave",
+      "name": "autosave",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["save", "markSaved"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.81,
+      "options": {
+        "interface": "AutosaveOptions",
+        "fields": [
+          {
+            "name": "save",
+            "type": "(doc: DocNode, editor: Editor) => void | Promise<void>",
+            "required": true,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Persist the document. A returned promise is waited for; whatever it rejects with, or the function throws, is reported and never thrown on."
+              }
+            ]
+          },
+          {
+            "name": "delay",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "How long typing has to pause before a save. Default 1000ms."
+              }
+            ]
+          },
+          {
+            "name": "restore",
+            "type": "() => DocNode | string | null | undefined",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Content to load when the editor mounts — what the last save left behind. Loading it is not an edit: the document is not dirty afterwards."
+              }
+            ]
+          },
+          {
+            "name": "onError",
+            "type": "(error: unknown) => void",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Told about every save that failed."
+              }
+            ]
+          },
+          {
+            "name": "flushOnHide",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Save at once when the page is hidden or unloaded. Default true."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Save the document once typing pauses."
+        },
+        {
+          "type": "text",
+          "text": "Every change marks the document dirty and starts the clock; the save runs `delay` after the last one, so a sentence costs one save rather than one per letter. `save()` saves now. When the page is hidden or unloaded a dirty document is saved before it goes, since a pause that never comes is the usual way an autosave loses the last paragraph."
+        },
+        {
+          "type": "text",
+          "text": "The state is reduced from transactions like any other: a change marks it dirty, and the save reports back through `markSaved`, which is a command so that the report is a transaction too. A save that fails leaves the document dirty with `error` set and is not retried on its own — the next change, or `save()`, tries again — because retrying a server that is down every second is how a server that is down stays down."
+        },
+        {
+          "type": "text",
+          "text": "A save runs outside any command, after the transaction that asked for it has landed, because `save` is application code and may do anything at all. `editor.can.save()` asks without saving. One `autosave()` per editor: it holds the editor it was mounted in."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "autosave({\n  delay: 800,\n  save: (doc) => localStorage.setItem('draft', JSON.stringify(doc)),\n  restore: () => JSON.parse(localStorage.getItem('draft') ?? 'null'),\n})"
+        }
+      ]
+    },
+    {
+      "export": "blockColor",
+      "name": "blockColor",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [
+        "setBlockColor",
+        "unsetBlockColor",
+        "setBlockBackground",
+        "unsetBlockBackground",
+        "unsetBlockColors"
+      ],
+      "keys": [],
+      "attrs": [],
+      "css": "blockColorCSS",
+      "kits": [],
+      "gz": 0.37,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Colour on the block itself, the way Notion means it."
+        },
+        {
+          "type": "text",
+          "text": "`textStyle` already colours *text*: a mark on a run of characters, which is the right model for colouring three words in a sentence. It is the wrong model for colouring a paragraph — mark every character and the background still stops at the last one, so what you get is a band around the words rather than a band across the block, and it breaks apart the moment someone types at the end."
+        },
+        {
+          "type": "text",
+          "text": "This is an attribute on the block instead. It survives being dragged somewhere else, it covers the full measure, and an empty paragraph can hold a colour and still show it — none of which a mark can do."
+        },
+        {
+          "type": "text",
+          "text": "Built the way alignment and line height are, so a paragraph that knows nothing about colour still keeps, renders and parses it:"
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.setBlockBackground('#fdecc8')\neditor.commands.setBlockColor('rgb(212, 76, 71)')\neditor.commands.unsetBlockColors()"
+        },
+        {
+          "type": "text",
+          "text": "The palette is deliberately not here. Notion ships ten named colours and stores the name, which is how a document follows a theme; this stores the value it was given and leaves naming to the application, because a headless editor that decides your ten colours has decided your design."
+        }
+      ]
+    },
+    {
+      "export": "blockquote",
+      "name": "blockquote",
+      "kind": "node",
+      "dom": {
+        "parses": ["blockquote"],
+        "renders": "blockquote"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "block+",
+      "commands": ["toggleBlockquote", "exitBlockquote"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-b",
+          "command": "toggleBlockquote"
+        },
+        {
+          "combo": "Enter",
+          "command": "exitBlockquote"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.33,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "bold",
+      "name": "bold",
+      "kind": "mark",
+      "dom": {
+        "parses": ["strong", "b", "[style: font-weight]"],
+        "renders": "strong"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleBold", "setBold", "unsetBold"],
+      "keys": [
+        {
+          "combo": "Mod-b",
+          "command": "toggleBold"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.13,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "bubbleMenu",
+      "name": "bubbleMenu",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.65,
+      "options": {
+        "interface": "BubbleMenuOptions",
+        "fields": [
+          {
+            "name": "element",
+            "type": "HTMLElement",
+            "required": true,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The element to show. Positioned absolutely by this extension, hidden when not needed."
+              }
+            ]
+          },
+          {
+            "name": "shouldShow",
+            "type": "(editor: Editor) => boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "When to show it. Default: the selection is not empty and the editor, or the menu, has focus."
+              }
+            ]
+          },
+          {
+            "name": "placement",
+            "type": "'top' | 'bottom'",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Above or below the selection. Default `top`."
+              }
+            ]
+          },
+          {
+            "name": "offset",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Pixels between the selection and the menu. Default 8."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A menu that appears over the selection."
+        },
+        {
+          "type": "text",
+          "text": "You bring the element; this shows it when something is selected, places it above the selection, and hides it when the selection collapses or focus leaves both the editor and the menu. Buttons inside it should prevent the default on `mousedown`, so pressing one does not take the selection away from the text it is about to format."
+        }
+      ]
+    },
+    {
+      "export": "bulletList",
+      "name": "bulletList",
+      "kind": "node",
+      "dom": {
+        "parses": ["ul"],
+        "renders": "ul"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "listItem+",
+      "commands": ["toggleBulletList"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-8",
+          "command": "toggleBulletList"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.49,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "callout",
+      "name": "callout",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-callout]"],
+        "renders": "div"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "block+",
+      "commands": ["toggleCallout", "setCalloutType", "setCalloutEmoji", "exitCallout"],
+      "keys": [
+        {
+          "combo": "Enter",
+          "command": "exitCallout"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "type",
+          "default": "info"
+        },
+        {
+          "name": "emoji",
+          "default": null
+        }
+      ],
+      "css": "calloutCSS",
+      "kits": [],
+      "gz": 0.64,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A callout — a Notion block, an admonition, an aside with a colour."
+        },
+        {
+          "type": "text",
+          "text": "Holds blocks, so a callout can carry a list or a code sample, and carries a type for the colour and an optional emoji for the icon. The icon is outside the editable content, so the caret cannot land in it."
+        }
+      ]
+    },
+    {
+      "export": "characterCount",
+      "name": "characterCount",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["countCharacters"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.28,
+      "options": {
+        "interface": "CharacterCountOptions",
+        "fields": [
+          {
+            "name": "limit",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Refuse edits that would take the document past this many characters."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Live character and word counts, with an optional hard limit."
+        },
+        {
+          "type": "text",
+          "text": "The limit is enforced by refusing the command rather than truncating: silently cutting a user's paste in half is worse than telling them it did not fit."
+        },
+        {
+          "type": "text",
+          "text": "Counted only when the document changes. The count used to be taken on every transaction — a caret move, a click, an arrow key — by serialising the whole document to JSON and walking that, so a toolbar showing a word count made every click cost the length of the document."
+        }
+      ]
+    },
+    {
+      "export": "clearFormatting",
+      "name": "clearFormatting",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["unsetAllMarks", "clearBlocks", "clearFormatting"],
+      "keys": [
+        {
+          "combo": "Mod-\\",
+          "command": "clearFormatting"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.24,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Back to plain text: every mark off the selection, every block a paragraph."
+        },
+        {
+          "type": "text",
+          "text": "The toolbar button labelled with a crossed-out T. One command rather than a call per mark, so the host does not have to know which marks the editor was built with — and one undo step, because that is what the person pressing it expects to get back."
+        }
+      ]
+    },
+    {
+      "export": "code",
+      "name": "code",
+      "kind": "mark",
+      "dom": {
+        "parses": ["code"],
+        "renders": "code"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleCode"],
+      "keys": [
+        {
+          "combo": "Mod-e",
+          "command": "toggleCode"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.05,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "codeBlock",
+      "name": "codeBlock",
+      "kind": "node",
+      "dom": {
+        "parses": ["pre"],
+        "renders": "pre"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "text*",
+      "commands": ["toggleCodeBlock"],
+      "keys": [
+        {
+          "combo": "Mod-Alt-c",
+          "command": "toggleCodeBlock"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "language",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.14,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "codeHighlight",
+      "name": "codeHighlight",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": "codeHighlightCSS",
+      "kits": [],
+      "gz": 0.63,
+      "options": {
+        "interface": "CodeHighlightOptions",
+        "fields": [
+          {
+            "name": "highlight",
+            "type": "Highlighter",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Tokenise code. Left off, a small built-in tokeniser colours comments, strings, numbers and the keywords most languages share. Plug in lowlight, Prism or Shiki here for the real thing."
+              }
+            ]
+          },
+          {
+            "name": "types",
+            "type": "readonly string[]",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Which node types are code. Default `codeBlock`."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Syntax highlighting for code blocks, as decorations."
+        },
+        {
+          "type": "text",
+          "text": "The tokens never enter the document — a code block's content stays plain text, which is what copying it out and saving it both want. Each block is tokenised when it changes and remembered until it does again, keyed on the block node itself; typing in one code block does not re-colour another."
+        }
+      ]
+    },
+    {
+      "export": "column",
+      "name": "column",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-column]"],
+        "renders": "div"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "block+",
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["columnsKit"],
+      "gz": 0.04,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "One column of a column list. Holds blocks, so a column can carry a list, a table or an image rather than only text."
+        }
+      ]
+    },
+    {
+      "export": "columnList",
+      "name": "columnList",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-columns]"],
+        "renders": "div"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "column column+",
+      "commands": ["setColumns", "unsetColumns", "addColumn", "removeColumn"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["columnsKit"],
+      "gz": 0.66,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Side-by-side columns."
+        },
+        {
+          "type": "text",
+          "text": "Two nodes, deliberately plain: a list holds columns and a column holds blocks, which is the whole of the structure. The layout is a CSS grid on the list, so the document says how many columns there are and the page decides how wide each one is."
+        },
+        {
+          "type": "text",
+          "text": "Wrapping a block into columns keeps that block as the first column and makes the rest empty, and taking the columns away lays every column's blocks out in order — so a document that was put into columns and taken out again reads as it did."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.setColumns(3)\neditor.commands.addColumn()\neditor.commands.removeColumn()\neditor.commands.unsetColumns()"
+        }
+      ]
+    },
+    {
+      "export": "comment",
+      "name": "comment",
+      "kind": "mark",
+      "dom": {
+        "parses": ["span[data-comment]"],
+        "renders": "span"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["addComment", "removeComment"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "threadId",
+          "default": null
+        }
+      ],
+      "css": "commentCSS",
+      "kits": [],
+      "gz": 0.33,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Threaded comments, anchored to ranges."
+        },
+        {
+          "type": "text",
+          "text": "The thread itself — author, body, replies, resolution — belongs to the host application, not the document. All that lives here is the anchor: a mark carrying a thread id. That separation is deliberate. Comment bodies in the document would travel with every copy, paste and export of the text, and would need migrating whenever the comment schema changed."
+        },
+        {
+          "type": "text",
+          "text": "Because the anchor is a mark, position mapping keeps it correct for free: edit the paragraph around a comment and the highlight follows the words."
+        }
+      ]
+    },
+    {
+      "export": "core",
+      "name": "core",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["select", "insert", "replace", "remove", "moveBlock", "focus"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": null,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "The primitives every editor needs, exposed as commands."
+        },
+        {
+          "type": "text",
+          "text": "Always loaded by createEditor — an editor that cannot move its own selection is not useful, and making callers remember to add it would be a papercut."
+        }
+      ]
+    },
+    {
+      "export": "details",
+      "name": "details",
+      "kind": "node",
+      "dom": {
+        "parses": ["details"],
+        "renders": "details"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "detailsSummary block+",
+      "commands": ["insertDetails", "toggleDetails", "setDetailsOpen", "unsetDetails"],
+      "keys": [
+        {
+          "combo": "Enter"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "open",
+          "default": true
+        }
+      ],
+      "css": "detailsCSS",
+      "kits": ["detailsKit"],
+      "gz": 0.57,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A collapsible block — a Notion toggle, an HTML `<details>`."
+        },
+        {
+          "type": "text",
+          "text": "Rendered as the real element, so open and closed are what the browser already knows how to do. The node view keeps the document in step with the disclosure triangle: clicking it writes `open` to the attribute, and an `open` that arrives from elsewhere — undo, a peer, a loaded document — is written back to the element."
+        }
+      ]
+    },
+    {
+      "export": "detailsSummary",
+      "name": "detailsSummary",
+      "kind": "node",
+      "dom": {
+        "parses": ["summary"],
+        "renders": "summary"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "inline*",
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["detailsKit"],
+      "gz": 0.03,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "The title line of a toggle."
+        }
+      ]
+    },
+    {
+      "export": "dictation",
+      "name": "dictation",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["startDictation", "stopDictation", "toggleDictation", "setDictation"],
+      "keys": [],
+      "attrs": [],
+      "css": "dictationCSS",
+      "kits": [],
+      "gz": 0.85,
+      "options": {
+        "interface": "DictationOptions",
+        "fields": [
+          {
+            "name": "lang",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "BCP 47 tag. Defaults to the browser's language."
+              }
+            ]
+          },
+          {
+            "name": "continuous",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Keep listening after a pause. Default true."
+              }
+            ]
+          },
+          {
+            "name": "interim",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Show what is being said before it is final. Default true."
+              }
+            ]
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Class on the provisional text. Default `matra-dictation-interim`."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Speak, and the words arrive at the caret."
+        },
+        {
+          "type": "text",
+          "text": "Built on the browser's own speech recognition, so nothing is sent anywhere the browser does not already send it and nothing is downloaded. Words the recogniser is still deciding on are drawn after the caret as a decoration, and become document text only once it settles — so a half-heard phrase is never in the undo history."
+        },
+        {
+          "type": "text",
+          "text": "`startDictation` needs a mounted editor and a browser that can listen; `editor.can.startDictation()` says whether both are true without turning the microphone on. Where the API is missing, every command returns false."
+        }
+      ]
+    },
+    {
+      "export": "document",
+      "name": "doc",
+      "kind": "node",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": null,
+      "content": "block+",
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": null,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "dragHandle",
+      "name": "dragHandle",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": "dragHandleCSS",
+      "kits": [],
+      "gz": 1.01,
+      "options": {
+        "interface": "DragHandleOptions",
+        "fields": [
+          {
+            "name": "render",
+            "type": "() => HTMLElement",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Build your own handle. Default is a six-dot grip."
+              }
+            ]
+          },
+          {
+            "name": "offset",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Distance from the block's left edge, in pixels."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A grip that appears beside the block under the pointer, and drags it."
+        },
+        {
+          "type": "text",
+          "text": "One element, moved, rather than a widget decoration per block. A decoration per block would put a handle in the document's decoration set for every paragraph — thousands on a long document, all recomputed whenever anything changes — to show one at a time."
+        },
+        {
+          "type": "text",
+          "text": "The handle sits outside the editable element and is `contenteditable=\"false\"` regardless, so it can never take the caret or become part of the document."
+        }
+      ]
+    },
+    {
+      "export": "embed",
+      "name": "embed",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-embed]", "iframe[src]"],
+        "renders": "div"
+      },
+      "configurable": true,
+      "group": "block",
+      "content": null,
+      "commands": ["insertEmbed", "setEmbedAspect"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "src",
+          "default": null
+        },
+        {
+          "name": "title",
+          "default": null
+        },
+        {
+          "name": "aspect",
+          "default": "16/9"
+        }
+      ],
+      "css": "embedCSS",
+      "kits": [],
+      "gz": 1.04,
+      "options": {
+        "interface": "EmbedOptions",
+        "fields": [
+          {
+            "name": "allow",
+            "type": "EmbedAllow",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Left off, a short list of well-known players and tools applies."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Anything with an embed page, in a frame."
+        },
+        {
+          "type": "text",
+          "text": "The frame is the dangerous part of a document, so the allowlist is not optional: a `src` is checked when a command sets it, when HTML is parsed, and again when the node renders — because a document loaded from JSON skipped the first two, and that is how every real application loads documents. A frame that fails the check at render time is withheld and the wrapper stays, so the document keeps its data and fetches nothing."
+        },
+        {
+          "type": "text",
+          "text": "Every frame is sandboxed. Scripts and same-origin are allowed because most embed pages stop working without them; navigating the top page is not."
+        }
+      ]
+    },
+    {
+      "export": "emoji",
+      "name": "emoji",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.94,
+      "options": {
+        "interface": "EmojiOptions",
+        "fields": [
+          {
+            "name": "emojis",
+            "type": "Record<string, string>",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Your own shortcodes, added to or overriding the built-in set."
+              }
+            ]
+          },
+          {
+            "name": "emoticons",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Also replace `:)`, `:(`, `<3` and friends as they are typed. Default false."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Emoji as you type: `:tada:` becomes 🎉 the moment the closing colon lands."
+        },
+        {
+          "type": "text",
+          "text": "Detection only, like mentions and slash commands — a picker is an interface, and `suggestion({ char: ':' })` plus `searchEmoji` are what one is built on."
+        }
+      ]
+    },
+    {
+      "export": "field",
+      "name": "field",
+      "kind": "node",
+      "dom": {
+        "parses": ["span[data-field]"],
+        "renders": "span"
+      },
+      "configurable": false,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertField", "fillFields"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "name",
+          "default": null
+        },
+        {
+          "name": "label",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.55,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A blank in a template."
+        },
+        {
+          "type": "text",
+          "text": "`{{name}}` in a letter is a promise that something will be put there, and as text it is a promise the editor cannot keep: it can be half-deleted into `{{nam}}`, spell-checked, bolded from the middle, and nothing will notice until the letter goes out with braces in it. As an atom it is one thing — the caret steps over it, backspace removes all of it — and filling it is a command rather than a search and replace."
+        },
+        {
+          "type": "text",
+          "text": "`fillFields` fills the fields in the editor; `fillFieldsIn` does the same to a document as JSON, with no editor and no DOM, which is where a mail merge actually runs."
+        }
+      ]
+    },
+    {
+      "export": "fileHandler",
+      "name": "fileHandler",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.14,
+      "options": {
+        "interface": "FileHandlerOptions",
+        "fields": [
+          {
+            "name": "accept",
+            "type": "readonly string[]",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "MIME types or prefixes to take: `['image/']`. Left off, every file."
+              }
+            ]
+          },
+          {
+            "name": "onDrop",
+            "type": "(event: FileEvent) => void",
+            "required": false,
+            "doc": []
+          },
+          {
+            "name": "onPaste",
+            "type": "(event: FileEvent) => void",
+            "required": false,
+            "doc": []
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Files dropped on or pasted into the editor."
+        },
+        {
+          "type": "text",
+          "text": "The editor cannot know where a file should go — an upload endpoint, a data URL, a placeholder while the request runs — so it hands the files over with a position that survives the wait. A screenshot pasted from the clipboard arrives here as a file, the same as one dragged from the desktop."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "fileHandler({\n  accept: ['image/'],\n  async onDrop({ editor, files, pos, marker }) {\n    for (const file of files) {\n      const src = await upload(file)\n      editor.commands.insert({ type: 'image', attrs: { src } }, pos && marker.map(pos))\n    }\n  },\n})"
+        }
+      ]
+    },
+    {
+      "export": "floatingMenu",
+      "name": "floatingMenu",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.67,
+      "options": {
+        "interface": "FloatingMenuOptions",
+        "fields": [
+          {
+            "name": "element",
+            "type": "HTMLElement",
+            "required": true,
+            "doc": []
+          },
+          {
+            "name": "shouldShow",
+            "type": "(editor: Editor) => boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "When to show it. Default: the caret is in an empty top-level paragraph and the editor has focus."
+              }
+            ]
+          },
+          {
+            "name": "placement",
+            "type": "'start' | 'left'",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "At the start of the line, or in the margin to its left. Default `start`."
+              }
+            ]
+          },
+          {
+            "name": "offset",
+            "type": "number",
+            "required": false,
+            "doc": []
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A menu that appears on an empty line."
+        },
+        {
+          "type": "text",
+          "text": "The \"what goes here\" affordance: a plus in the margin, or a row of block types beside the caret. Shown when the caret sits in an empty top-level paragraph in a focused editor, and nowhere else."
+        }
+      ]
+    },
+    {
+      "export": "focus",
+      "name": "focus",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.15,
+      "options": {
+        "interface": "FocusOptions",
+        "fields": [
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The class put on the block the caret is in. Default `has-focus`."
+              }
+            ]
+          },
+          {
+            "name": "ancestors",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Also mark every ancestor block — the list around the item. Default false."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A class on the block the caret is in."
+        },
+        {
+          "type": "text",
+          "text": "What a focus mode dims everything else against, and what a block toolbar anchors to. A decoration rather than an attribute, so the document never knows which block was being looked at."
+        }
+      ]
+    },
+    {
+      "export": "footnote",
+      "name": "footnote",
+      "kind": "node",
+      "dom": {
+        "parses": ["li[data-footnote]"],
+        "renders": "li"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "block+",
+      "commands": [],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "id",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "The note itself: blocks, under the id its marker carries."
+        }
+      ]
+    },
+    {
+      "export": "footnoteRef",
+      "name": "footnoteRef",
+      "kind": "node",
+      "dom": {
+        "parses": ["sup[data-footnote-ref]"],
+        "renders": "sup"
+      },
+      "configurable": false,
+      "group": "inline",
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "id",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "The marker in the text."
+        },
+        {
+          "type": "text",
+          "text": "It carries an id and nothing else. Its number is a decoration computed from where it stands, so moving a paragraph renumbers every note without a single change to the document, and two people looking at the same document see the same numbers. The element is empty in HTML; the number is drawn by `footnotesCSS` from the decoration's attribute."
+        }
+      ]
+    },
+    {
+      "export": "footnotes",
+      "name": "footnotes",
+      "kind": "node",
+      "dom": {
+        "parses": ["ol[data-footnotes]"],
+        "renders": "ol"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "footnote*",
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": "footnotesCSS",
+      "kits": [],
+      "gz": 0.04,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "The list the notes live in, kept as the last block by `insertFootnote`."
+        }
+      ]
+    },
+    {
+      "export": "footnotesKit",
+      "name": "footnoteRef",
+      "kind": "node",
+      "dom": {
+        "parses": ["sup[data-footnote-ref]"],
+        "renders": "sup"
+      },
+      "configurable": true,
+      "group": "inline",
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "id",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Footnotes: a marker in the text, a note at the end, numbered by position."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.insertFootnote()      // a marker here, a note below, caret in the note\neditor.commands.removeFootnote(id)    // both halves\neditor.commands.goToFootnote(id)      // and back with goToFootnoteRef(id)"
+        },
+        {
+          "type": "text",
+          "text": "The numbers are never in the document. They are decorations, recomputed per block when the document changes and not at all when only the caret moves, so deleting a marker renumbers the rest as you watch and an undo puts the old numbers back. A note whose marker is gone is left in place and marked `matra-footnote-orphan`, rather than deleted behind your back."
+        }
+      ]
+    },
+    {
+      "export": "ghostText",
+      "name": "ghostText",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["setGhostText", "acceptGhostText", "acceptGhostWord", "dismissGhostText"],
+      "keys": [
+        {
+          "combo": "Tab",
+          "command": "acceptGhostText"
+        },
+        {
+          "combo": "Escape",
+          "command": "dismissGhostText"
+        }
+      ],
+      "attrs": [],
+      "css": "ghostTextCSS",
+      "kits": [],
+      "gz": 0.71,
+      "options": {
+        "interface": "GhostTextOptions",
+        "fields": [
+          {
+            "name": "suggest",
+            "type": "(context: GhostContext) => string | null | undefined | Promise<string | null | undefined>",
+            "required": true,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Propose what comes next. Return nothing to propose nothing."
+              },
+              {
+                "type": "text",
+                "text": "Asked after the caret has rested for `delay`, and only the latest answer counts: a reply that arrives after another keystroke is dropped, so a slow model never writes into a sentence that has moved on."
+              }
+            ]
+          },
+          {
+            "name": "delay",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Milliseconds the caret rests before asking. Default 300."
+              }
+            ]
+          },
+          {
+            "name": "minBefore",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Characters needed before the caret in its block before asking. Default 1."
+              }
+            ]
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Class on the rendered suggestion. Default `matra-ghost`."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Inline completion: grey text after the caret, Tab to take it."
+        },
+        {
+          "type": "text",
+          "text": "The suggestion is a decoration and never part of the document, so it is not saved, not sent to collaborators and not undone. Any keystroke or caret move dismisses it — a ghost that stays where it was while the sentence changes underneath it is worse than none — and Tab inserts it at the position it was shown at, as one ordinary edit."
+        },
+        {
+          "type": "text",
+          "text": "Where the text comes from is yours: a model, a phrase table, the next line of the previous draft. This only asks, waits, and draws."
+        }
+      ]
+    },
+    {
+      "export": "hardBreak",
+      "name": "hardBreak",
+      "kind": "node",
+      "dom": {
+        "parses": ["br"],
+        "renders": "br"
+      },
+      "configurable": false,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertHardBreak"],
+      "keys": [
+        {
+          "combo": "Shift-Enter",
+          "command": "insertHardBreak"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.06,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "hashtag",
+      "name": "hashtag",
+      "kind": "node",
+      "dom": {
+        "parses": ["span[data-hashtag]"],
+        "renders": "span"
+      },
+      "configurable": true,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertHashtag"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "tag",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.24,
+      "options": {
+        "interface": "HashtagOptions",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Node name, if you need two kinds of tag in one editor."
+              }
+            ]
+          },
+          {
+            "name": "render",
+            "type": "(tag: string) => string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "What appears in the document. Defaults to `#tag`."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A hashtag, as a node rather than styled text."
+        },
+        {
+          "type": "text",
+          "text": "The same argument as `mention`: an atom cannot be half-deleted into `#mat`, and a document that stores the tag as an attribute can be asked for its tags without anyone parsing prose. Typing `#word` and a space makes one; `#` inside a word — `a#b`, a colour, a URL fragment — is left alone."
+        }
+      ]
+    },
+    {
+      "export": "heading",
+      "name": "heading",
+      "kind": "node",
+      "dom": {
+        "parses": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "renders": "h1"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "inline*",
+      "commands": ["setHeading", "toggleHeading"],
+      "keys": [
+        {
+          "combo": "Mod-Alt-1"
+        },
+        {
+          "combo": "Mod-Alt-2"
+        },
+        {
+          "combo": "Mod-Alt-3"
+        },
+        {
+          "combo": "Mod-Alt-4"
+        },
+        {
+          "combo": "Mod-Alt-5"
+        },
+        {
+          "combo": "Mod-Alt-6"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "level",
+          "default": 1
+        }
+      ],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "highlight",
+      "name": "highlight",
+      "kind": "mark",
+      "dom": {
+        "parses": ["mark"],
+        "renders": "mark"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleHighlight", "unsetHighlight"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-h",
+          "command": "toggleHighlight"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "color",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.15,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "history",
+      "name": "history",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["undo", "redo"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.07,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Undo and redo as commands, for toolbars."
+        },
+        {
+          "type": "text",
+          "text": "The engine keeps the stack and binds the keys; these just reach it. The commands return false when there is nothing to rewind, so a button can disable itself."
+        }
+      ]
+    },
+    {
+      "export": "horizontalRule",
+      "name": "horizontalRule",
+      "kind": "node",
+      "dom": {
+        "parses": ["hr"],
+        "renders": "hr"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": null,
+      "commands": ["insertHorizontalRule"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.07,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "image",
+      "name": "image",
+      "kind": "node",
+      "dom": {
+        "parses": ["img[src]"],
+        "renders": "img"
+      },
+      "configurable": false,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertImage"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "src",
+          "default": null
+        },
+        {
+          "name": "alt",
+          "default": null
+        },
+        {
+          "name": "title",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.2,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "imageResize",
+      "name": "imageResize",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["setImageWidth"],
+      "keys": [],
+      "attrs": [],
+      "css": "imageResizeCSS",
+      "kits": [],
+      "gz": 0.81,
+      "options": {
+        "interface": "ImageResizeOptions",
+        "fields": [
+          {
+            "name": "min",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Narrowest an image may be dragged, in pixels. Default 32."
+              }
+            ]
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Widest. Default 4096."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A drag handle on every image, and a `width` attribute to remember it by."
+        },
+        {
+          "type": "text",
+          "text": "The attribute is added to the stock image node from outside, and the node view replaces the image's rendering from outside too, so the image extension knows nothing about resizing and an editor without this one renders a plain `<img>`. Width is a whole number of pixels, written to the `width` attribute so the HTML carries it and a browser honours it before any CSS loads."
+        }
+      ]
+    },
+    {
+      "export": "indent",
+      "name": "indent",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["indent", "outdent", "setIndent"],
+      "keys": [
+        {
+          "combo": "Tab",
+          "command": "indent"
+        },
+        {
+          "combo": "Shift-Tab",
+          "command": "outdent"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.45,
+      "options": {
+        "interface": "IndentOptions",
+        "fields": [
+          {
+            "name": "types",
+            "type": "readonly string[]",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Which blocks can be indented. Default paragraphs and headings."
+              }
+            ]
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "How many levels. Default 8."
+              }
+            ]
+          },
+          {
+            "name": "step",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Width of one level, in `em`. Default 2."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Block indentation, the way a word processor does it."
+        },
+        {
+          "type": "text",
+          "text": "An attribute on the block rather than a wrapper node: Tab on a paragraph moves the paragraph in, Shift-Tab moves it back out, and the document says `indent: 2` rather than nesting the paragraph inside something invented to hold it. Inside a list the keys belong to the list, so this stands down there."
+        }
+      ]
+    },
+    {
+      "export": "invisibleCharacters",
+      "name": "invisibleCharacters",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [
+        "showInvisibleCharacters",
+        "hideInvisibleCharacters",
+        "toggleInvisibleCharacters"
+      ],
+      "keys": [],
+      "attrs": [],
+      "css": "invisibleCharactersCSS",
+      "kits": [],
+      "gz": 0.72,
+      "options": {
+        "interface": "InvisibleCharactersOptions",
+        "fields": [
+          {
+            "name": "visible",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Start with the markers showing. Default false."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Spaces, paragraph ends and line breaks, made visible."
+        },
+        {
+          "type": "text",
+          "text": "What a word processor shows under \"formatting marks\": a dot on every space, a pilcrow closing every block, an arrow after every hard break. Decorations rather than content, so the marks are never in the document — not in its HTML, not in its JSON, not in what a collaborator receives."
+        },
+        {
+          "type": "text",
+          "text": "Markers are found per block and cached on the block node, the way search hits are, so keeping them on while writing costs the paragraph being written and not the document."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.toggleInvisibleCharacters()\neditor.extensionState<InvisibleCharactersState>('invisibleCharacters')?.visible"
+        }
+      ]
+    },
+    {
+      "export": "italic",
+      "name": "italic",
+      "kind": "mark",
+      "dom": {
+        "parses": ["em", "i", "[style: font-style]"],
+        "renders": "em"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleItalic"],
+      "keys": [
+        {
+          "combo": "Mod-i",
+          "command": "toggleItalic"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.08,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "kbd",
+      "name": "kbd",
+      "kind": "mark",
+      "dom": {
+        "parses": ["kbd"],
+        "renders": "kbd"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleKbd"],
+      "keys": [
+        {
+          "combo": "Mod-Alt-k",
+          "command": "toggleKbd"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.05,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A key on the keyboard, as in \"press <kbd>Ctrl</kbd>\"."
+        },
+        {
+          "type": "text",
+          "text": "Its own mark rather than `code` with a class: a key name is not code, a screen reader announces the two differently, and a stylesheet wants one drawn as a keycap and the other as monospace text. The two never overlap — `code` already refuses every other mark, and refusing `code` back means toggling kbd over code text swaps one for the other instead of doing nothing and looking broken."
+        }
+      ]
+    },
+    {
+      "export": "lineHeight",
+      "name": "lineHeight",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["setLineHeight", "unsetLineHeight"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.36,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Line height as an attribute on existing blocks."
+        },
+        {
+          "type": "text",
+          "text": "Built the way alignment is: the attribute is declared here and lands on every type named, so a paragraph that knows nothing about line height still keeps, renders and parses it. The document stores the value it was given (`1.5`, `24px`) and the element gets `style=\"line-height: …\"` — after the value has been checked, on the way in and on the way out alike."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.setLineHeight(1.5)\neditor.commands.setLineHeight('28px')\neditor.commands.unsetLineHeight()"
+        }
+      ]
+    },
+    {
+      "export": "link",
+      "name": "link",
+      "kind": "mark",
+      "dom": {
+        "parses": ["a[href]"],
+        "renders": "a"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["setLink", "unsetLink"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "href",
+          "default": null
+        },
+        {
+          "name": "target",
+          "default": "_blank"
+        },
+        {
+          "name": "rel",
+          "default": "noopener noreferrer"
+        }
+      ],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.23,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "listItem",
+      "name": "listItem",
+      "kind": "node",
+      "dom": {
+        "parses": ["li"],
+        "renders": "li"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "paragraph block*",
+      "commands": ["splitListItem", "liftListItem", "sinkListItem"],
+      "keys": [
+        {
+          "combo": "Enter",
+          "command": "splitListItem"
+        },
+        {
+          "combo": "Tab",
+          "command": "sinkListItem"
+        },
+        {
+          "combo": "Shift-Tab",
+          "command": "liftListItem"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.51,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "locked",
+      "name": "locked",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["lock", "unlock", "toggleLock"],
+      "keys": [],
+      "attrs": [],
+      "css": "lockedCSS",
+      "kits": [],
+      "gz": 0.8,
+      "options": {
+        "interface": "LockedOptions",
+        "fields": [
+          {
+            "name": "types",
+            "type": "readonly string[]",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Node types that may carry the lock."
+              },
+              {
+                "type": "text",
+                "text": "Defaults to every block the bundled extensions define. A name the editor does not have is ignored, so the default list costs nothing in a small editor and covers the whole of a large one."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Blocks that refuse to change."
+        },
+        {
+          "type": "text",
+          "text": "A contract with clauses nobody may edit and blanks they may; a form letter whose greeting is fixed; a template where the headings stay and the prose beneath them is yours. Every editor makes the whole document editable or none of it, and the gap between those is what this fills."
+        },
+        {
+          "type": "text",
+          "text": "The lock is an attribute, so it travels with the document, and the guard is a change filter rather than a read-only view: a keystroke, a paste, a drop, a drag and a command that would alter a locked node are all refused the same way, because all of them are changes. Nothing that leaves a locked node exactly as it was is refused — typing beside it, moving it, moving something past it — because nodes are immutable and an untouched node keeps its identity: every locked node of the old document has to be present, as the same object, in the new one. Top-level blocks nothing touched are the same objects too, so their locked nodes come out of a cache and the check costs the blocks that changed."
+        },
+        {
+          "type": "text",
+          "text": "The lock itself is the one edit a locked node accepts, and undo of a lock is another, so `lock`, `unlock` and history all pass. `setContent` replaces the document rather than editing it and passes too."
+        }
+      ]
+    },
+    {
+      "export": "mathBlock",
+      "name": "mathBlock",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-math]"],
+        "renders": "div"
+      },
+      "configurable": true,
+      "group": "block",
+      "content": null,
+      "commands": ["insertBlockMath"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "latex",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.42,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A formula on a line of its own."
+        },
+        {
+          "type": "text",
+          "text": "The same node as `mathInline` in every way but where it sits: a block, so `ctx.insert` splits the paragraph around it and `$$E=mc^2$$ ` typed at the start of a paragraph replaces the paragraph with it."
+        }
+      ]
+    },
+    {
+      "export": "mathInline",
+      "name": "mathInline",
+      "kind": "node",
+      "dom": {
+        "parses": ["span[data-math]"],
+        "renders": "span"
+      },
+      "configurable": true,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertInlineMath", "setMath"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "latex",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.79,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A formula in the run of text."
+        },
+        {
+          "type": "text",
+          "text": "Only the source is stored. It is rendered into the element by whatever the application supplies — the editor carries no typesetting library, and a document never depends on one: the HTML keeps the source as the element's text, so an export reads as `E=mc^2` with no script on the page at all."
+        },
+        {
+          "type": "text",
+          "text": "An atom, so the caret steps over it and backspace takes the whole thing. `$E=mc^2$ ` typed into a paragraph becomes one; `setMath` rewrites the one the caret is on, inline or display."
+        }
+      ]
+    },
+    {
+      "export": "mathKit",
+      "name": "mathInline",
+      "kind": "node",
+      "dom": {
+        "parses": ["span[data-math]"],
+        "renders": "span"
+      },
+      "configurable": true,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertInlineMath", "setMath"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "latex",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.79,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Both nodes, sharing one renderer."
+        }
+      ]
+    },
+    {
+      "export": "mention",
+      "name": "mention",
+      "kind": "node",
+      "dom": {
+        "parses": ["span[data-mention-id]"],
+        "renders": "span"
+      },
+      "configurable": true,
+      "group": "inline",
+      "content": null,
+      "commands": ["insertMention"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "id",
+          "default": null
+        },
+        {
+          "name": "label",
+          "default": ""
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.21,
+      "options": {
+        "interface": "MentionOptions",
+        "fields": [
+          {
+            "name": "render",
+            "type": "(attrs: { id: string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "What appears in the document. Defaults to `@label`."
+              }
+            ]
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "doc": []
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Node name, if you need two kinds of mention in one editor."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "A mention, as a node rather than styled text."
+        },
+        {
+          "type": "text",
+          "text": "An atom: the caret steps over it, backspace removes the whole thing, and it cannot be half-deleted into `@Nahi`. That is the entire argument for making it a node — styled text looks identical until someone edits it, and then it quietly stops being a reference to anybody."
+        },
+        {
+          "type": "text",
+          "text": "The id travels with it, so the document keeps a reference rather than a name that was true when it was typed."
+        }
+      ]
+    },
+    {
+      "export": "orderedList",
+      "name": "orderedList",
+      "kind": "node",
+      "dom": {
+        "parses": ["ol"],
+        "renders": "ol"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "listItem+",
+      "commands": ["toggleOrderedList"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-9",
+          "command": "toggleOrderedList"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "start",
+          "default": 1
+        }
+      ],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.55,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "pageBreak",
+      "name": "pageBreak",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-page-break]"],
+        "renders": "div"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": null,
+      "commands": ["insertPageBreak"],
+      "keys": [],
+      "attrs": [],
+      "css": "pageBreakCSS",
+      "kits": [],
+      "gz": 0.07,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A page break."
+        },
+        {
+          "type": "text",
+          "text": "A block atom with nothing inside, like a horizontal rule: the caret steps over it, Backspace removes the whole thing, and inserting one at a caret in the middle of a paragraph cuts the paragraph around it. On screen it is a labelled dashed line; in print it is where the page ends and nothing else."
+        },
+        {
+          "type": "text",
+          "text": "The element is marked non-editable in its own DOM, as the YouTube embed is, so an empty `<div>` inside the editor never becomes a line the caret can sit on."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.insertPageBreak()"
+        }
+      ]
+    },
+    {
+      "export": "paragraph",
+      "name": "paragraph",
+      "kind": "node",
+      "dom": {
+        "parses": ["p"],
+        "renders": "p"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "inline*",
+      "commands": ["setParagraph"],
+      "keys": [
+        {
+          "combo": "Mod-Alt-0",
+          "command": "setParagraph"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": null,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "placeholder",
+      "name": "placeholder",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": "placeholderCSS",
+      "kits": [],
+      "gz": 0.27,
+      "options": {
+        "interface": "PlaceholderOptions",
+        "fields": [
+          {
+            "name": "text",
+            "type": "string",
+            "required": true,
+            "doc": []
+          },
+          {
+            "name": "everyBlock",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Also prompt inside an empty block the caret is in, not just an empty document — the way a Notion-style page hints at every new line."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Prompt text for an empty editor."
+        },
+        {
+          "type": "text",
+          "text": "Implemented as a data attribute on the editable element plus a CSS rule, rather than a fake node in the document — a placeholder that lives in the document is one a user can select, copy and accidentally save."
+        }
+      ]
+    },
+    {
+      "export": "search",
+      "name": "search",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [
+        "setSearch",
+        "clearSearch",
+        "nextMatch",
+        "previousMatch",
+        "replaceMatch",
+        "replaceAllMatches"
+      ],
+      "keys": [],
+      "attrs": [],
+      "css": "searchCSS",
+      "kits": [],
+      "gz": 1.37,
+      "options": {
+        "interface": "SearchOptions",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Extension name, and the key `editor.extensionState` reads."
+              }
+            ]
+          },
+          {
+            "name": "matchClass",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Class on every match."
+              }
+            ]
+          },
+          {
+            "name": "currentClass",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Class on the current match, in addition to `matchClass`."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Find and replace."
+        },
+        {
+          "type": "text",
+          "text": "Every match is a decoration, so nothing about searching touches the document, and replacing all of them is one transaction and one undo step."
+        },
+        {
+          "type": "text",
+          "text": "Matches are recomputed per block and cached on the block node: typing in one paragraph rescans that paragraph and reads every other paragraph's matches back, so a search left open while writing costs the paragraph being written, not the document."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.setSearch({ query: 'colour', caseSensitive: false })\neditor.commands.nextMatch()\neditor.commands.replaceMatch('color')\neditor.commands.replaceAllMatches('color')\neditor.commands.clearSearch()"
+        }
+      ]
+    },
+    {
+      "export": "selectionHighlight",
+      "name": "selectionHighlight",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": "selectionHighlightCSS",
+      "kits": [],
+      "gz": 0.81,
+      "options": {
+        "interface": "SelectionHighlightOptions",
+        "fields": [
+          {
+            "name": "minLength",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The shortest selection that is looked for elsewhere. Default 2."
+              }
+            ]
+          },
+          {
+            "name": "caseSensitive",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Match case. Default false."
+              }
+            ]
+          },
+          {
+            "name": "wholeWord",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Whole words only, so a selected `cat` leaves `cats` alone. Default false."
+              }
+            ]
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The most matches drawn, so a common word in a long document stays cheap. Default 500."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Every other occurrence of the selected word, highlighted."
+        },
+        {
+          "type": "text",
+          "text": "What a code editor does when a name is selected, and what makes \"is this used anywhere else\" a glance rather than a search. Only a selection that could be a word qualifies: inside one textblock, no whitespace, at least `minLength` characters. The selected range itself is left alone, since the browser is already drawing that one."
+        },
+        {
+          "type": "text",
+          "text": "Matches are found per top-level block and remembered on the block node with the query they were found for. Moving the selection to another occurrence of the same word rescans nothing; typing rescans the paragraph being typed in; selecting a different word rescans each block as it is reached. The result is memoised on the document and the selection, so a transaction that changed neither hands the renderer the same array and it draws nothing."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "createEditor({ extensions: [...starterKit, selectionHighlight()] })"
+        }
+      ]
+    },
+    {
+      "export": "smartPaste",
+      "name": "smartPaste",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 1.76,
+      "options": {
+        "interface": "SmartPasteOptions",
+        "fields": [
+          {
+            "name": "tables",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Tab-separated and comma-separated text becomes a table. Default true."
+              }
+            ]
+          },
+          {
+            "name": "csv",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Comma-separated text counts as a table too. Default true."
+              }
+            ]
+          },
+          {
+            "name": "headerRow",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The first row of a pasted table is a header row. Default true."
+              }
+            ]
+          },
+          {
+            "name": "markdown",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Text that reads as Markdown is parsed as Markdown. Default true."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Paste what was meant, not what was copied."
+        },
+        {
+          "type": "text",
+          "text": "A spreadsheet copied as text is tabs and newlines; a README copied from a terminal is Markdown; both arrive as a paragraph with the punctuation in it. This looks at plain text before the editor does and, when the shape is unmistakable, builds the table or parses the Markdown instead. Anything with real HTML on the clipboard is left to the parser, which already reads a table copied from a browser."
+        },
+        {
+          "type": "text",
+          "text": "Needs the table nodes for the table half and whatever nodes the Markdown names for the other: a heading pasted into an editor with no heading extension stays text, because that editor cannot hold one."
+        }
+      ]
+    },
+    {
+      "export": "strike",
+      "name": "strike",
+      "kind": "mark",
+      "dom": {
+        "parses": ["s", "del", "[style: text-decoration]"],
+        "renders": "s"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleStrike"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-x",
+          "command": "toggleStrike"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": 0.08,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "subscript",
+      "name": "subscript",
+      "kind": "mark",
+      "dom": {
+        "parses": ["sub"],
+        "renders": "sub"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleSubscript"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.05,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "suggestion",
+      "name": "suggestion",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["acceptSuggestion", "cancelSuggestion"],
+      "keys": [
+        {
+          "combo": "Escape",
+          "command": "cancelSuggestion"
+        }
+      ],
+      "attrs": [],
+      "css": "suggestionCSS",
+      "kits": [],
+      "gz": 0.54,
+      "options": {
+        "interface": "SuggestionOptions",
+        "fields": [
+          {
+            "name": "char",
+            "type": "string",
+            "required": true,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The character that opens it. `@` for mentions, `/` for commands."
+              }
+            ]
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Extension name, and therefore the key `editor.extensionState` is read by. Two suggestions on one editor need two names."
+              }
+            ]
+          },
+          {
+            "name": "startOfLine",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Only fire at the start of a block. What `/` menus usually want."
+              }
+            ]
+          },
+          {
+            "name": "allowSpaces",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Let the query contain spaces. Names have spaces; commands do not."
+              }
+            ]
+          },
+          {
+            "name": "maxLength",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Give up after this many characters, so a stray `@` stops matching."
+              }
+            ]
+          },
+          {
+            "name": "decorationClass",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Class on the decoration over the active range, for positioning a popup."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": []
+    },
+    {
+      "export": "superscript",
+      "name": "superscript",
+      "kind": "mark",
+      "dom": {
+        "parses": ["sup"],
+        "renders": "sup"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleSuperscript"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.05,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "table",
+      "name": "table",
+      "kind": "node",
+      "dom": {
+        "parses": ["table"],
+        "renders": "table"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "tableRow+",
+      "commands": [
+        "insertTable",
+        "deleteTable",
+        "addRowAfter",
+        "addRowBefore",
+        "deleteRow",
+        "addColumnAfter",
+        "addColumnBefore",
+        "deleteColumn",
+        "toggleHeaderRow",
+        "goToNextCell",
+        "goToPreviousCell"
+      ],
+      "keys": [
+        {
+          "combo": "Tab",
+          "command": "goToNextCell"
+        },
+        {
+          "combo": "Shift-Tab",
+          "command": "goToPreviousCell"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": ["tableKit"],
+      "gz": 1.84,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "tableCell",
+      "name": "tableCell",
+      "kind": "node",
+      "dom": {
+        "parses": ["td"],
+        "renders": "td"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "block+",
+      "commands": [],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "colspan",
+          "default": 1
+        },
+        {
+          "name": "rowspan",
+          "default": 1
+        },
+        {
+          "name": "colwidth",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": ["tableKit"],
+      "gz": 0.19,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "tableHeader",
+      "name": "tableHeader",
+      "kind": "node",
+      "dom": {
+        "parses": ["th"],
+        "renders": "th"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "block+",
+      "commands": [],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "colspan",
+          "default": 1
+        },
+        {
+          "name": "rowspan",
+          "default": 1
+        },
+        {
+          "name": "colwidth",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": ["tableKit"],
+      "gz": 0.19,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "tableRow",
+      "name": "tableRow",
+      "kind": "node",
+      "dom": {
+        "parses": ["tr"],
+        "renders": "tr"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "(tableCell | tableHeader)+",
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["tableKit"],
+      "gz": 0.04,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "taskItem",
+      "name": "taskItem",
+      "kind": "node",
+      "dom": {
+        "parses": ["li[data-checked]"],
+        "renders": "li"
+      },
+      "configurable": false,
+      "group": null,
+      "content": "paragraph block*",
+      "commands": ["splitTaskItem", "liftTaskItem", "sinkTaskItem", "toggleTaskItem"],
+      "keys": [
+        {
+          "combo": "Mod-Enter",
+          "command": "toggleTaskItem"
+        },
+        {
+          "combo": "Enter",
+          "command": "splitTaskItem"
+        },
+        {
+          "combo": "Tab",
+          "command": "sinkTaskItem"
+        },
+        {
+          "combo": "Shift-Tab",
+          "command": "liftTaskItem"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "checked",
+          "default": false
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.92,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "taskList",
+      "name": "taskList",
+      "kind": "node",
+      "dom": {
+        "parses": ["ul[data-type=\"taskList\"]"],
+        "renders": "ul"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": "taskItem+",
+      "commands": ["toggleTaskList"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-7",
+          "command": "toggleTaskList"
+        }
+      ],
+      "attrs": [],
+      "css": "taskListCSS",
+      "kits": [],
+      "gz": 0.57,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A checklist."
+        },
+        {
+          "type": "text",
+          "text": "The checkbox is real DOM rather than a `::before`, because a checklist people cannot tick with the mouse is a bulleted list with extra steps. It carries `contenteditable=\"false\"` so the caret never lands inside it."
+        }
+      ]
+    },
+    {
+      "export": "text",
+      "name": "text",
+      "kind": "node",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": "inline",
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": ["starterKit"],
+      "gz": null,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "textAlign",
+      "name": "textAlign",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["setTextAlign", "unsetTextAlign"],
+      "keys": [
+        {
+          "combo": "Mod-Shift-l"
+        },
+        {
+          "combo": "Mod-Shift-e"
+        },
+        {
+          "combo": "Mod-Shift-r"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.36,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Alignment as an attribute on existing blocks."
+        },
+        {
+          "type": "text",
+          "text": "It is an extension rather than a node because alignment applies to whatever textblock is already there — turning a heading into a \"centered heading\" node type would double the schema for no gain. The attribute is declared here and lands on every type named, so a paragraph that knows nothing about alignment still keeps, renders and parses it."
+        }
+      ]
+    },
+    {
+      "export": "textDirection",
+      "name": "textDirection",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["setTextDirection", "unsetTextDirection"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.68,
+      "options": {
+        "interface": "TextDirectionOptions",
+        "fields": [
+          {
+            "name": "types",
+            "type": "readonly string[]",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Which blocks carry a direction. Default paragraph and heading."
+              }
+            ]
+          },
+          {
+            "name": "auto",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Render a block whose text reads right to left that way, with nothing stored. Default true."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Text direction as an attribute on existing blocks, detected when unset."
+        },
+        {
+          "type": "text",
+          "text": "A `dir` attribute on every type named, like `textAlign`: a paragraph that knows nothing about direction still keeps, renders and parses it, and a document with a Hebrew heading round-trips through HTML with `dir=\"rtl\"` on the heading. Set it with the commands when the reader knows better than the text."
+        },
+        {
+          "type": "text",
+          "text": "Left unset, the block's own text decides. Each block whose first strong character is right-to-left is drawn with `dir=\"rtl\"` as a node decoration, so an Arabic paragraph typed into an English document reads the right way round without anybody choosing — and the JSON says nothing about it. The answer is remembered per top-level block on the block node, and the whole set is memoised on the document, so a caret move costs nothing."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "editor.commands.setTextDirection('rtl')\neditor.commands.unsetTextDirection()"
+        }
+      ]
+    },
+    {
+      "export": "textStyle",
+      "name": "textStyle",
+      "kind": "mark",
+      "dom": {
+        "parses": ["span"],
+        "renders": "span"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": [
+        "setColor",
+        "unsetColor",
+        "setBackgroundColor",
+        "unsetBackgroundColor",
+        "setFontFamily",
+        "unsetFontFamily",
+        "setFontSize",
+        "unsetFontSize",
+        "unsetTextStyle"
+      ],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "color",
+          "default": null
+        },
+        {
+          "name": "backgroundColor",
+          "default": null
+        },
+        {
+          "name": "fontFamily",
+          "default": null
+        },
+        {
+          "name": "fontSize",
+          "default": null
+        }
+      ],
+      "css": null,
+      "kits": [],
+      "gz": 0.6,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Colour, background, font family and font size, as one mark."
+        },
+        {
+          "type": "text",
+          "text": "Tiptap ships these as four extensions layered on a `textStyle` mark; here they are one mark with four attributes, so a coloured, resized word is one `<span>` rather than a nest of them. Setting one attribute keeps the others: `setColor('red')` on text already in a different font leaves the font alone."
+        }
+      ]
+    },
+    {
+      "export": "textTransform",
+      "name": "textTransform",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["uppercase", "lowercase", "capitalize", "sentenceCase", "toggleCase"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.96,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "Change the case of the selection, or of the word under the caret."
+        },
+        {
+          "type": "text",
+          "text": "Five commands: `uppercase`, `lowercase`, `capitalize` (the first letter of every word, the rest untouched), `sentenceCase` (the first letter of the selection and of every sentence after a full stop, everything else down) and `toggleCase` (all capitals go down, anything else goes up). With nothing selected each works on the word the caret is in."
+        },
+        {
+          "type": "text",
+          "text": "The text is rewritten one text node at a time, so a bold word stays bold and a link stays a link. Locale-aware casing is used, which is why `ß` becomes `SS` and the selection is mapped afterwards rather than assumed to be the same width. A command that would change nothing returns false."
+        }
+      ]
+    },
+    {
+      "export": "trailingNode",
+      "name": "trailingNode",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.08,
+      "options": {
+        "interface": "TrailingNodeOptions",
+        "fields": [
+          {
+            "name": "node",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The node kept at the end. Default `paragraph`."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Always a paragraph at the end of the document."
+        },
+        {
+          "type": "text",
+          "text": "A document that ends in a table, an image or a code block has nowhere to put a caret after it, and the only way to write below it is to know the trick. So whenever the last block is anything else, an empty paragraph is added after it — its own transaction, grouped by undo with whatever caused it."
+        }
+      ]
+    },
+    {
+      "export": "typewriter",
+      "name": "typewriter",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": ["enableTypewriter", "disableTypewriter", "toggleTypewriter"],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.68,
+      "options": {
+        "interface": "TypewriterOptions",
+        "fields": [
+          {
+            "name": "position",
+            "type": "number",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Where the caret's line is kept, as a fraction of the visible height: 0 is the top, 1 the bottom. Default 0.5."
+              }
+            ]
+          },
+          {
+            "name": "smooth",
+            "type": "boolean",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Glide there rather than jump. Default false."
+              }
+            ]
+          },
+          {
+            "name": "scroller",
+            "type": "HTMLElement | (() => HTMLElement | null)",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The element that scrolls, or a function that finds it. Default the page."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "The line being written stays put; the page moves under it."
+        },
+        {
+          "type": "text",
+          "text": "What a typewriter did, and what a long writing session wants: the eye never travels down the screen to find the caret, because the caret never leaves the spot. After each edit or caret move the caret's line is scrolled to `position` of the scroller's visible height — the middle, unless asked otherwise."
+        },
+        {
+          "type": "text",
+          "text": "The caret is measured in the next animation frame rather than as the change lands: the DOM was patched a moment ago and measuring it then would force a layout in the middle of the input path, where the browser was about to lay it out anyway. One frame per burst, however many events land in it. Nothing happens while the editor does not have focus, so a document changed by a peer or a script does not drag the reader's page about."
+        },
+        {
+          "type": "code",
+          "lang": "ts",
+          "text": "createEditor({ extensions: [...starterKit, typewriter({ position: 0.4 })] })\neditor.commands.toggleTypewriter()"
+        }
+      ]
+    },
+    {
+      "export": "typography",
+      "name": "typography",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.2,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "underline",
+      "name": "underline",
+      "kind": "mark",
+      "dom": {
+        "parses": ["u", "[style: text-decoration]"],
+        "renders": "u"
+      },
+      "configurable": false,
+      "group": null,
+      "content": null,
+      "commands": ["toggleUnderline"],
+      "keys": [
+        {
+          "combo": "Mod-u",
+          "command": "toggleUnderline"
+        }
+      ],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.07,
+      "options": null,
+      "doc": []
+    },
+    {
+      "export": "uniqueId",
+      "name": "uniqueId",
+      "kind": "extension",
+      "dom": {
+        "parses": [],
+        "renders": null
+      },
+      "configurable": true,
+      "group": null,
+      "content": null,
+      "commands": [],
+      "keys": [],
+      "attrs": [],
+      "css": null,
+      "kits": [],
+      "gz": 0.18,
+      "options": {
+        "interface": "UniqueIdOptions",
+        "fields": [
+          {
+            "name": "types",
+            "type": "string[]",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Which node types get an id. Defaults to the blocks in the box."
+              }
+            ]
+          },
+          {
+            "name": "attribute",
+            "type": "string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "The attribute the id is written to."
+              }
+            ]
+          },
+          {
+            "name": "generate",
+            "type": "() => string",
+            "required": false,
+            "doc": [
+              {
+                "type": "text",
+                "text": "Supply your own, when the ids have to match something outside the editor."
+              }
+            ]
+          }
+        ]
+      },
+      "doc": [
+        {
+          "type": "text",
+          "text": "Declare the attribute so the schema keeps it."
+        },
+        {
+          "type": "text",
+          "text": "Without this the id is dropped on the way in: undeclared attributes do not survive, which is a security property rather than an oversight. The id is written to the element as `data-<attribute>` and read back from there, so it survives HTML as well as JSON."
+        }
+      ]
+    },
+    {
+      "export": "youtube",
+      "name": "youtube",
+      "kind": "node",
+      "dom": {
+        "parses": ["div[data-youtube-video]", "iframe[src]"],
+        "renders": "div"
+      },
+      "configurable": false,
+      "group": "block",
+      "content": null,
+      "commands": ["insertYoutube"],
+      "keys": [],
+      "attrs": [
+        {
+          "name": "src",
+          "default": null
+        },
+        {
+          "name": "width",
+          "default": 640
+        },
+        {
+          "name": "height",
+          "default": 360
+        },
+        {
+          "name": "start",
+          "default": 0
+        }
+      ],
+      "css": "youtubeCSS",
+      "kits": [],
+      "gz": 0.77,
+      "options": null,
+      "doc": [
+        {
+          "type": "text",
+          "text": "A YouTube video, embedded."
+        },
+        {
+          "type": "text",
+          "text": "Only the id is stored. The frame's address is built from it here, on the privacy-preserving domain, so a document can never carry a frame pointing anywhere else — an embed whose `src` is trusted from JSON is an `<iframe>` to any page an attacker likes."
+        }
+      ]
+    }
+  ]
+}
