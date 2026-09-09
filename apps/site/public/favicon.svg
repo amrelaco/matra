@@ -1,11 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 74">
-  <!-- The stems follow the browser's theme; the bar keeps the accent in both. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!--
+    Square, because Google will not use a favicon that is not.
+
+    The mark is 64 x 74 drawn, so it is scaled into a 64 x 64 canvas with a
+    little air around it rather than stretched · a squashed logo in a tab is
+    worse than no logo, and the search result showed neither.
+
+    The stems follow the browser's theme; the bar keeps the accent in both.
+  -->
   <style>
     .stem { fill: #1a1917 }
     @media (prefers-color-scheme: dark) { .stem { fill: #edebe6 } }
   </style>
-  <rect width="64" height="12" fill="#7c82e8"/>
-  <rect class="stem" y="22" width="18" height="52"/>
-  <rect class="stem" x="23" y="22" width="18" height="32"/>
-  <rect class="stem" x="46" y="22" width="18" height="44"/>
+  <g transform="translate(9.7 6) scale(0.7027)">
+    <rect width="64" height="12" fill="#7c82e8"/>
+    <rect class="stem" y="22" width="18" height="52"/>
+    <rect class="stem" x="23" y="22" width="18" height="32"/>
+    <rect class="stem" x="46" y="22" width="18" height="44"/>
+  </g>
 </svg>

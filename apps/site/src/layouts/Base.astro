@@ -78,7 +78,18 @@ const social = new URL(image, Astro.site).href
     <meta name="twitter:image" content={social} />
 
     <meta name="theme-color" content="#f5f1e8" />
+    <!--
+      Google will not show a favicon that is not square, and looks for
+      /favicon.ico before anything declared here. The search result for
+      "matrajs" showed the generic globe because the SVG was 64x74 and the ico
+      did not exist. The SVG stays first for browsers, which prefer it and get
+      a mark that follows the theme; the raster copies carry the paper ground
+      baked in, because Google draws the icon on a chip of its own colour.
+    -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" href="/sitemap.xml" />
     <!--
       Points crawlers that read it at the plain-text index of the docs. Harmless
@@ -133,6 +144,11 @@ const social = new URL(image, Astro.site).href
             '@id': 'https://matrajs.com/#website',
             url: 'https://matrajs.com/',
             name: 'Matra',
+            // The project is Matra; the thing people type into Google is
+            // "matrajs", which is the npm scope and the domain. Saying both
+            // here is how the two get treated as one entity rather than as a
+            // near-miss.
+            alternateName: ['MatraJS', 'matrajs'],
             description:
               'A headless rich text editor framework with a first-class extension model.',
             publisher: { '@id': 'https://matrajs.com/#org' },
@@ -143,7 +159,10 @@ const social = new URL(image, Astro.site).href
             '@id': 'https://matrajs.com/#org',
             name: 'Amrela',
             url: 'https://matrajs.com/',
-            logo: 'https://matrajs.com/favicon.svg',
+            // A raster, not the SVG. Google's logo guidance wants an image it
+            // can rasterise predictably, and the icon it was pointed at was
+            // not even square until today.
+            logo: 'https://matrajs.com/icon-512.png',
           },
           {
             '@type': 'SoftwareSourceCode',
