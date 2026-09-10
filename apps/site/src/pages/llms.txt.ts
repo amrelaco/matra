@@ -81,6 +81,7 @@ npm install @matrajs/react   # or /vue, /svelte, /solid
 - [Keyboard shortcuts](https://matrajs.com/docs/shortcuts): defaults and rebinding.
 - [Recipes](https://matrajs.com/docs/recipes): common editor requirements, solved.
 - [Frameworks](https://matrajs.com/docs/frameworks): choosing a binding.
+- [Plain JavaScript](https://matrajs.com/docs/javascript): no framework, no build step.
 - [React](https://matrajs.com/docs/react) · [Vue](https://matrajs.com/docs/vue) · [Svelte](https://matrajs.com/docs/svelte) · [Solid](https://matrajs.com/docs/solid)
 - [AI](https://matrajs.com/docs/ai): streaming edits.
 - [Collaboration](https://matrajs.com/docs/collab): multiplayer editing.

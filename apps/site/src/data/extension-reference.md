@@ -1,6 +1,6 @@
 # Every extension
 
-All 81 extensions live in `@matrajs/core` and carry 137 commands between them. There is no separate package to install for any one of them.
+All 83 extensions live in `@matrajs/core` and carry 139 commands between them. There is no separate package to install for any one of them.
 
 ## Installing only what you want
 
@@ -33,6 +33,18 @@ A kit is an array of definitions, spread with `...`.
 - `tableKit` — `table`, `tableRow`, `tableCell`, `tableHeader`
 
 ## Nodes
+
+### audio
+
+```ts
+import { audio } from '@matrajs/core'
+```
+
+**Commands** — `editor.commands.insertAudio()`
+
+**Attributes** — `src`, `title`, `controls = true`
+
+**HTML** — parses `audio[src]` · renders `audio`
 
 ### blockquote
 
@@ -523,6 +535,26 @@ import { paragraph } from '@matrajs/core'
 **Keys** — `Mod-Alt-0` setParagraph
 
 **HTML** — parses `p` · renders `p`
+
+### ruby
+
+Furigana · a reading printed above its base text.
+
+`<ruby>漢字<rt>かんじ</rt></ruby>`. Japanese needs it wherever a reader may not know a kanji, and Chinese typesetting uses the same element for pinyin, so this is not a niche of a niche · it is how CJK text is annotated at all.
+
+An atom, with the base as an attribute rather than as content. The obvious design is content plus an `rt` child, and it does not survive a paste: the parser walks every child element, and with no way to tell it which subtree is the content, the reading comes back inside the base as text — 漢字かんじ. The fix in ProseMirror is `contentElement`, which this parser does not have. So both halves are attributes, they round-trip exactly, and a caret can never end up inside an annotation.
+
+The cost is that the base is not editable in place. `setRuby` replaces the node, which is what a furigana control does anyway.
+
+```ts
+import { ruby } from '@matrajs/core'
+```
+
+**Commands** — `editor.commands.setRuby()`
+
+**Attributes** — `base`, `reading = ""`
+
+**HTML** — parses `ruby` · renders `ruby`
 
 ### table
 

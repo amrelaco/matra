@@ -124,3 +124,5 @@ export {
 export { textDirection, type TextDirection, type TextDirectionOptions } from './text-direction'
 export { typewriter, type TypewriterOptions, type TypewriterState } from './typewriter'
 export { autosave, type AutosaveOptions, type AutosaveState } from './autosave'
+export { audio, isSafeAudioSrc, type AudioAttrs } from './audio'
+export { ruby, type RubyAttrs } from './ruby'

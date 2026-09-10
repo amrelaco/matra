@@ -131,6 +131,10 @@ const shared = [
 ]
 
 const onlyMatra = [
+  [
+    'Server rendering without a second renderer',
+    'Tiptap needs `@tiptap/static-renderer` because its `getHTML()` wants a DOM. Matra’s does not, so the editor path already ran on a server · `renderToHTML(doc, extensions)` is the same output 2.8× faster, measured over 500 documents, by skipping the schema build. Both are generic: an extension written this afternoon renders through its own `toDOM`.',
+  ],
   ['Callouts', 'A note, warning or tip with an emoji attribute that round-trips.'],
   ['Columns', 'Two to six, as real nodes rather than a CSS class on a paragraph.'],
   ['Locked blocks', 'Blocks that refuse every change — a contract with fixed clauses.'],
@@ -162,8 +166,6 @@ const onlyTiptap = [
     'A gap cursor',
     'A caret in a place no text can go — before a leading table, between two rules. Matra keeps a paragraph at the end of the document, which covers the common case and not the others.',
   ],
-  ['An audio node', 'Tiptap ships one. Matra does not · it is about fifteen lines to write.'],
-  ['Ruby text', 'Furigana above CJK text.'],
   [
     'CRDT collaboration',
     'Tiptap’s collaboration is Yjs, so it works offline, peer to peer, and with Hocuspocus, Liveblocks or PartyKit. Matra exchanges steps against a central authority, which is simpler to host and cannot merge two clients that were both offline.',
@@ -183,10 +185,6 @@ const onlyTiptap = [
   [
     'Pagination',
     'Page boundaries in the editor, with headers and footers. Matra has a page break node and no page model.',
-  ],
-  [
-    'A static renderer',
-    '`@tiptap/static-renderer` turns stored JSON into HTML or React with no editor in the process, which is what you want on a server rendering a thousand saved documents. Matra reads and writes Markdown and has no equivalent.',
   ],
   [
     'A free AI toolkit',

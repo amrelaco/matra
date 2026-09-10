@@ -120,7 +120,7 @@ function put(bag: Record<string, unknown>, key: string, value: unknown): void {
  * per global and returns the spec untouched — which is every paragraph that is
  * not aligned, indented or otherwise decorated by another extension.
  */
-function withGlobals(
+export function withGlobals(
   spec: DomOutput,
   attrs: Record<string, unknown>,
   globals: readonly Global[],
@@ -203,7 +203,7 @@ function markRenderer(def: MarkDef, globals: readonly Global[]): MarkSpec['toDOM
 }
 
 /** Every global attribute declared by an extension, keyed by the type it lands on. */
-function collectGlobals(defs: readonly AnyDef[]): Map<string, Global[]> {
+export function collectGlobals(defs: readonly AnyDef[]): Map<string, Global[]> {
   const out = new Map<string, Global[]>()
   for (const def of defs) {
     if (def.kind !== 'extension') continue

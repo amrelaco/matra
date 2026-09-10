@@ -1,5 +1,6 @@
 export { createEditor } from './editor'
 export { buildSchema } from './schema'
+export { renderToHTML } from './render'
 export { pos, range } from './pos'
 export * from './extensions'
 export type {
