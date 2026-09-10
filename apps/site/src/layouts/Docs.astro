@@ -39,6 +39,7 @@ const nav = [
       ['Vue', '/docs/vue'],
       ['Svelte', '/docs/svelte'],
       ['Solid', '/docs/solid'],
+      ['Angular', '/docs/angular'],
     ],
   ],
   [
@@ -282,24 +283,53 @@ const schema = [
       if (headings.length === 0) aside?.setAttribute('hidden', '')
       else aside?.removeAttribute('hidden')
 
-      // Mark the section being read. A contents list that never says where you
-      // are is a list of links, not a map.
-      if ('IntersectionObserver' in window && headings.length > 0) {
+      /*
+       * Mark the section being read.
+       *
+       * This watched for headings inside a band from 80px down to 30% of the
+       * viewport and lit every one it found. Two faults, and the second is the
+       * one people noticed: it could light several links at once, and any
+       * section taller than the band had no heading inside it — so scrolling
+       * through a long section left nothing marked at all. The reference pages
+       * are almost entirely long sections.
+       *
+       * Tracking the last heading above a reading line instead always yields
+       * exactly one answer, including inside a section three screens tall.
+       */
+      if (headings.length > 0) {
         const links = new Map(
           Array.from(toc.querySelectorAll('a')).map((link) => [link.hash.slice(1), link]),
         )
-        const seen = new Set()
-        const watcher = new IntersectionObserver(
-          (entries) => {
-            for (const entry of entries) {
-              if (entry.isIntersecting) seen.add(entry.target.id)
-              else seen.delete(entry.target.id)
-            }
-            for (const [id, link] of links) link.classList.toggle('on', seen.has(id))
-          },
-          { rootMargin: '-80px 0px -70% 0px' },
-        )
-        for (const heading of headings) watcher.observe(heading)
+        const LINE = 96
+        let queued = false
+
+        const mark = () => {
+          queued = false
+          let active = headings[0]
+          for (const heading of headings) {
+            if (heading.getBoundingClientRect().top > LINE) break
+            active = heading
+          }
+          // The last heading may sit below the line even when the page will
+          // scroll no further, and it is plainly the one being read.
+          const bottom = window.innerHeight + window.scrollY
+          if (bottom >= document.documentElement.scrollHeight - 2) {
+            active = headings[headings.length - 1]
+          }
+          for (const [id, link] of links) link.classList.toggle('on', id === active?.id)
+        }
+
+        // Read positions once per frame at most · a scroll handler that calls
+        // getBoundingClientRect on every event is a scroll handler that janks.
+        const onScroll = () => {
+          if (queued) return
+          queued = true
+          requestAnimationFrame(mark)
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true })
+        window.addEventListener('resize', onScroll)
+        mark()
       }
 
       // A copy button on every block. Docs that make you select code by hand

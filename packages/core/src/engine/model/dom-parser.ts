@@ -253,9 +253,10 @@ export class DOMParser {
       // carried in and rendered back out.
       const inherited = marks.filter((mark) => type.allowsMarkType(mark.type))
       const inner = literal || type.spec.code === true || element.tagName === 'PRE'
+      const from = contentRoot(element, matched.rule.contentElement)
       const content = type.isLeaf
         ? Fragment.empty
-        : this.fitContent(type, this.parseChildren(element, inherited, depth, type, inner))
+        : this.fitContent(type, this.parseChildren(from, inherited, depth, type, inner))
       const node = type.createAndFill(attrs, content)
       return node ? [node] : NONE
     }
@@ -347,6 +348,22 @@ export class DOMParser {
 const NONE: readonly Node[] = []
 
 /** Collapse runs of whitespace the way HTML rendering does. */
+/**
+ * The element whose children are the node's content.
+ *
+ * The element itself unless a rule says otherwise · one truthiness test on the
+ * rules that do not use it, which is all of them but one.
+ *
+ * A selector that matches nothing falls back to the element, because a rule
+ * that matched the tag has already claimed it and returning empty content would
+ * silently drop the text.
+ */
+function contentRoot(element: Element, spec: ParseRule['contentElement']): Element {
+  if (!spec) return element
+  if (typeof spec === 'function') return spec(element)
+  return element.querySelector(spec) ?? element
+}
+
 function normaliseWhitespace(text: string): string {
   return text.replace(/[\s\r\n]+/g, ' ')
 }

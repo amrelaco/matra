@@ -330,6 +330,13 @@ export interface ParseRule {
   attrs?: Record<string, unknown>
   getAttrs?: (dom: Element | string) => Record<string, unknown> | false | null
   priority?: number
+  /**
+   * Where this node's content actually is · a selector, or a function that
+   * returns the element holding it. Without it the matched element's own
+   * children are the content, which is wrong for a tag that wraps its content
+   * beside something else.
+   */
+  contentElement?: string | ((dom: Element) => Element)
 }
 
 export type DomOutput = string | [string, ...unknown[]]

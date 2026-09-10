@@ -1,6 +1,6 @@
 # Every extension
 
-All 83 extensions live in `@matrajs/core` and carry 139 commands between them. There is no separate package to install for any one of them.
+All 83 extensions live in `@matrajs/core` and carry 140 commands between them. There is no separate package to install for any one of them.
 
 ## Installing only what you want
 
@@ -542,17 +542,17 @@ Furigana · a reading printed above its base text.
 
 `<ruby>漢字<rt>かんじ</rt></ruby>`. Japanese needs it wherever a reader may not know a kanji, and Chinese typesetting uses the same element for pinyin, so this is not a niche of a niche · it is how CJK text is annotated at all.
 
-An atom, with the base as an attribute rather than as content. The obvious design is content plus an `rt` child, and it does not survive a paste: the parser walks every child element, and with no way to tell it which subtree is the content, the reading comes back inside the base as text — 漢字かんじ. The fix in ProseMirror is `contentElement`, which this parser does not have. So both halves are attributes, they round-trip exactly, and a caret can never end up inside an annotation.
+The base is content, so it stays real editable text with marks and spellcheck intact and a caret can sit inside it. The reading is an attribute: one short string that is never formatted, and modelling it as a second child would let a caret wander into the annotation and a paste drop a paragraph in it.
 
-The cost is that the base is not editable in place. `setRuby` replaces the node, which is what a furigana control does anyway.
+That split only works because a parse rule can say where the content is. `<ruby>` holds the base *and* the `rt`, so without `contentElement` the reading is parsed as part of the word it annotates and 漢字 comes back as 漢字かんじ. This shipped for an afternoon as an atom with the base as an attribute, which round-tripped correctly and could not be edited.
 
 ```ts
 import { ruby } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setRuby()`
+**Commands** — `editor.commands.setRuby()`, `editor.commands.unsetRuby()`
 
-**Attributes** — `base`, `reading = ""`
+**Attributes** — `reading = ""`
 
 **HTML** — parses `ruby` · renders `ruby`
 

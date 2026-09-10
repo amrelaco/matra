@@ -1,0 +1,118 @@
+---
+import Docs from '../../layouts/Docs.astro'
+
+/**
+ * Angular, as its own page.
+ *
+ * It was a section on /docs/frameworks, which meant somebody searching for
+ * "Angular rich text editor" found a page about four other frameworks, and
+ * somebody scanning the sidebar concluded Angular was not supported at all.
+ * The absence of an `@matrajs/angular` package makes that reading easier to
+ * arrive at, so the page says why up front rather than leaving it to be guessed.
+ */
+---
+
+<Docs
+  title="Angular rich text editor | Matra docs"
+  description="Build a rich text editor in Angular with Matra: a standalone directive, fifteen lines, compiled by your own build rather than shipped as a library."
+  section="Frameworks"
+  heading="Angular"
+>
+  <p>
+    A directive, so the editor's element stays in the template where it belongs. Everything on
+    this page is ordinary <code>@matrajs/core</code> · there is no Angular-specific package to install.
+  </p>
+
+  <pre><code>npm i @matrajs/core</code></pre>
+
+  <h2>Why there is no @matrajs/angular</h2>
+  <p>
+    Worth saying plainly rather than leaving you to wonder whether Angular is an afterthought.
+    An Angular library has to be published through <code>ng-packagr</code> in Angular's partial compilation
+    format, and that format is tied to the compiler version that produced it. Ship one and it fails
+    in some consumers' AOT builds · a package that breaks production builds is worse than the fifteen
+    lines below, which <em>your</em> compiler handles correctly because it is the one compiling them.
+  </p>
+
+  <h2>The directive</h2>
+  <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject } from '@angular/core'
+import { createEditor, starterKit } from '@matrajs/core'
+
+@Directive({ selector: '[matra]', standalone: true, exportAs: 'matra' })
+export class MatraDirective implements OnInit, OnDestroy {
+  private host = inject(ElementRef<HTMLElement>)
+  editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+
+  ngOnInit() {
+    if (!this.editor.unsafe.view) this.editor.mount(this.host.nativeElement)
+  }
+
+  ngOnDestroy() {
+    this.editor.destroy()
+  }
+}`}</code></pre>
+
+  <h2>Using it</h2>
+  <pre><code>{`<div matra #ed="matra"></div>
+
+<button (click)="ed.editor.commands.toggleBold()">Bold</button>`}</code></pre>
+  <p>
+    <code>exportAs</code> is what makes <code>#ed</code> the directive rather than the element, so
+    a toolbar anywhere in the template can reach <code>ed.editor</code> without a service.
+  </p>
+
+  <h2>A toolbar that keeps up</h2>
+  <p>
+    The editor is not an Angular signal, so a button's pressed state has to be told when to
+    change.
+    <code>editor.on()</code> returns its own unsubscribe, and the cheapest correct wiring is a signal
+    updated from it.
+  </p>
+  <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject, signal } from '@angular/core'
+import { createEditor, starterKit } from '@matrajs/core'
+
+@Directive({ selector: '[matra]', standalone: true, exportAs: 'matra' })
+export class MatraDirective implements OnInit, OnDestroy {
+  private host = inject(ElementRef<HTMLElement>)
+  private off: (() => void)[] = []
+
+  editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
+  active = signal<Record<string, boolean>>({})
+
+  ngOnInit() {
+    if (!this.editor.unsafe.view) this.editor.mount(this.host.nativeElement)
+    const read = () => this.active.set({ bold: this.editor.isActive('bold') })
+    this.off.push(this.editor.on('selectionChange', read), this.editor.on('change', read))
+    read()
+  }
+
+  ngOnDestroy() {
+    for (const off of this.off) off()
+    this.editor.destroy()
+  }
+}`}</code></pre>
+  <div class="note">
+    <p>
+      Both events, not just one. <code>selectionChange</code> covers moving the caret into bold text;
+      <code>change</code> covers the command that made it bold without moving anything. A toolbar
+      wired to only the first goes stale the moment someone uses a keyboard shortcut.
+    </p>
+  </div>
+
+  <h2>Zone.js</h2>
+  <p>
+    Nothing here needs <code>NgZone.run</code>. The editor's listeners fire from DOM events
+    Angular already patches, so a signal set inside one is seen. If you are on
+    <code>provideExperimentalZonelessChangeDetection</code>, signals are the only thing that
+    schedules a render anyway, which is why the toolbar above uses one rather than a plain
+    field.
+  </p>
+
+  <h2>Server rendering</h2>
+  <p>
+    <code>createEditor</code> needs no DOM, so it is safe to construct during SSR · only
+    <code>mount</code> touches the document, and <code>ngOnInit</code> does not run on the server
+    for a directive on an element that was never created. To render stored content without an editor
+    at all, use <a href="/docs/extension-reference"><code>renderToHTML</code></a>.
+  </p>
+</Docs>

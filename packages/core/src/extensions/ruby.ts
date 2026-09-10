@@ -1,12 +1,5 @@
 import type { Command, NodeDef } from '../types'
 
-export interface RubyAttrs {
-  /** The text being annotated · the kanji. */
-  base: string
-  /** The reading printed above it · the furigana. */
-  reading: string
-}
-
 /**
  * Furigana · a reading printed above its base text.
  *
@@ -14,52 +7,50 @@ export interface RubyAttrs {
  * know a kanji, and Chinese typesetting uses the same element for pinyin, so
  * this is not a niche of a niche · it is how CJK text is annotated at all.
  *
- * An atom, with the base as an attribute rather than as content. The obvious
- * design is content plus an `rt` child, and it does not survive a paste: the
- * parser walks every child element, and with no way to tell it which subtree is
- * the content, the reading comes back inside the base as text — 漢字かんじ. The
- * fix in ProseMirror is `contentElement`, which this parser does not have. So
- * both halves are attributes, they round-trip exactly, and a caret can never
- * end up inside an annotation.
+ * The base is content, so it stays real editable text with marks and
+ * spellcheck intact and a caret can sit inside it. The reading is an attribute:
+ * one short string that is never formatted, and modelling it as a second child
+ * would let a caret wander into the annotation and a paste drop a paragraph in
+ * it.
  *
- * The cost is that the base is not editable in place. `setRuby` replaces the
- * node, which is what a furigana control does anyway.
+ * That split only works because a parse rule can say where the content is.
+ * `<ruby>` holds the base *and* the `rt`, so without `contentElement` the
+ * reading is parsed as part of the word it annotates and 漢字 comes back as
+ * 漢字かんじ. This shipped for an afternoon as an atom with the base as an
+ * attribute, which round-tripped correctly and could not be edited.
  */
 export const ruby = {
   kind: 'node',
   name: 'ruby' as const,
   group: 'inline',
   inline: true,
-  atom: true,
+  content: 'text*',
   attrs: {
-    base: { required: true },
     reading: { default: '' },
   },
   parseDOM: [
     {
       tag: 'ruby',
-      getAttrs: (dom) => {
-        const el = dom as Element
-        const reading = el.querySelector('rt')?.textContent ?? ''
-        // The base is everything the annotation is not. Cloned first, because
-        // removing the `rt` from the live document would edit the page.
-        const clone = el.cloneNode(true) as Element
+      getAttrs: (dom) => ({
+        reading: (dom as Element).querySelector('rt')?.textContent ?? '',
+      }),
+      // A clone, because removing the annotation from the live element would
+      // edit the page being parsed · `rp` goes too, since its brackets are a
+      // fallback for browsers without ruby support and not part of the word.
+      contentElement: (dom: Element) => {
+        const clone = dom.cloneNode(true) as Element
         for (const part of Array.from(clone.querySelectorAll('rt, rp'))) part.remove()
-        const base = (clone.textContent ?? '').trim()
-        return base ? { base, reading } : false
+        return clone
       },
     },
   ],
   toDOM: (node) => {
-    const attrs = node.attrs ?? {}
-    const base = String(attrs.base ?? '')
-    const reading = String(attrs.reading ?? '')
-    // `rp` gives a browser without ruby support brackets to fall back to, and
-    // costs two elements nothing else reads.
-    return reading ? ['ruby', base, ['rp', '('], ['rt', reading], ['rp', ')']] : ['ruby', base]
+    const reading = String(node.attrs?.reading ?? '')
+    return reading ? ['ruby', 0, ['rp', '('], ['rt', reading], ['rp', ')']] : ['ruby', 0]
   },
   commands: {
-    setRuby: (ctx, base, reading) =>
-      base ? ctx.insert({ type: 'ruby', attrs: { base, reading } }) : false,
+    /** Annotate the selection. An empty reading leaves the text unwrapped. */
+    setRuby: (ctx, reading) => (reading ? ctx.wrapIn('ruby', { reading }) : false),
+    unsetRuby: (ctx) => ctx.lift(),
   },
-} satisfies NodeDef<{ setRuby: Command<[base: string, reading: string]> }>
+} satisfies NodeDef<{ setRuby: Command<[reading: string]>; unsetRuby: Command }>

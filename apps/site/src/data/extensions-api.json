@@ -4,7 +4,7 @@
   "counts": {
     "extensions": 83,
     "configurable": 35,
-    "commands": 139,
+    "commands": 140,
     "documented": 54
   },
   "kits": [
@@ -2564,14 +2564,10 @@
       },
       "configurable": false,
       "group": "inline",
-      "content": null,
-      "commands": ["setRuby"],
+      "content": "text*",
+      "commands": ["setRuby", "unsetRuby"],
       "keys": [],
       "attrs": [
-        {
-          "name": "base",
-          "default": null
-        },
         {
           "name": "reading",
           "default": ""
@@ -2592,11 +2588,11 @@
         },
         {
           "type": "text",
-          "text": "An atom, with the base as an attribute rather than as content. The obvious design is content plus an `rt` child, and it does not survive a paste: the parser walks every child element, and with no way to tell it which subtree is the content, the reading comes back inside the base as text — 漢字かんじ. The fix in ProseMirror is `contentElement`, which this parser does not have. So both halves are attributes, they round-trip exactly, and a caret can never end up inside an annotation."
+          "text": "The base is content, so it stays real editable text with marks and spellcheck intact and a caret can sit inside it. The reading is an attribute: one short string that is never formatted, and modelling it as a second child would let a caret wander into the annotation and a paste drop a paragraph in it."
         },
         {
           "type": "text",
-          "text": "The cost is that the base is not editable in place. `setRuby` replaces the node, which is what a furigana control does anyway."
+          "text": "That split only works because a parse rule can say where the content is. `<ruby>` holds the base *and* the `rt`, so without `contentElement` the reading is parsed as part of the word it annotates and 漢字 comes back as 漢字かんじ. This shipped for an afternoon as an atom with the base as an attribute, which round-tripped correctly and could not be edited."
         }
       ]
     },

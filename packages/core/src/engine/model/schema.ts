@@ -15,6 +15,17 @@ export interface ParseRule {
   priority?: number
   /** Drop the element and everything inside it. */
   ignore?: boolean
+  /**
+   * Where this node's content actually is.
+   *
+   * By default the matched element's own children are the content, which is
+   * wrong whenever a tag wraps its content beside something else: a `<ruby>`
+   * holds the base text *and* the `<rt>` reading, and parsing all of it puts
+   * the annotation inside the word it annotates. A selector picks the subtree;
+   * a function returns it, and may return a clone when the content is "these
+   * children but not those".
+   */
+  contentElement?: string | ((dom: Element) => Element)
 }
 
 export interface NodeSpec {

@@ -66,12 +66,17 @@ function readGlobals(dom: Element, globals: readonly Global[]): Record<string, u
 function toParseDOM(rules: ParseRule[] | undefined, globals: readonly Global[]) {
   if (!rules) return undefined
   return rules.map((rule): EngineParseRule => {
+    // Copied field by field rather than spread, so anything added to the public
+    // ParseRule has to be added here too · `contentElement` was declared, wired
+    // through the parser, and silently dropped on this line until a test asked
+    // why the furigana was inside the word.
     const base = {
       tag: rule.tag,
       style: rule.style,
       attrs: rule.attrs,
       getAttrs: rule.getAttrs as EngineParseRule['getAttrs'],
       priority: rule.priority,
+      contentElement: rule.contentElement,
     }
     if (!globals.length) return base
     return {

@@ -136,15 +136,47 @@ describe('audio', () => {
 })
 
 describe('ruby', () => {
+  const kit = [...starterKit, ruby]
+
   it('puts the reading above the base', () => {
-    const node = doc(p({ type: 'ruby', attrs: { base: '漢字', reading: 'かんじ' } }))
-    const html = renderToHTML(node, [...starterKit, ruby])
-    expect(html).toBe('<p><ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby></p>')
+    const node = doc(p({ type: 'ruby', attrs: { reading: 'かんじ' }, content: [t('漢字')] }))
+    expect(renderToHTML(node, kit)).toBe(
+      '<p><ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby></p>',
+    )
   })
 
   it('omits the annotation when there is none', () => {
-    const node = doc(p({ type: 'ruby', attrs: { base: '漢字', reading: '' } }))
-    expect(renderToHTML(node, [...starterKit, ruby])).toBe('<p><ruby>漢字</ruby></p>')
+    const node = doc(p({ type: 'ruby', attrs: { reading: '' }, content: [t('漢字')] }))
+    expect(renderToHTML(node, kit)).toBe('<p><ruby>漢字</ruby></p>')
+  })
+
+  /*
+   * The bug that forced the first design. Without `contentElement` the parser
+   * walks every child of `<ruby>`, so the reading lands inside the base and the
+   * word comes back as 漢字かんじ.
+   */
+  it('does not parse the reading into the base', () => {
+    const editor = createEditor({
+      extensions: kit as never,
+      content: '<p><ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby></p>',
+    })
+    const json = editor.getJSON()
+    const found = JSON.stringify(json)
+    expect(found).toContain('"reading":"かんじ"')
+    // The base is the content, and the reading is not in it.
+    const para = json.content?.[0]
+    const rubyNode = para?.content?.[0]
+    expect(rubyNode?.type).toBe('ruby')
+    expect(rubyNode?.content?.[0]?.text).toBe('漢字')
+    editor.destroy()
+  })
+
+  it('round-trips through the editor unchanged', () => {
+    const html = '<p><ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby></p>'
+    const editor = createEditor({ extensions: kit as never, content: html })
+    expect(editor.getHTML()).toBe(html)
+    expect(renderToHTML(editor.getJSON(), kit)).toBe(html)
+    editor.destroy()
   })
 })
 

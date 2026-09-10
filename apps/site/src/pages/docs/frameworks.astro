@@ -131,32 +131,10 @@ export function Editor() {
 
   <h2>Angular</h2>
   <p>
-    A directive, so the element stays in the template where it belongs. There is no
-    <code>@matrajs/angular</code> package, and the reason is worth saying rather than leaving you
-    to wonder: an Angular library has to be published through <code>ng-packagr</code> in Angular's
-    partial-compilation format, or it fails in every consumer's AOT build. Shipping one that breaks
-    in production builds would be worse than these fifteen lines, which
-    <em>your</em> compiler handles correctly because it compiles them.
+    A standalone directive, and no <code>@matrajs/angular</code> package · the reason, the directive,
+    a toolbar that keeps up and the Zone.js answer are on
+    <a href="/docs/angular">the Angular page</a>.
   </p>
-  <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject } from '@angular/core'
-import { createEditor, starterKit } from '@matrajs/core'
-
-@Directive({ selector: '[matra]', standalone: true, exportAs: 'matra' })
-export class MatraDirective implements OnInit, OnDestroy {
-  private host = inject(ElementRef<HTMLElement>)
-  editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
-
-  ngOnInit() {
-    if (!this.editor.unsafe.view) this.editor.mount(this.host.nativeElement)
-  }
-
-  ngOnDestroy() {
-    this.editor.destroy()
-  }
-}
-
-// <div matra #ed="matra"></div>
-// <button (click)="ed.editor.commands.toggleBold()">Bold</button>`}</code></pre>
 
   <h2>Qwik, Astro, Lit, or no framework</h2>
   <p>
