@@ -133,24 +133,20 @@ const shared = [
 const onlyMatra = [
   ['Callouts', 'A note, warning or tip with an emoji attribute that round-trips.'],
   ['Columns', 'Two to six, as real nodes rather than a CSS class on a paragraph.'],
-  ['Footnotes', 'Numbered by position, renumbering as you watch, with the list at the foot.'],
   ['Locked blocks', 'Blocks that refuse every change — a contract with fixed clauses.'],
   ['Fields', 'Named blanks a template fills in, with no editor in the loop.'],
   ['Snippets', 'Type a trigger and a phrase expands.'],
-  ['Page breaks', 'A labelled line on screen and a real break when printed.'],
   ['Line height and text direction', 'Both as checked attributes, not style strings.'],
   ['Block indent', 'An attribute on the block rather than a wrapper node invented to hold it.'],
   ['Text case', 'Upper, lower, title and sentence case, one text node at a time.'],
   ['Typewriter scrolling', 'The caret line stays put and the page moves.'],
   ['Autosave', 'Debounced, with a dirty flag and a flush when the page is hidden.'],
-  ['Ghost text', 'Inline completion from any source, Tab to take it.'],
   ['Dictation', 'The browser’s own recogniser, with nothing sent anywhere new.'],
   ['Hashtags', 'A node, so `#release` stays a reference rather than styled text.'],
   ['Keyboard keys', 'A `kbd` mark, for documentation that names a shortcut.'],
   ['Image resize', 'A handle on the edge; the width lands in the HTML.'],
   ['Allow-listed embeds', 'Any approved host in a sandboxed frame, refusing the rest.'],
   ['Smart paste', 'Tab-separated text arrives as a table.'],
-  ['Threaded comments', 'Free here. Tiptap’s Comments needs a subscription.'],
   ['An MCP server', 'The documentation, served to Claude, Cursor and Codex as a tool.'],
 ]
 
@@ -187,6 +183,14 @@ const onlyTiptap = [
   [
     'Pagination',
     'Page boundaries in the editor, with headers and footers. Matra has a page break node and no page model.',
+  ],
+  [
+    'A static renderer',
+    '`@tiptap/static-renderer` turns stored JSON into HTML or React with no editor in the process, which is what you want on a server rendering a thousand saved documents. Matra reads and writes Markdown and has no equivalent.',
+  ],
+  [
+    'A free AI toolkit',
+    '`@tiptap/ai-toolkit` is MIT. Matra’s `@matrajs/ai` is commercial · on this one the licensing runs the other way.',
   ],
   [
     'A decade of ProseMirror behind it',
@@ -266,7 +270,7 @@ const breadcrumbs = {
     lede="Measured where it can be measured, and honest where it cannot. Including the column that says what the others do better."
   />
 
-  <section class="section">
+  <section class="section" id="numbers">
     <div class="wrap">
       <p class="kicker"><span class="dot"></span>The numbers</p>
       <h2>Four editors, one table.</h2>
@@ -322,6 +326,13 @@ const breadcrumbs = {
       <div>
         <p class="kicker"><span class="dot"></span>Only here</p>
         <h3>What Matra has and Tiptap does not.</h3>
+        <p class="qualifier">
+          Has no version of, at any price. Comments, footnotes, pagination and AI completion
+          used to be on this list and are not, because Tiptap sells all four · that is a
+          difference in the bill, not in the feature, and it belongs in <a href="#numbers"
+            >the table</a
+          >.
+        </p>
         <dl class="pairs">
           {
             onlyMatra.map(([term, detail]) => (
@@ -400,10 +411,24 @@ const breadcrumbs = {
       margin-top: var(--s4);
     }
 
+    /*
+     * Fixed, not auto. Left to itself the browser gave the label column 41% —
+     * enough for the one long label — and every short label then sat in 437 px
+     * of cell with its value a long way off to the right. Fixed columns put the
+     * numbers where the eye expects them, and the four editors get equal width
+     * so none of them looks favoured by the layout.
+     */
     .cmp {
       width: 100%;
+      min-width: 640px;
+      table-layout: fixed;
       border-collapse: collapse;
       font-size: 14.5px;
+    }
+
+    .cmp th:first-child,
+    .cmp td:first-child {
+      width: 32%;
     }
 
     .cmp th,
@@ -470,6 +495,14 @@ const breadcrumbs = {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 48px;
+    }
+
+    .qualifier {
+      margin: 10px 0 0;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--ink-faint);
+      max-width: 46ch;
     }
 
     .pairs {
