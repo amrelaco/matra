@@ -63,7 +63,6 @@ const nav = [
     'Reference',
     [
       ['API', '/docs/api'],
-      ['Every extension', '/docs/extension-reference'],
       ['Keyboard shortcuts', '/docs/shortcuts'],
       ['Recipes', '/docs/recipes'],
       ['Benchmarks', '/docs/benchmarks'],
@@ -177,28 +176,43 @@ const schema = [
                   >
                     {label}
                   </a>
-                  {href === EXT_BASE &&
-                    extGroups.map((sub) => (
-                      <details class="docs-sub" open={sub.items.some(([, h]) => h === here)}>
-                        <summary>
-                          {sub.title} <span class="docs-sub-count">{sub.items.length}</span>
-                        </summary>
-                        {sub.items.map(([subLabel, subHref]) => (
-                          <a
-                            href={subHref}
-                            class={subHref === here ? 'on' : ''}
-                            aria-current={subHref === here ? 'page' : undefined}
-                          >
-                            {subLabel}
-                          </a>
-                        ))}
-                      </details>
-                    ))}
                 </>
               ))}
             </div>
           ))
         }
+
+        <div class="docs-group">
+          <div class="docs-group-name mono">Extensions</div>
+          <a
+            href={EXT_BASE}
+            class={EXT_BASE === here ? 'on' : ''}
+            aria-current={EXT_BASE === here ? 'page' : undefined}
+          >
+            All {extensions.length}
+          </a>
+          {
+            extGroups.map((sub) => (
+              <details class="docs-sub" open={sub.items.some(([, h]) => h === here)}>
+                <summary>
+                  <span>{sub.title}</span>
+                  <span class="docs-sub-count">{sub.items.length}</span>
+                </summary>
+                <div class="docs-sub-list">
+                  {sub.items.map(([subLabel, subHref]) => (
+                    <a
+                      href={subHref}
+                      class={subHref === here ? 'on' : ''}
+                      aria-current={subHref === here ? 'page' : undefined}
+                    >
+                      {subLabel}
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ))
+          }
+        </div>
       </nav>
     </aside>
 

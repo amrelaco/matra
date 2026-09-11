@@ -3,16 +3,18 @@ import api from '../../../data/extensions-api.json'
 import Docs from '../../../layouts/Docs.astro'
 
 /**
- * One page per extension.
+ * One page per extension, written as a task rather than a schema dump.
  *
- * These were one page of eighty-one entries, which is the right shape for a
- * crawler and the wrong one for a person: nobody scrolls past sixty extensions
- * to read about the one they came for. The single page survives as the index —
- * it is still what `llms-full.txt` and the MCP server carry, because a reader
- * that fetches once wants everything in that fetch.
+ * The first version listed what an extension had — commands, keys, attributes —
+ * which answers "what is this" and not "how do I use it", and the second is the
+ * question someone arrives with. So the spine of the page is install, add, use,
+ * in that order, with a snippet at each step that runs as written.
  *
- * Nothing here is written by hand either. `scripts/extension-api.mjs` produces
- * the data; this renders one route from each entry.
+ * Still generated. `scripts/extension-api.mjs` reflects over the built package
+ * for the commands and their signatures, reads option fields and parameter
+ * names out of the emitted `.d.ts`, and lifts prose from the doc comment above
+ * each export. A reference kept by hand is a reference that lies after the next
+ * release, and a command that no longer exists reads as the reader's own bug.
  */
 export function getStaticPaths() {
   return api.extensions.map((extension) => ({
@@ -22,10 +24,10 @@ export function getStaticPaths() {
 }
 
 const { extension: e } = Astro.props
+const all = api.extensions
 
 const KIND_LABEL = { node: 'Node', mark: 'Mark', extension: 'Behaviour' } as const
 
-/** The first sentence of the prose, or a fact about the definition instead. */
 function summarise(): string {
   const first = e.doc.find((block) => block.type === 'text')
   if (first) return first.text
@@ -35,16 +37,93 @@ function summarise(): string {
   if (bits.length) return `${bits.join(' · ')}.`
   return `A ${KIND_LABEL[e.kind].toLowerCase()} in @matrajs/core.`
 }
-
 const summary = summarise()
 
+/** The call that goes in the extensions array. */
 const call = e.configurable ? `${e.importName}({ … })` : e.importName
+
+/**
+ * The floor plus this extension.
+ *
+ * Every document is a `doc` holding blocks of `paragraph` holding `text`, so a
+ * snippet without those three does not run · which is exactly the snippet a
+ * reader copies first.
+ */
+const needed = ['document', 'paragraph', 'text'].filter((n) => n !== e.importName)
+const imports = [...new Set(['createEditor', ...needed, e.importName])].join(', ')
+const extensionList = [...needed, call].join(', ')
+
+const setup = `import { ${imports} } from '@matrajs/core'
+
+const editor = createEditor({
+  extensions: [${extensionList}],
+  element: document.querySelector('#editor'),
+})`
+
+/** A first call worth showing, preferring one that reads like a verb. */
+const primary = e.commands.find((c) => /^(set|toggle|insert|add)/.test(c.name)) ?? e.commands[0]
+
+const aliases = (api as { aliases?: Record<string, string[]> }).aliases ?? {}
+
+/** A value to show for a parameter · a literal beats a type name in an example. */
+const argFor = (param: string): string => {
+  const type = param.split(':').slice(1).join(':').trim()
+  // `HeadingLevel` becomes 2, not the word HeadingLevel. The second member,
+  // where there is one, because the first is usually the default anyway.
+  const alias = aliases[type]
+  if (alias?.length) return alias[Math.min(1, alias.length - 1)]
+  if (/^['"]/.test(type)) return type.split('|')[0].trim()
+  if (/^-?\d/.test(type)) return type.split('|')[0].trim()
+  if (type.startsWith('number')) return '1'
+  if (type.startsWith('boolean')) return 'true'
+  if (type.startsWith('string')) return "'…'"
+  return '…'
+}
+const exampleCall = primary
+  ? `editor.commands.${primary.name}(${primary.params
+      .filter((p) => !p.includes('?'))
+      .map(argFor)
+      .join(', ')})`
+  : null
+
+/*
+ * `isActive` answers "is the caret inside this", which only means anything for
+ * something the document contains. A behaviour extension has no node or mark of
+ * its own, so showing a pressed state for one would be generated code that does
+ * not work.
+ */
+const stateful = e.kind === 'node' || e.kind === 'mark'
+
+const buttonExample = [
+  `const button = document.querySelector('#${primary?.name ?? 'run'}')`,
+  '',
+  "button.addEventListener('click', () => {",
+  `  ${exampleCall}`,
+  '  editor.focus()',
+  '})',
+  ...(stateful
+    ? [
+        '',
+        `const read = () => button.setAttribute('aria-pressed', String(editor.isActive('${e.name}')))`,
+        "editor.on('selectionChange', read)",
+        "editor.on('change', read)",
+        'read()',
+      ]
+    : []),
+].join('\n')
+
+/** Everything else in the same kits · what a reader is likely to want next. */
+const siblings = e.kits.length
+  ? all
+      .filter((x) => x.importName !== e.importName && x.kits.some((k) => e.kits.includes(k)))
+      .slice(0, 8)
+  : []
 ---
 
 <Docs
-  title={`${e.importName} | Matra extensions`}
-  description={`${e.importName} · ${summary}`}
-  section="Every extension"
+  title={`${e.importName} · Matra extension`}
+  description={`How to use the ${e.importName} extension in Matra: what to import, the options it takes, its commands with their arguments, keyboard shortcuts and styling.`}
+  section="Extensions"
   heading={e.importName}
 >
   <p class="tags" data-static>
@@ -70,32 +149,91 @@ const call = e.configurable ? `${e.importName}({ … })` : e.importName
     )
   }
 
-  <h2>Adding it</h2>
-  <pre><code>{`import { createEditor, document, paragraph, text, ${e.importName} } from '@matrajs/core'
-
-const editor = createEditor({
-  extensions: [document, paragraph, text, ${call}],
-  element: document.querySelector('#editor'),
-})`}</code></pre>
+  <h2>1 · Install</h2>
   <p>
-    There is no separate package · <code>{e.importName}</code> is already in <code
-      >@matrajs/core</code
-    >, and an extension you do not import is not in your bundle. <code>document</code>, <code
-      >paragraph</code
-    > and <code>text</code> are the floor every document needs.
+    One package for every extension · there is no <code>@matrajs/{e.importName}</code> to install.
   </p>
+  <pre><code>npm i @matrajs/core</code></pre>
+
+  <h2>2 · Add it to the editor</h2>
+  <p>
+    Import it and put it in the <code>extensions</code> array. That array is the whole feature list:
+    what is not in it is not in your bundle and not in the document's schema.
+  </p>
+  <pre><code set:text={setup} /></pre>
+  {
+    e.kits.length > 0 && (
+      <div class="note">
+        <p>
+          Already in <code>{e.kits[0]}</code> · if you spread that kit you have this extension
+          and adding it again is a duplicate the schema will reject.
+        </p>
+      </div>
+    )
+  }
+
+  <h2>3 · Use it</h2>
+  {
+    exampleCall ? (
+      <>
+        <p>Run a command, and give focus back · a click on a button takes it away.</p>
+        <pre>
+          <code set:text={`${exampleCall}\neditor.focus()`} />
+        </pre>
+      </>
+    ) : (
+      <p>Nothing to call · this one works once it is in the array. {summary}</p>
+    )
+  }
+  {
+    e.keys.length > 0 && (
+      <p>
+        From the keyboard:{' '}
+        {e.keys.map((k, i) => (
+          <>
+            {i > 0 && ', '}
+            <kbd>{k.combo}</kbd>
+          </>
+        ))}
+        .
+      </p>
+    )
+  }
+  {
+    primary && (
+      <>
+        <p>Wired to a button{stateful ? ', with the pressed state kept in step' : ''}:</p>
+        <pre>
+          <code set:text={buttonExample} />
+        </pre>
+        {stateful && (
+          <div class="note">
+            <p>
+              Both events, not one. <code>selectionChange</code> covers the caret moving into
+              it;
+              <code>change</code> covers the command that changed it without moving anything. A
+              toolbar wired to only the first goes stale the moment someone uses the keyboard.
+            </p>
+          </div>
+        )}
+      </>
+    )
+  }
 
   {
     e.options?.fields.length ? (
       <>
         <h2>Options</h2>
+        <p>
+          <code>{e.importName}</code> is a function · call it with an options object.
+        </p>
         <div class="scroll" data-static>
           <table class="ref">
             <thead>
               <tr>
-                <th>Field</th>
+                <th>Option</th>
                 <th>Type</th>
-                <th />
+                <th>What it does</th>
               </tr>
             </thead>
             <tbody>
@@ -112,7 +250,7 @@ const editor = createEditor({
                     {f.doc
                       .filter((b) => b.type === 'text')
                       .map((b) => b.text)
-                      .join(' ')}
+                      .join(' ') || '—'}
                   </td>
                 </tr>
               ))}
@@ -127,13 +265,35 @@ const editor = createEditor({
     e.commands.length ? (
       <>
         <h2>Commands</h2>
-        <ul data-static>
-          {e.commands.map((c) => (
-            <li>
-              <code>editor.commands.{c}()</code>
-            </li>
-          ))}
-        </ul>
+        <p>
+          Every one returns <code>true</code> if it changed the document and <code>false</code>{' '}
+          if it could not · a command that does not apply where the caret is says so rather than
+          throwing.
+        </p>
+        <div class="scroll" data-static>
+          <table class="ref">
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Call</th>
+              </tr>
+            </thead>
+            <tbody>
+              {e.commands.map((c) => (
+                <tr>
+                  <td>
+                    <code>{c.name}</code>
+                  </td>
+                  <td>
+                    <code class="type">
+                      editor.commands.{c.name}({c.params.join(', ')})
+                    </code>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </>
     ) : null
   }
@@ -141,7 +301,7 @@ const editor = createEditor({
   {
     e.keys.length ? (
       <>
-        <h2>Keys</h2>
+        <h2>Keyboard shortcuts</h2>
         <ul data-static>
           {e.keys.map((k) => (
             <li>
@@ -149,50 +309,10 @@ const editor = createEditor({
             </li>
           ))}
         </ul>
-      </>
-    ) : null
-  }
-
-  {
-    e.attrs.length ? (
-      <>
-        <h2>Attributes</h2>
-        <ul data-static>
-          {e.attrs.map((a) => (
-            <li>
-              <code>{a.name}</code>
-              {a.default != null && (
-                <>
-                  {' '}
-                  · defaults to <code>{JSON.stringify(a.default)}</code>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </>
-    ) : null
-  }
-
-  {
-    e.dom.parses.length || e.dom.renders ? (
-      <>
-        <h2>HTML</h2>
-        <ul data-static>
-          {e.dom.parses.length ? (
-            <li>
-              Parses{' '}
-              {e.dom.parses.map((t) => (
-                <code>{t}</code>
-              ))}
-            </li>
-          ) : null}
-          {e.dom.renders ? (
-            <li>
-              Renders <code>{e.dom.renders}</code>
-            </li>
-          ) : null}
-        </ul>
+        <p>
+          <code>Mod</code> is Command on a Mac and Control everywhere else. To rebind one, put
+          your own extension after this in the array · later keys win.
+        </p>
       </>
     ) : null
   }
@@ -200,18 +320,88 @@ const editor = createEditor({
   {
     e.css ? (
       <>
-        <h2>Styles</h2>
+        <h2>Styling</h2>
         <p>
-          This one needs a stylesheet to look right, and ships the minimum as a string rather
-          than a file · nothing is loaded unless you load it.
+          This one needs CSS to look right, and ships the minimum as a string rather than a file
+          · nothing loads unless you load it, and you can ignore it and write your own.
         </p>
         <pre>
-          <code>{`import { ${e.css} } from '@matrajs/core'
+          <code
+            set:text={`import { ${e.css} } from '@matrajs/core'
 
 const style = document.createElement('style')
 style.textContent = ${e.css}
-document.head.append(style)`}</code>
+document.head.append(style)`}
+          />
         </pre>
+      </>
+    ) : null
+  }
+
+  {
+    e.attrs.length || e.dom.parses.length || e.dom.renders ? (
+      <>
+        <h2>In the document</h2>
+        {e.attrs.length ? (
+          <div class="scroll" data-static>
+            <table class="ref">
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Default</th>
+                </tr>
+              </thead>
+              <tbody>
+                {e.attrs.map((a) => (
+                  <tr>
+                    <td>
+                      <code>{a.name}</code>
+                    </td>
+                    <td>
+                      <code class="type">
+                        {a.default === null ? 'none' : JSON.stringify(a.default)}
+                      </code>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+        <ul data-static>
+          {e.dom.parses.length ? (
+            <li>
+              Reads{' '}
+              {e.dom.parses.map((t) => (
+                <code>{t}</code>
+              ))}{' '}
+              when HTML is pasted or loaded.
+            </li>
+          ) : null}
+          {e.dom.renders ? (
+            <li>
+              Writes <code>{e.dom.renders}</code> in <code>getHTML()</code> and{' '}
+              <code>renderToHTML()</code>.
+            </li>
+          ) : null}
+        </ul>
+      </>
+    ) : null
+  }
+
+  {
+    siblings.length ? (
+      <>
+        <h2>See also</h2>
+        <ul class="siblings">
+          {siblings.map((s) => (
+            <li>
+              <a href={`/docs/extension-reference/${s.importName}`}>
+                <code>{s.importName}</code>
+              </a>
+            </li>
+          ))}
+        </ul>
       </>
     ) : null
   }
@@ -227,7 +417,6 @@ document.head.append(style)`}</code>
       flex-wrap: wrap;
       margin-top: 0;
     }
-
     .tag {
       font-family: var(--font-mono);
       font-size: 10.5px;
@@ -237,22 +426,18 @@ document.head.append(style)`}</code>
       padding: 3px 7px;
       background-color: var(--surface);
     }
-
     .tag.soft {
       color: var(--ink-faint);
     }
-
     .scroll {
       overflow-x: auto;
       margin-top: var(--s3);
     }
-
     .ref {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
     }
-
     .ref th,
     .ref td {
       padding: 9px 14px 9px 0;
@@ -263,13 +448,11 @@ document.head.append(style)`}</code>
       background-position: 0 100%;
       background-repeat: no-repeat;
     }
-
     .ref th {
       font-weight: 500;
       color: var(--ink-faint);
       font-size: 12.5px;
     }
-
     .req {
       font-family: var(--font-mono);
       font-size: 10px;
@@ -278,18 +461,22 @@ document.head.append(style)`}</code>
       color: var(--indigo);
       margin-left: 8px;
     }
-
     .type,
     .fdoc {
       color: var(--ink-soft);
     }
-
     .fdoc {
       font-size: 13.5px;
       line-height: 1.6;
-      max-width: 46ch;
+      max-width: 42ch;
     }
-
+    .siblings {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+    }
     .back {
       margin-top: var(--s4);
       font-size: 14px;

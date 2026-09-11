@@ -187,6 +187,113 @@ const optionsFor = (exportName) => {
   return { interface: iface, fields }
 }
 
+/* --- command signatures ---------------------------------------------------- */
+
+/** The balanced `{ … }` starting at the first brace at or after `from`. */
+const braced = (text, from) => {
+  const open = text.indexOf('{', from)
+  if (open === -1) return null
+  let depth = 0
+  for (let i = open; i < text.length; i++) {
+    if (text[i] === '{') depth++
+    else if (text[i] === '}' && --depth === 0) return text.slice(open + 1, i)
+  }
+  return null
+}
+
+/**
+ * What a command actually takes, from the emitted types.
+ *
+ * `editor.commands.insertTable()` tells a reader nothing; `insertTable(rows?,
+ * cols?)` tells them what to pass. Both spellings appear in the `.d.ts` — a
+ * plain arrow for a command declared inline, and `Command<[…]>` for one written
+ * through the helper — so both are read here.
+ *
+ * The first parameter is always the context the editor supplies, and is dropped:
+ * nobody calling `editor.commands.x()` passes it.
+ */
+const splitParams = (list) => {
+  const out = []
+  let depth = 0
+  let current = ''
+  for (const ch of list) {
+    if ('<([{'.includes(ch)) depth++
+    else if ('>)]}'.includes(ch)) depth--
+    if (ch === ',' && depth === 0) {
+      out.push(current.trim())
+      current = ''
+      continue
+    }
+    current += ch
+  }
+  if (current.trim()) out.push(current.trim())
+  return out
+}
+
+const signatureOf = (type) => {
+  const arrow = type.match(/^\(([\s\S]*)\)\s*=>/)
+  if (arrow) {
+    const params = splitParams(arrow[1])
+    // Drop `ctx: Ctx`, which the editor supplies.
+    return params.slice(1).map((p) => p.replace(/\s*\|\s*undefined/g, '').trim())
+  }
+  const generic = type.match(/^Command<\[([\s\S]*)\]>/)
+  // `Command<[TextAlign]>` names only the type · give it a parameter name so the
+  // signature reads as a call rather than as a type list.
+  if (generic && !generic[1].includes(':')) {
+    return splitParams(generic[1])
+      .filter(Boolean)
+      .map((t, i) => `${['value', 'second', 'third'][i] ?? `arg${i}`}: ${t.trim()}`)
+  }
+  if (generic)
+    return splitParams(generic[1]).map((p) => p.replace(/\s*\|\s*undefined/g, '').trim())
+  return []
+}
+
+const commandsFor = (exportName) => {
+  const decl = new RegExp(`declare (?:const|function) ${exportName}\\b`)
+  const at = types.search(decl)
+  if (at === -1) return new Map()
+  // Bound the search to this declaration so a later extension's commands block
+  // cannot be read as this one's.
+  const next = types.slice(at + 1).search(/\ndeclare /)
+  const region = types.slice(at, next === -1 ? undefined : at + 1 + next)
+  /*
+   * Two shapes. A plain object declares `commands: { … }`; a factory returns
+   * `ExtensionDef<{ … }>` and has no such label, which is why every configurable
+   * extension reported no arguments at all — `setTextAlign` showed as taking
+   * none when it requires an alignment.
+   */
+  let at2 = region.indexOf('commands: {')
+  if (at2 === -1) at2 = region.search(/(?:Extension|Node|Mark)Def<\s*\{/)
+  if (at2 === -1) return new Map()
+  const body = braced(region, at2)
+  if (!body) return new Map()
+
+  const out = new Map()
+  const re = /(\w+)\s*:\s*([^\n]+?);?$/gm
+  for (const [, name, rawType] of body.matchAll(re)) {
+    out.set(name, signatureOf(rawType.trim().replace(/;$/, '')))
+  }
+  return out
+}
+
+/**
+ * Simple type aliases, so an example can show a value rather than a type name.
+ *
+ * `setHeading(level: HeadingLevel)` is the signature; `setHeading(2)` is the
+ * line someone copies. Only one level of resolution and only unions of
+ * literals — enough for the aliases the extensions actually use as arguments,
+ * and it declines rather than guesses for anything else.
+ */
+const aliases = {}
+for (const [, name, body] of types.matchAll(/^(?:declare )?type (\w+) = ([^;\n]+);/gm)) {
+  const members = body.split('|').map((m) => m.trim())
+  if (members.length > 1 && members.every((m) => /^(['"].*['"]|-?\d+(\.\d+)?)$/.test(m))) {
+    aliases[name] = members
+  }
+}
+
 /* --- sizes ---------------------------------------------------------------- */
 
 const sizeData = JSON.parse(
@@ -250,7 +357,10 @@ const describe = (exportName, def, { configurable }) => ({
   configurable,
   group: def.group ?? null,
   content: def.content ?? null,
-  commands: Object.keys(def.commands ?? {}),
+  commands: Object.keys(def.commands ?? {}).map((name) => ({
+    name,
+    params: commandsFor(exportName).get(name) ?? [],
+  })),
   keys: Object.entries(def.keys ?? {}).map(([combo, command]) => ({ combo, command })),
   attrs: Object.entries(def.attrs ?? {}).map(([attr, spec]) => ({
     name: attr,
@@ -299,10 +409,11 @@ const payload = {
   counts: {
     extensions: extensions.length,
     configurable: extensions.filter((e) => e.configurable).length,
-    commands: new Set(extensions.flatMap((e) => e.commands)).size,
+    commands: new Set(extensions.flatMap((e) => e.commands.map((c) => c.name))).size,
     documented: extensions.filter((e) => e.doc.length).length,
   },
   kits: kitsOut,
+  aliases,
   extensions,
 }
 

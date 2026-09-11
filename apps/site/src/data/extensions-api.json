@@ -1,5 +1,5 @@
 {
-  "measured": "2026-09-10",
+  "measured": "2026-09-11",
   "package": "@matrajs/core",
   "counts": {
     "extensions": 83,
@@ -43,6 +43,12 @@
       "members": ["table", "tableRow", "tableCell", "tableHeader"]
     }
   ],
+  "aliases": {
+    "HeadingLevel": ["1", "2", "3", "4", "5", "6"],
+    "TextAlign": ["'left'", "'center'", "'right'", "'justify'"],
+    "CalloutType": ["'info'", "'note'", "'tip'", "'warning'", "'danger'", "'success'"],
+    "TextDirection": ["'ltr'", "'rtl'"]
+  },
   "extensions": [
     {
       "importName": "audio",
@@ -55,7 +61,12 @@
       "configurable": false,
       "group": "block",
       "content": null,
-      "commands": ["insertAudio"],
+      "commands": [
+        {
+          "name": "insertAudio",
+          "params": ["attrs: AudioAttrs"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -143,7 +154,16 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["save", "markSaved"],
+      "commands": [
+        {
+          "name": "save",
+          "params": []
+        },
+        {
+          "name": "markSaved",
+          "params": ["ok: boolean", "error?: unknown"]
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -245,11 +265,26 @@
       "group": null,
       "content": null,
       "commands": [
-        "setBlockColor",
-        "unsetBlockColor",
-        "setBlockBackground",
-        "unsetBlockBackground",
-        "unsetBlockColors"
+        {
+          "name": "setBlockColor",
+          "params": ["color: string"]
+        },
+        {
+          "name": "unsetBlockColor",
+          "params": []
+        },
+        {
+          "name": "setBlockBackground",
+          "params": ["color: string"]
+        },
+        {
+          "name": "unsetBlockBackground",
+          "params": []
+        },
+        {
+          "name": "unsetBlockColors",
+          "params": []
+        }
       ],
       "keys": [],
       "attrs": [],
@@ -296,7 +331,16 @@
       "configurable": false,
       "group": "block",
       "content": "block+",
-      "commands": ["toggleBlockquote", "exitBlockquote"],
+      "commands": [
+        {
+          "name": "toggleBlockquote",
+          "params": []
+        },
+        {
+          "name": "exitBlockquote",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-b",
@@ -325,7 +369,20 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleBold", "setBold", "unsetBold"],
+      "commands": [
+        {
+          "name": "toggleBold",
+          "params": []
+        },
+        {
+          "name": "setBold",
+          "params": []
+        },
+        {
+          "name": "unsetBold",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-b",
@@ -427,7 +484,12 @@
       "configurable": false,
       "group": "block",
       "content": "listItem+",
-      "commands": ["toggleBulletList"],
+      "commands": [
+        {
+          "name": "toggleBulletList",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-8",
@@ -452,7 +514,24 @@
       "configurable": false,
       "group": "block",
       "content": "block+",
-      "commands": ["toggleCallout", "setCalloutType", "setCalloutEmoji", "exitCallout"],
+      "commands": [
+        {
+          "name": "toggleCallout",
+          "params": ["type?: CalloutType"]
+        },
+        {
+          "name": "setCalloutType",
+          "params": ["type: CalloutType"]
+        },
+        {
+          "name": "setCalloutEmoji",
+          "params": ["emoji: string | null"]
+        },
+        {
+          "name": "exitCallout",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Enter",
@@ -495,7 +574,12 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["countCharacters"],
+      "commands": [
+        {
+          "name": "countCharacters",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -543,7 +627,20 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["unsetAllMarks", "clearBlocks", "clearFormatting"],
+      "commands": [
+        {
+          "name": "unsetAllMarks",
+          "params": []
+        },
+        {
+          "name": "clearBlocks",
+          "params": []
+        },
+        {
+          "name": "clearFormatting",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-\\",
@@ -577,7 +674,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleCode"],
+      "commands": [
+        {
+          "name": "toggleCode",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-e",
@@ -602,7 +704,12 @@
       "configurable": false,
       "group": "block",
       "content": "text*",
-      "commands": ["toggleCodeBlock"],
+      "commands": [
+        {
+          "name": "toggleCodeBlock",
+          "params": ["language?: string"]
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Alt-c",
@@ -712,7 +819,24 @@
       "configurable": false,
       "group": "block",
       "content": "column column+",
-      "commands": ["setColumns", "unsetColumns", "addColumn", "removeColumn"],
+      "commands": [
+        {
+          "name": "setColumns",
+          "params": ["count?: number"]
+        },
+        {
+          "name": "unsetColumns",
+          "params": []
+        },
+        {
+          "name": "addColumn",
+          "params": []
+        },
+        {
+          "name": "removeColumn",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -750,7 +874,16 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["addComment", "removeComment"],
+      "commands": [
+        {
+          "name": "addComment",
+          "params": ["threadId: string"]
+        },
+        {
+          "name": "removeComment",
+          "params": ["threadId: string"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -788,7 +921,32 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["select", "insert", "replace", "remove", "moveBlock", "focus"],
+      "commands": [
+        {
+          "name": "select",
+          "params": ["value: Range | Pos"]
+        },
+        {
+          "name": "insert",
+          "params": ["value: DocNode | DocNode[] | string", "second: Pos?"]
+        },
+        {
+          "name": "replace",
+          "params": ["value: Range", "second: DocNode | DocNode[] | string"]
+        },
+        {
+          "name": "remove",
+          "params": ["value: Range?"]
+        },
+        {
+          "name": "moveBlock",
+          "params": ["value: Pos", "second: Pos"]
+        },
+        {
+          "name": "focus",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -817,7 +975,24 @@
       "configurable": false,
       "group": "block",
       "content": "detailsSummary block+",
-      "commands": ["insertDetails", "toggleDetails", "setDetailsOpen", "unsetDetails"],
+      "commands": [
+        {
+          "name": "insertDetails",
+          "params": []
+        },
+        {
+          "name": "toggleDetails",
+          "params": []
+        },
+        {
+          "name": "setDetailsOpen",
+          "params": ["open: boolean", "at: Pos"]
+        },
+        {
+          "name": "unsetDetails",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Enter"
@@ -880,7 +1055,24 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["startDictation", "stopDictation", "toggleDictation", "setDictation"],
+      "commands": [
+        {
+          "name": "startDictation",
+          "params": []
+        },
+        {
+          "name": "stopDictation",
+          "params": []
+        },
+        {
+          "name": "toggleDictation",
+          "params": []
+        },
+        {
+          "name": "setDictation",
+          "params": ["patch: Partial<DictationState>"]
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": "dictationCSS",
@@ -1040,7 +1232,16 @@
       "configurable": true,
       "group": "block",
       "content": null,
-      "commands": ["insertEmbed", "setEmbedAspect"],
+      "commands": [
+        {
+          "name": "insertEmbed",
+          "params": ["src: string", "attrs?: EmbedAttrs"]
+        },
+        {
+          "name": "setEmbedAspect",
+          "params": ["aspect: string", "at?: Pos"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -1156,7 +1357,16 @@
       "configurable": false,
       "group": "inline",
       "content": null,
-      "commands": ["insertField", "fillFields"],
+      "commands": [
+        {
+          "name": "insertField",
+          "params": ["name: string", "label?: string | null"]
+        },
+        {
+          "name": "fillFields",
+          "params": ["values: Record<string, FieldValue>"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -1509,7 +1719,24 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["setGhostText", "acceptGhostText", "acceptGhostWord", "dismissGhostText"],
+      "commands": [
+        {
+          "name": "setGhostText",
+          "params": ["text: string | null"]
+        },
+        {
+          "name": "acceptGhostText",
+          "params": []
+        },
+        {
+          "name": "acceptGhostWord",
+          "params": []
+        },
+        {
+          "name": "dismissGhostText",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Tab",
@@ -1603,7 +1830,12 @@
       "configurable": false,
       "group": "inline",
       "content": null,
-      "commands": ["insertHardBreak"],
+      "commands": [
+        {
+          "name": "insertHardBreak",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Shift-Enter",
@@ -1628,7 +1860,12 @@
       "configurable": true,
       "group": "inline",
       "content": null,
-      "commands": ["insertHashtag"],
+      "commands": [
+        {
+          "name": "insertHashtag",
+          "params": ["tag: string"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -1688,7 +1925,16 @@
       "configurable": false,
       "group": "block",
       "content": "inline*",
-      "commands": ["setHeading", "toggleHeading"],
+      "commands": [
+        {
+          "name": "setHeading",
+          "params": ["level: HeadingLevel"]
+        },
+        {
+          "name": "toggleHeading",
+          "params": ["level: HeadingLevel"]
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Alt-1"
@@ -1732,7 +1978,16 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleHighlight", "unsetHighlight"],
+      "commands": [
+        {
+          "name": "toggleHighlight",
+          "params": ["color: string"]
+        },
+        {
+          "name": "unsetHighlight",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-h",
@@ -1762,7 +2017,16 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["undo", "redo"],
+      "commands": [
+        {
+          "name": "undo",
+          "params": []
+        },
+        {
+          "name": "redo",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -1791,7 +2055,12 @@
       "configurable": false,
       "group": "block",
       "content": null,
-      "commands": ["insertHorizontalRule"],
+      "commands": [
+        {
+          "name": "insertHorizontalRule",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -1811,7 +2080,12 @@
       "configurable": false,
       "group": "inline",
       "content": null,
-      "commands": ["insertImage"],
+      "commands": [
+        {
+          "name": "insertImage",
+          "params": ["attrs: ImageAttrs"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -1844,7 +2118,12 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["setImageWidth"],
+      "commands": [
+        {
+          "name": "setImageWidth",
+          "params": ["width: number | null", "at?: Pos"]
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": "imageResizeCSS",
@@ -1899,7 +2178,20 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["indent", "outdent", "setIndent"],
+      "commands": [
+        {
+          "name": "indent",
+          "params": []
+        },
+        {
+          "name": "outdent",
+          "params": []
+        },
+        {
+          "name": "setIndent",
+          "params": ["level: number"]
+        }
+      ],
       "keys": [
         {
           "combo": "Tab",
@@ -1975,9 +2267,18 @@
       "group": null,
       "content": null,
       "commands": [
-        "showInvisibleCharacters",
-        "hideInvisibleCharacters",
-        "toggleInvisibleCharacters"
+        {
+          "name": "showInvisibleCharacters",
+          "params": []
+        },
+        {
+          "name": "hideInvisibleCharacters",
+          "params": []
+        },
+        {
+          "name": "toggleInvisibleCharacters",
+          "params": []
+        }
       ],
       "keys": [],
       "attrs": [],
@@ -2031,7 +2332,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleItalic"],
+      "commands": [
+        {
+          "name": "toggleItalic",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-i",
@@ -2056,7 +2362,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleKbd"],
+      "commands": [
+        {
+          "name": "toggleKbd",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Alt-k",
@@ -2090,7 +2401,16 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["setLineHeight", "unsetLineHeight"],
+      "commands": [
+        {
+          "name": "setLineHeight",
+          "params": ["value: string | number"]
+        },
+        {
+          "name": "unsetLineHeight",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -2124,7 +2444,16 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["setLink", "unsetLink"],
+      "commands": [
+        {
+          "name": "setLink",
+          "params": ["attrs: LinkAttrs"]
+        },
+        {
+          "name": "unsetLink",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -2157,7 +2486,20 @@
       "configurable": false,
       "group": null,
       "content": "paragraph block*",
-      "commands": ["splitListItem", "liftListItem", "sinkListItem"],
+      "commands": [
+        {
+          "name": "splitListItem",
+          "params": []
+        },
+        {
+          "name": "liftListItem",
+          "params": []
+        },
+        {
+          "name": "sinkListItem",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Enter",
@@ -2190,7 +2532,20 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["lock", "unlock", "toggleLock"],
+      "commands": [
+        {
+          "name": "lock",
+          "params": []
+        },
+        {
+          "name": "unlock",
+          "params": []
+        },
+        {
+          "name": "toggleLock",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": "lockedCSS",
@@ -2246,7 +2601,12 @@
       "configurable": true,
       "group": "block",
       "content": null,
-      "commands": ["insertBlockMath"],
+      "commands": [
+        {
+          "name": "insertBlockMath",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -2280,7 +2640,16 @@
       "configurable": true,
       "group": "inline",
       "content": null,
-      "commands": ["insertInlineMath", "setMath"],
+      "commands": [
+        {
+          "name": "insertInlineMath",
+          "params": []
+        },
+        {
+          "name": "setMath",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -2318,7 +2687,16 @@
       "configurable": true,
       "group": "inline",
       "content": null,
-      "commands": ["insertInlineMath", "setMath"],
+      "commands": [
+        {
+          "name": "insertInlineMath",
+          "params": []
+        },
+        {
+          "name": "setMath",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -2348,7 +2726,12 @@
       "configurable": true,
       "group": "inline",
       "content": null,
-      "commands": ["insertMention"],
+      "commands": [
+        {
+          "name": "insertMention",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -2422,7 +2805,12 @@
       "configurable": false,
       "group": "block",
       "content": "listItem+",
-      "commands": ["toggleOrderedList"],
+      "commands": [
+        {
+          "name": "toggleOrderedList",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-9",
@@ -2452,7 +2840,12 @@
       "configurable": false,
       "group": "block",
       "content": null,
-      "commands": ["insertPageBreak"],
+      "commands": [
+        {
+          "name": "insertPageBreak",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": "pageBreakCSS",
@@ -2490,7 +2883,12 @@
       "configurable": false,
       "group": "block",
       "content": "inline*",
-      "commands": ["setParagraph"],
+      "commands": [
+        {
+          "name": "setParagraph",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Alt-0",
@@ -2565,7 +2963,16 @@
       "configurable": false,
       "group": "inline",
       "content": "text*",
-      "commands": ["setRuby", "unsetRuby"],
+      "commands": [
+        {
+          "name": "setRuby",
+          "params": ["reading: string"]
+        },
+        {
+          "name": "unsetRuby",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [
         {
@@ -2608,12 +3015,30 @@
       "group": null,
       "content": null,
       "commands": [
-        "setSearch",
-        "clearSearch",
-        "nextMatch",
-        "previousMatch",
-        "replaceMatch",
-        "replaceAllMatches"
+        {
+          "name": "setSearch",
+          "params": ["query: SearchQuery | string"]
+        },
+        {
+          "name": "clearSearch",
+          "params": []
+        },
+        {
+          "name": "nextMatch",
+          "params": []
+        },
+        {
+          "name": "previousMatch",
+          "params": []
+        },
+        {
+          "name": "replaceMatch",
+          "params": ["replacement: string"]
+        },
+        {
+          "name": "replaceAllMatches",
+          "params": ["replacement: string"]
+        }
       ],
       "keys": [],
       "attrs": [],
@@ -2856,7 +3281,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleStrike"],
+      "commands": [
+        {
+          "name": "toggleStrike",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-x",
@@ -2881,7 +3311,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleSubscript"],
+      "commands": [
+        {
+          "name": "toggleSubscript",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -2901,7 +3336,16 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["acceptSuggestion", "cancelSuggestion"],
+      "commands": [
+        {
+          "name": "acceptSuggestion",
+          "params": []
+        },
+        {
+          "name": "cancelSuggestion",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Escape",
@@ -2996,7 +3440,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleSuperscript"],
+      "commands": [
+        {
+          "name": "toggleSuperscript",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -3017,17 +3466,50 @@
       "group": "block",
       "content": "tableRow+",
       "commands": [
-        "insertTable",
-        "deleteTable",
-        "addRowAfter",
-        "addRowBefore",
-        "deleteRow",
-        "addColumnAfter",
-        "addColumnBefore",
-        "deleteColumn",
-        "toggleHeaderRow",
-        "goToNextCell",
-        "goToPreviousCell"
+        {
+          "name": "insertTable",
+          "params": ["rows?: number", "cols?: number"]
+        },
+        {
+          "name": "deleteTable",
+          "params": []
+        },
+        {
+          "name": "addRowAfter",
+          "params": []
+        },
+        {
+          "name": "addRowBefore",
+          "params": []
+        },
+        {
+          "name": "deleteRow",
+          "params": []
+        },
+        {
+          "name": "addColumnAfter",
+          "params": []
+        },
+        {
+          "name": "addColumnBefore",
+          "params": []
+        },
+        {
+          "name": "deleteColumn",
+          "params": []
+        },
+        {
+          "name": "toggleHeaderRow",
+          "params": []
+        },
+        {
+          "name": "goToNextCell",
+          "params": []
+        },
+        {
+          "name": "goToPreviousCell",
+          "params": []
+        }
       ],
       "keys": [
         {
@@ -3143,7 +3625,24 @@
       "configurable": false,
       "group": null,
       "content": "paragraph block*",
-      "commands": ["splitTaskItem", "liftTaskItem", "sinkTaskItem", "toggleTaskItem"],
+      "commands": [
+        {
+          "name": "splitTaskItem",
+          "params": []
+        },
+        {
+          "name": "liftTaskItem",
+          "params": []
+        },
+        {
+          "name": "sinkTaskItem",
+          "params": []
+        },
+        {
+          "name": "toggleTaskItem",
+          "params": ["at: Pos"]
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Enter",
@@ -3185,7 +3684,12 @@
       "configurable": false,
       "group": "block",
       "content": "taskItem+",
-      "commands": ["toggleTaskList"],
+      "commands": [
+        {
+          "name": "toggleTaskList",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-7",
@@ -3239,7 +3743,16 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["setTextAlign", "unsetTextAlign"],
+      "commands": [
+        {
+          "name": "setTextAlign",
+          "params": ["value: TextAlign"]
+        },
+        {
+          "name": "unsetTextAlign",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-Shift-l"
@@ -3278,7 +3791,16 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["setTextDirection", "unsetTextDirection"],
+      "commands": [
+        {
+          "name": "setTextDirection",
+          "params": ["value: TextDirection"]
+        },
+        {
+          "name": "unsetTextDirection",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -3343,15 +3865,42 @@
       "group": null,
       "content": null,
       "commands": [
-        "setColor",
-        "unsetColor",
-        "setBackgroundColor",
-        "unsetBackgroundColor",
-        "setFontFamily",
-        "unsetFontFamily",
-        "setFontSize",
-        "unsetFontSize",
-        "unsetTextStyle"
+        {
+          "name": "setColor",
+          "params": ["color: string"]
+        },
+        {
+          "name": "unsetColor",
+          "params": []
+        },
+        {
+          "name": "setBackgroundColor",
+          "params": ["color: string"]
+        },
+        {
+          "name": "unsetBackgroundColor",
+          "params": []
+        },
+        {
+          "name": "setFontFamily",
+          "params": ["family: string"]
+        },
+        {
+          "name": "unsetFontFamily",
+          "params": []
+        },
+        {
+          "name": "setFontSize",
+          "params": ["size: string"]
+        },
+        {
+          "name": "unsetFontSize",
+          "params": []
+        },
+        {
+          "name": "unsetTextStyle",
+          "params": []
+        }
       ],
       "keys": [],
       "attrs": [
@@ -3398,7 +3947,28 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["uppercase", "lowercase", "capitalize", "sentenceCase", "toggleCase"],
+      "commands": [
+        {
+          "name": "uppercase",
+          "params": []
+        },
+        {
+          "name": "lowercase",
+          "params": []
+        },
+        {
+          "name": "capitalize",
+          "params": []
+        },
+        {
+          "name": "sentenceCase",
+          "params": []
+        },
+        {
+          "name": "toggleCase",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -3475,7 +4045,20 @@
       "configurable": true,
       "group": null,
       "content": null,
-      "commands": ["enableTypewriter", "disableTypewriter", "toggleTypewriter"],
+      "commands": [
+        {
+          "name": "enableTypewriter",
+          "params": []
+        },
+        {
+          "name": "disableTypewriter",
+          "params": []
+        },
+        {
+          "name": "toggleTypewriter",
+          "params": []
+        }
+      ],
       "keys": [],
       "attrs": [],
       "css": null,
@@ -3570,7 +4153,12 @@
       "configurable": false,
       "group": null,
       "content": null,
-      "commands": ["toggleUnderline"],
+      "commands": [
+        {
+          "name": "toggleUnderline",
+          "params": []
+        }
+      ],
       "keys": [
         {
           "combo": "Mod-u",
@@ -3661,7 +4249,12 @@
       "configurable": false,
       "group": "block",
       "content": null,
-      "commands": ["insertYoutube"],
+      "commands": [
+        {
+          "name": "insertYoutube",
+          "params": ["attrs: YoutubeAttrs"]
+        }
+      ],
       "keys": [],
       "attrs": [
         {

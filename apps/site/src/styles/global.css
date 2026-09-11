@@ -988,11 +988,41 @@ th {
   background-repeat: no-repeat;
 }
 
+/*
+ * The sidebar scrolls independently of the article.
+ *
+ * Sticky alone stopped being enough once the extensions arrived: the list is
+ * taller than any viewport, so its foot was only reachable by scrolling the
+ * article to the bottom, and a reader who wanted the last extension had to read
+ * the whole page to get at it. `overscroll-behavior` stops a flick at the end
+ * of the list carrying on into the page behind it.
+ */
 .docs-side {
   position: sticky;
   top: 96px;
   align-self: start;
+  max-height: calc(100vh - 96px - var(--s4));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-right: var(--s4);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink) 18%, transparent) transparent;
+}
+.docs-side::-webkit-scrollbar,
+.docs-toc::-webkit-scrollbar,
+.docs-sub-list::-webkit-scrollbar {
+  width: 6px;
+}
+.docs-side::-webkit-scrollbar-thumb,
+.docs-toc::-webkit-scrollbar-thumb,
+.docs-sub-list::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 3px;
+}
+.docs-side::-webkit-scrollbar-track,
+.docs-toc::-webkit-scrollbar-track,
+.docs-sub-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 .docs-group {
   margin-bottom: var(--s3);
@@ -1158,7 +1188,12 @@ th {
   position: sticky;
   top: 96px;
   align-self: start;
+  max-height: calc(100vh - 96px - var(--s4));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-left: var(--s4);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink) 18%, transparent) transparent;
 }
 .docs-toc a {
   display: block;
@@ -2092,22 +2127,22 @@ html[data-theme-changing] {
 }
 
 /* --- the extension submenus ------------------------------------------------
-   A third level in the docs sidebar. Eighty-one links would bury the twenty
+   A third level in the docs sidebar. Eighty-three links would bury the twenty
    pages above them, so each kind collapses and only the group holding the
    current page is open. */
 .docs-sub {
-  margin: 2px 0 2px 10px;
+  margin: 1px 0;
 }
 
 .docs-sub > summary {
   cursor: pointer;
-  font-size: 13px;
-  color: var(--ink-faint);
-  padding: 4px 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  padding: 6px 10px 6px 11px;
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
 .docs-sub > summary::-webkit-details-marker {
@@ -2117,6 +2152,7 @@ html[data-theme-changing] {
 /* Drawn rather than a glyph, so it turns with the disclosure. */
 .docs-sub > summary::before {
   content: "";
+  flex: none;
   width: 0;
   height: 0;
   border-left: 4px solid currentColor;
@@ -2133,13 +2169,35 @@ html[data-theme-changing] {
   color: var(--ink);
 }
 
+/* Pushed to the end, so the counts line up down the edge. */
 .docs-sub-count {
+  margin-left: auto;
   font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--ink-faint);
 }
 
-.docs-sub > a {
-  padding-left: 15px;
+/*
+ * The open list is its own scroller.
+ *
+ * Thirty-eight nodes is longer than the rest of the sidebar put together, and
+ * expanding that group used to push every other section out of reach. Capped,
+ * it stays a list you scan inside its own group.
+ */
+.docs-sub-list {
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-left: 15px;
+  padding-left: 7px;
+  background-image: var(--dash-v);
+  background-size: 1px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  scrollbar-width: thin;
+}
+
+.docs-sub-list > a {
   font-size: 13px;
+  padding: 5px 10px;
 }

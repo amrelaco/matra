@@ -40,7 +40,7 @@ A kit is an array of definitions, spread with `...`.
 import { audio } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertAudio()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Attributes** — `src`, `title`, `controls = true`
 
@@ -54,7 +54,7 @@ import { audio } from '@matrajs/core'
 import { blockquote } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleBlockquote()`, `editor.commands.exitBlockquote()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-b` toggleBlockquote, `Enter` exitBlockquote
 
@@ -68,7 +68,7 @@ import { blockquote } from '@matrajs/core'
 import { bulletList } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleBulletList()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-8` toggleBulletList
 
@@ -86,7 +86,7 @@ Holds blocks, so a callout can carry a list or a code sample, and carries a type
 import { callout } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleCallout()`, `editor.commands.setCalloutType()`, `editor.commands.setCalloutEmoji()`, `editor.commands.exitCallout()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Enter` exitCallout
 
@@ -104,7 +104,7 @@ import { callout } from '@matrajs/core'
 import { codeBlock } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleCodeBlock()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Alt-c` toggleCodeBlock
 
@@ -145,7 +145,7 @@ editor.commands.unsetColumns()
 import { columnList } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setColumns()`, `editor.commands.unsetColumns()`, `editor.commands.addColumn()`, `editor.commands.removeColumn()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **HTML** — parses `div[data-columns]` · renders `div`
 
@@ -161,7 +161,7 @@ Rendered as the real element, so open and closed are what the browser already kn
 import { details } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertDetails()`, `editor.commands.toggleDetails()`, `editor.commands.setDetailsOpen()`, `editor.commands.unsetDetails()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Enter` (ctx) => {
       const { tr } = engine(ctx);
@@ -215,7 +215,7 @@ import { embed } from '@matrajs/core'
 | --- | --- | --- |
 | `allow` | `EmbedAllow` | Left off, a short list of well-known players and tools applies. |
 
-**Commands** — `editor.commands.insertEmbed()`, `editor.commands.setEmbedAspect()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `src`, `title`, `aspect = "16/9"`
 
@@ -237,7 +237,7 @@ A blank in a template.
 import { field } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertField()`, `editor.commands.fillFields()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `name`, `label`
 
@@ -317,7 +317,7 @@ import { footnotesKit } from '@matrajs/core'
 import { hardBreak } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertHardBreak()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Shift-Enter` insertHardBreak
 
@@ -340,7 +340,7 @@ import { hashtag } from '@matrajs/core'
 | `name` | `string` | Node name, if you need two kinds of tag in one editor. |
 | `render` | `(tag: string) => string` | What appears in the document. Defaults to `#tag`. |
 
-**Commands** — `editor.commands.insertHashtag()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Attributes** — `tag`
 
@@ -354,7 +354,7 @@ import { hashtag } from '@matrajs/core'
 import { heading } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setHeading()`, `editor.commands.toggleHeading()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Alt-1` (ctx) => ctx.setBlockType("heading", { level }), `Mod-Alt-2` (ctx) => ctx.setBlockType("heading", { level }), `Mod-Alt-3` (ctx) => ctx.setBlockType("heading", { level }), `Mod-Alt-4` (ctx) => ctx.setBlockType("heading", { level }), `Mod-Alt-5` (ctx) => ctx.setBlockType("heading", { level }), `Mod-Alt-6` (ctx) => ctx.setBlockType("heading", { level })
 
@@ -370,7 +370,7 @@ import { heading } from '@matrajs/core'
 import { horizontalRule } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertHorizontalRule()`
+**Commands** — `editor.commands.[object Object]()`
 
 **HTML** — parses `hr` · renders `hr`
 
@@ -382,7 +382,7 @@ import { horizontalRule } from '@matrajs/core'
 import { image } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertImage()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Attributes** — `src`, `alt`, `title`
 
@@ -396,7 +396,7 @@ import { image } from '@matrajs/core'
 import { listItem } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.splitListItem()`, `editor.commands.liftListItem()`, `editor.commands.sinkListItem()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Enter` splitListItem, `Tab` sinkListItem, `Shift-Tab` liftListItem
 
@@ -414,7 +414,7 @@ The same node as `mathInline` in every way but where it sits: a block, so `ctx.i
 import { mathBlock } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertBlockMath()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Attributes** — `latex`
 
@@ -434,7 +434,7 @@ An atom, so the caret steps over it and backspace takes the whole thing. `$E=mc^
 import { mathInline } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertInlineMath()`, `editor.commands.setMath()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `latex`
 
@@ -450,7 +450,7 @@ Both nodes, sharing one renderer.
 import { mathKit } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertInlineMath()`, `editor.commands.setMath()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `latex`
 
@@ -476,7 +476,7 @@ import { mention } from '@matrajs/core'
 | `label` (required) | `string` |  |
 | `name` | `string` | Node name, if you need two kinds of mention in one editor. |
 
-**Commands** — `editor.commands.insertMention()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Attributes** — `id`, `label = ""`
 
@@ -490,7 +490,7 @@ import { mention } from '@matrajs/core'
 import { orderedList } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleOrderedList()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-9` toggleOrderedList
 
@@ -516,7 +516,7 @@ editor.commands.insertPageBreak()
 import { pageBreak } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertPageBreak()`
+**Commands** — `editor.commands.[object Object]()`
 
 **HTML** — parses `div[data-page-break]` · renders `div`
 
@@ -530,7 +530,7 @@ import { pageBreak } from '@matrajs/core'
 import { paragraph } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setParagraph()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Alt-0` setParagraph
 
@@ -550,7 +550,7 @@ That split only works because a parse rule can say where the content is. `<ruby>
 import { ruby } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setRuby()`, `editor.commands.unsetRuby()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `reading = ""`
 
@@ -564,7 +564,7 @@ import { ruby } from '@matrajs/core'
 import { table } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertTable()`, `editor.commands.deleteTable()`, `editor.commands.addRowAfter()`, `editor.commands.addRowBefore()`, `editor.commands.deleteRow()`, `editor.commands.addColumnAfter()`, `editor.commands.addColumnBefore()`, `editor.commands.deleteColumn()`, `editor.commands.toggleHeaderRow()`, `editor.commands.goToNextCell()`, `editor.commands.goToPreviousCell()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Tab` goToNextCell, `Shift-Tab` goToPreviousCell
 
@@ -612,7 +612,7 @@ import { tableRow } from '@matrajs/core'
 import { taskItem } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.splitTaskItem()`, `editor.commands.liftTaskItem()`, `editor.commands.sinkTaskItem()`, `editor.commands.toggleTaskItem()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Enter` toggleTaskItem, `Enter` splitTaskItem, `Tab` sinkTaskItem, `Shift-Tab` liftTaskItem
 
@@ -632,7 +632,7 @@ The checkbox is real DOM rather than a `::before`, because a checklist people ca
 import { taskList } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleTaskList()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-7` toggleTaskList
 
@@ -660,7 +660,7 @@ Only the id is stored. The frame's address is built from it here, on the privacy
 import { youtube } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.insertYoutube()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Attributes** — `src`, `width = 640`, `height = 360`, `start = 0`
 
@@ -678,7 +678,7 @@ import { youtube } from '@matrajs/core'
 import { bold } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleBold()`, `editor.commands.setBold()`, `editor.commands.unsetBold()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-b` toggleBold
 
@@ -692,7 +692,7 @@ import { bold } from '@matrajs/core'
 import { code } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleCode()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-e` toggleCode
 
@@ -712,7 +712,7 @@ Because the anchor is a mark, position mapping keeps it correct for free: edit t
 import { comment } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.addComment()`, `editor.commands.removeComment()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `threadId`
 
@@ -728,7 +728,7 @@ import { comment } from '@matrajs/core'
 import { highlight } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleHighlight()`, `editor.commands.unsetHighlight()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-h` toggleHighlight
 
@@ -744,7 +744,7 @@ import { highlight } from '@matrajs/core'
 import { italic } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleItalic()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-i` toggleItalic
 
@@ -762,7 +762,7 @@ Its own mark rather than `code` with a class: a key name is not code, a screen r
 import { kbd } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleKbd()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Alt-k` toggleKbd
 
@@ -776,7 +776,7 @@ import { kbd } from '@matrajs/core'
 import { link } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setLink()`, `editor.commands.unsetLink()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `href`, `target = "_blank"`, `rel = "noopener noreferrer"`
 
@@ -790,7 +790,7 @@ import { link } from '@matrajs/core'
 import { strike } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleStrike()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-x` toggleStrike
 
@@ -804,7 +804,7 @@ import { strike } from '@matrajs/core'
 import { subscript } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleSubscript()`
+**Commands** — `editor.commands.[object Object]()`
 
 **HTML** — parses `sub` · renders `sub`
 
@@ -816,7 +816,7 @@ import { subscript } from '@matrajs/core'
 import { superscript } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleSuperscript()`
+**Commands** — `editor.commands.[object Object]()`
 
 **HTML** — parses `sup` · renders `sup`
 
@@ -832,7 +832,7 @@ Tiptap ships these as four extensions layered on a `textStyle` mark; here they a
 import { textStyle } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setColor()`, `editor.commands.unsetColor()`, `editor.commands.setBackgroundColor()`, `editor.commands.unsetBackgroundColor()`, `editor.commands.setFontFamily()`, `editor.commands.unsetFontFamily()`, `editor.commands.setFontSize()`, `editor.commands.unsetFontSize()`, `editor.commands.unsetTextStyle()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Attributes** — `color`, `backgroundColor`, `fontFamily`, `fontSize`
 
@@ -846,7 +846,7 @@ import { textStyle } from '@matrajs/core'
 import { underline } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.toggleUnderline()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Keys** — `Mod-u` toggleUnderline
 
@@ -903,7 +903,7 @@ import { autosave } from '@matrajs/core'
 | `onError` | `(error: unknown) => void` | Told about every save that failed. |
 | `flushOnHide` | `boolean` | Save at once when the page is hidden or unloaded. Default true. |
 
-**Commands** — `editor.commands.save()`, `editor.commands.markSaved()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### blockColor
 
@@ -929,7 +929,7 @@ The palette is deliberately not here. Notion ships ten named colours and stores 
 import { blockColor } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setBlockColor()`, `editor.commands.unsetBlockColor()`, `editor.commands.setBlockBackground()`, `editor.commands.unsetBlockBackground()`, `editor.commands.unsetBlockColors()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Styles** — `import { blockColorCSS } from '@matrajs/core'`, a stylesheet string.
 
@@ -970,7 +970,7 @@ import { characterCount } from '@matrajs/core'
 | --- | --- | --- |
 | `limit` | `number` | Refuse edits that would take the document past this many characters. |
 
-**Commands** — `editor.commands.countCharacters()`
+**Commands** — `editor.commands.[object Object]()`
 
 ### clearFormatting
 
@@ -984,7 +984,7 @@ The toolbar button labelled with a crossed-out T. One command rather than a call
 import { clearFormatting } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.unsetAllMarks()`, `editor.commands.clearBlocks()`, `editor.commands.clearFormatting()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-\` clearFormatting
 
@@ -1017,7 +1017,7 @@ Always loaded by createEditor — an editor that cannot move its own selection i
 import { core } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.select()`, `editor.commands.insert()`, `editor.commands.replace()`, `editor.commands.remove()`, `editor.commands.moveBlock()`, `editor.commands.focus()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### dictation
 
@@ -1040,7 +1040,7 @@ import { dictation } from '@matrajs/core'
 | `interim` | `boolean` | Show what is being said before it is final. Default true. |
 | `className` | `string` | Class on the provisional text. Default `matra-dictation-interim`. |
 
-**Commands** — `editor.commands.startDictation()`, `editor.commands.stopDictation()`, `editor.commands.toggleDictation()`, `editor.commands.setDictation()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Styles** — `import { dictationCSS } from '@matrajs/core'`, a stylesheet string.
 
@@ -1169,7 +1169,7 @@ import { ghostText } from '@matrajs/core'
 | `minBefore` | `number` | Characters needed before the caret in its block before asking. Default 1. |
 | `className` | `string` | Class on the rendered suggestion. Default `matra-ghost`. |
 
-**Commands** — `editor.commands.setGhostText()`, `editor.commands.acceptGhostText()`, `editor.commands.acceptGhostWord()`, `editor.commands.dismissGhostText()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Tab` acceptGhostText, `Escape` dismissGhostText
 
@@ -1187,7 +1187,7 @@ The engine keeps the stack and binds the keys; these just reach it. The commands
 import { history } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.undo()`, `editor.commands.redo()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### imageResize
 
@@ -1206,7 +1206,7 @@ import { imageResize } from '@matrajs/core'
 | `min` | `number` | Narrowest an image may be dragged, in pixels. Default 32. |
 | `max` | `number` | Widest. Default 4096. |
 
-**Commands** — `editor.commands.setImageWidth()`
+**Commands** — `editor.commands.[object Object]()`
 
 **Styles** — `import { imageResizeCSS } from '@matrajs/core'`, a stylesheet string.
 
@@ -1228,7 +1228,7 @@ import { indent } from '@matrajs/core'
 | `max` | `number` | How many levels. Default 8. |
 | `step` | `number` | Width of one level, in `em`. Default 2. |
 
-**Commands** — `editor.commands.indent()`, `editor.commands.outdent()`, `editor.commands.setIndent()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Tab` indent, `Shift-Tab` outdent
 
@@ -1255,7 +1255,7 @@ import { invisibleCharacters } from '@matrajs/core'
 | --- | --- | --- |
 | `visible` | `boolean` | Start with the markers showing. Default false. |
 
-**Commands** — `editor.commands.showInvisibleCharacters()`, `editor.commands.hideInvisibleCharacters()`, `editor.commands.toggleInvisibleCharacters()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Styles** — `import { invisibleCharactersCSS } from '@matrajs/core'`, a stylesheet string.
 
@@ -1277,7 +1277,7 @@ editor.commands.unsetLineHeight()
 import { lineHeight } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setLineHeight()`, `editor.commands.unsetLineHeight()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### locked
 
@@ -1299,7 +1299,7 @@ import { locked } from '@matrajs/core'
 | --- | --- | --- |
 | `types` | `readonly string[]` | Node types that may carry the lock. Defaults to every block the bundled extensions define. A name the editor does not have is ignored, so the default list costs nothing in a small editor and covers the whole of a large one. |
 
-**Commands** — `editor.commands.lock()`, `editor.commands.unlock()`, `editor.commands.toggleLock()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Styles** — `import { lockedCSS } from '@matrajs/core'`, a stylesheet string.
 
@@ -1350,7 +1350,7 @@ import { search } from '@matrajs/core'
 | `matchClass` | `string` | Class on every match. |
 | `currentClass` | `string` | Class on the current match, in addition to `matchClass`. |
 
-**Commands** — `editor.commands.setSearch()`, `editor.commands.clearSearch()`, `editor.commands.nextMatch()`, `editor.commands.previousMatch()`, `editor.commands.replaceMatch()`, `editor.commands.replaceAllMatches()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Styles** — `import { searchCSS } from '@matrajs/core'`, a stylesheet string.
 
@@ -1419,7 +1419,7 @@ import { suggestion } from '@matrajs/core'
 | `maxLength` | `number` | Give up after this many characters, so a stray `@` stops matching. |
 | `decorationClass` | `string` | Class on the decoration over the active range, for positioning a popup. |
 
-**Commands** — `editor.commands.acceptSuggestion()`, `editor.commands.cancelSuggestion()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Escape` cancelSuggestion
 
@@ -1437,7 +1437,7 @@ It is an extension rather than a node because alignment applies to whatever text
 import { textAlign } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.setTextAlign()`, `editor.commands.unsetTextAlign()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 **Keys** — `Mod-Shift-l` (ctx) => apply2(ctx, "left"), `Mod-Shift-e` (ctx) => apply2(ctx, "center"), `Mod-Shift-r` (ctx) => apply2(ctx, "right")
 
@@ -1465,7 +1465,7 @@ import { textDirection } from '@matrajs/core'
 | `types` | `readonly string[]` | Which blocks carry a direction. Default paragraph and heading. |
 | `auto` | `boolean` | Render a block whose text reads right to left that way, with nothing stored. Default true. |
 
-**Commands** — `editor.commands.setTextDirection()`, `editor.commands.unsetTextDirection()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### textTransform
 
@@ -1481,7 +1481,7 @@ The text is rewritten one text node at a time, so a bold word stays bold and a l
 import { textTransform } from '@matrajs/core'
 ```
 
-**Commands** — `editor.commands.uppercase()`, `editor.commands.lowercase()`, `editor.commands.capitalize()`, `editor.commands.sentenceCase()`, `editor.commands.toggleCase()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### trailingNode
 
@@ -1524,7 +1524,7 @@ import { typewriter } from '@matrajs/core'
 | `smooth` | `boolean` | Glide there rather than jump. Default false. |
 | `scroller` | `HTMLElement | (() => HTMLElement | null)` | The element that scrolls, or a function that finds it. Default the page. |
 
-**Commands** — `editor.commands.enableTypewriter()`, `editor.commands.disableTypewriter()`, `editor.commands.toggleTypewriter()`
+**Commands** — `editor.commands.[object Object]()`, `editor.commands.[object Object]()`, `editor.commands.[object Object]()`
 
 ### typography
 
