@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,10 +9,11 @@ import Docs from '../../layouts/Docs.astro'
   section="Frameworks"
   heading="Solid"
 >
-  <pre><code>npm i @matrajs/core @matrajs/solid</code></pre>
+  <Code code={`npm i @matrajs/core @matrajs/solid`} lang="sh" />
 
   <h2>An editor</h2>
-  <pre><code>{`import { starterKit } from '@matrajs/core'
+  <Code
+    code={`import { starterKit } from '@matrajs/core'
 import { createMatra } from '@matrajs/solid'
 
 export function Editor() {
@@ -21,7 +23,9 @@ export function Editor() {
   })
 
   return <div ref={mount} />
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <p>
     <code>createMatra()</code> gives you the <code>editor</code>, a <code>mount</code> ref, and a
@@ -38,7 +42,8 @@ export function Editor() {
   </div>
 
   <h2>A toolbar that tells the truth</h2>
-  <pre><code>{`import { starterKit } from '@matrajs/core'
+  <Code
+    code={`import { starterKit } from '@matrajs/core'
 import { createMatra } from '@matrajs/solid'
 
 export function Editor() {
@@ -63,7 +68,9 @@ export function Editor() {
       <div ref={mount} />
     </>
   )
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <p>
     Only the expressions that call <code>state()</code> re-run. Solid's reactivity is not a render
@@ -84,13 +91,16 @@ export function Editor() {
   </p>
 
   <h2>Reaching the editor from elsewhere</h2>
-  <pre><code>{`const EditorContext = createContext()
+  <Code
+    code={`const EditorContext = createContext()
 
 // in the parent
 <EditorContext.Provider value={editor}>{props.children}</EditorContext.Provider>
 
 // in any child
-const editor = useContext(EditorContext)`}</code></pre>
+const editor = useContext(EditorContext)`}
+    lang="ts"
+  />
 
   <h2>Styling</h2>
   <p>

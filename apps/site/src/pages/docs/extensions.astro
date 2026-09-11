@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -15,39 +16,45 @@ import Docs from '../../layouts/Docs.astro'
   </p>
 
   <h2>A mark</h2>
-  <pre><code>import type &#123; Command, MarkDef &#125; from '@matrajs/core'
+  <Code
+    code={`import type { Command, MarkDef } from '@matrajs/core'
 
-export const spoiler: MarkDef&lt;&#123; toggleSpoiler: Command &#125;&gt; = &#123;
+export const spoiler: MarkDef<{ toggleSpoiler: Command }> = {
   kind: 'mark',
   name: 'spoiler',
-  parseDOM: [&#123; tag: 'span[data-spoiler]' &#125;],
-  toDOM: () =&gt; ['span', &#123; 'data-spoiler': '', class: 'spoiler' &#125;, 0],
-  commands: &#123;
-    toggleSpoiler: (ctx) =&gt; ctx.toggleMark('spoiler'),
-  &#125;,
-  keys: &#123; 'Mod-Shift-S': 'toggleSpoiler' &#125;,
-&#125;</code></pre>
+  parseDOM: [{ tag: 'span[data-spoiler]' }],
+  toDOM: () => ['span', { 'data-spoiler': '', class: 'spoiler' }, 0],
+  commands: {
+    toggleSpoiler: (ctx) => ctx.toggleMark('spoiler'),
+  },
+  keys: { 'Mod-Shift-S': 'toggleSpoiler' },
+}`}
+    lang="ts"
+  />
   <p>
     The generic is what makes <code>editor.commands.toggleSpoiler</code> exist and be typed. It is
     the only ceremony, and it buys autocomplete on every call site.
   </p>
 
   <h2>A node</h2>
-  <pre><code>export const callout: NodeDef&lt;&#123; setCallout: Command&lt;[tone: string]&gt; &#125;&gt; = &#123;
+  <Code
+    code={`export const callout: NodeDef<{ setCallout: Command<[tone: string]> }> = {
   kind: 'node',
   name: 'callout',
   group: 'block',
   content: 'block+',
-  attrs: &#123; tone: &#123; default: 'note' &#125; &#125;,
-  parseDOM: [&#123;
+  attrs: { tone: { default: 'note' } },
+  parseDOM: [{
     tag: 'div[data-callout]',
-    getAttrs: (dom) =&gt; (&#123; tone: dom.getAttribute('data-callout') &#125;),
-  &#125;],
-  toDOM: (node) =&gt; ['div', &#123; 'data-callout': node.attrs?.tone &#125;, 0],
-  commands: &#123;
-    setCallout: (ctx, tone) =&gt; ctx.wrapIn('callout', &#123; tone &#125;),
-  &#125;,
-&#125;</code></pre>
+    getAttrs: (dom) => ({ tone: dom.getAttribute('data-callout') }),
+  }],
+  toDOM: (node) => ['div', { 'data-callout': node.attrs?.tone }, 0],
+  commands: {
+    setCallout: (ctx, tone) => ctx.wrapIn('callout', { tone }),
+  },
+}`}
+    lang="ts"
+  />
 
   <div class="note">
     Declare every attribute you intend to keep. Undeclared attributes are dropped on the way in
@@ -57,39 +64,48 @@ export const spoiler: MarkDef&lt;&#123; toggleSpoiler: Command &#125;&gt; = &#12
 
   <h2>Input rules</h2>
   <p>Text that becomes something else as it is typed. Each match is one undo step.</p>
-  <pre><code>inputRules: [&#123;
-  match: /^&gt;&gt;\s$/,
-  handler: (ctx, _match, range) =&gt; ctx.delete(range) &amp;&amp; ctx.wrapIn('callout'),
-&#125;]</code></pre>
+  <Code
+    code={`inputRules: [{
+  match: /^>>\\s$/,
+  handler: (ctx, _match, range) => ctx.delete(range) && ctx.wrapIn('callout'),
+}]`}
+    lang="ts"
+  />
 
   <h2>State</h2>
   <p>
     An extension can keep state, reduced on every transaction. This is how the character counter
     works without publishing a global.
   </p>
-  <pre><code>export const wordGoal = (target: number): ExtensionDef&lt;Record&lt;string, never&gt;, boolean&gt; =&gt; (&#123;
+  <Code
+    code={`export const wordGoal = (target: number): ExtensionDef<Record<string, never>, boolean> => ({
   kind: 'extension',
   name: 'wordGoal',
-  state: &#123;
-    init: (ctx) =&gt; count(ctx.doc) &gt;= target,
-    apply: (ctx) =&gt; count(ctx.doc) &gt;= target,
-  &#125;,
-&#125;)
+  state: {
+    init: (ctx) => count(ctx.doc) >= target,
+    apply: (ctx) => count(ctx.doc) >= target,
+  },
+})
 
 // anywhere
-editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
+editor.extensionState<boolean>('wordGoal')`}
+    lang="ts"
+  />
 
   <h2>Decorations</h2>
   <p>
     Drawing over the document without putting anything in it · search highlights, remote
     cursors, squiggles. Decorations never travel with a copy, an export or an undo.
   </p>
-  <pre><code>decorations: (ctx) =&gt; findMatches(ctx.doc, query).map((range) =&gt; (&#123;
+  <Code
+    code={`decorations: (ctx) => findMatches(ctx.doc, query).map((range) => ({
   type: 'inline',
   from: range.from,
   to: range.to,
-  attrs: &#123; class: 'search-hit' &#125;,
-&#125;))</code></pre>
+  attrs: { class: 'search-hit' },
+}))`}
+    lang="ts"
+  />
 
   <h2>Attributes on somebody else's node</h2>
   <p>
@@ -98,23 +114,26 @@ editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
     schema of every type named, is rendered onto the element, and is read back on parse. This is
     how <code>textAlign</code>, <code>indent</code> and <code>uniqueId</code> work.
   </p>
-  <pre><code>export const tone: ExtensionDef = &#123;
+  <Code
+    code={`export const tone: ExtensionDef = {
   kind: 'extension',
   name: 'tone',
-  attributes: [&#123;
+  attributes: [{
     types: ['paragraph', 'heading'],
-    attrs: &#123;
-      tone: &#123;
+    attrs: {
+      tone: {
         default: null,
-        render: (value) =&gt; (&#123; 'data-tone': String(value) &#125;),   // onto the element
-        parse: (dom) =&gt; dom.getAttribute('data-tone'),          // and back off it
-      &#125;,
-    &#125;,
-  &#125;],
-  commands: &#123;
-    setTone: (ctx, tone) =&gt; ctx.setBlockType('paragraph', &#123; tone &#125;),
-  &#125;,
-&#125;</code></pre>
+        render: (value) => ({ 'data-tone': String(value) }),   // onto the element
+        parse: (dom) => dom.getAttribute('data-tone'),          // and back off it
+      },
+    },
+  }],
+  commands: {
+    setTone: (ctx, tone) => ctx.setBlockType('paragraph', { tone }),
+  },
+}`}
+    lang="ts"
+  />
   <p>
     Leave <code>render</code> and <code>parse</code> off and the value goes to
     <code>data-&lt;name&gt;</code>. A <code>style</code> or <code>class</code> the render returns
@@ -129,16 +148,19 @@ editor.extensionState&lt;boolean&gt;('wordGoal')</code></pre>
     then the editor, gets its turn. Files come through the same way — a screenshot pasted from the
     clipboard is a file — and a drop carries the position it landed on.
   </p>
-  <pre><code>handlePaste: (ctx, &#123; html, text, files &#125;) =&gt; &#123;
+  <Code
+    code={`handlePaste: (ctx, { html, text, files }) => {
   if (text !== 'magic') return false
   return ctx.insert('✨')
-&#125;,
-handleDrop: (ctx, &#123; files, pos &#125;) =&gt; &#123;
+},
+handleDrop: (ctx, { files, pos }) => {
   const marker = ctx.mark()          // survives the upload
-  upload(files[0]).then((src) =&gt;
-    editor.commands.insert(&#123; type: 'image', attrs: &#123; src &#125; &#125;, pos &amp;&amp; marker.map(pos)))
+  upload(files[0]).then((src) =>
+    editor.commands.insert({ type: 'image', attrs: { src } }, pos && marker.map(pos)))
   return true
-&#125;</code></pre>
+}`}
+    lang="ts"
+  />
   <p>
     <code>fileHandler()</code> is this, packaged: an <code>accept</code> list and a callback with
     the editor, the files, the position and the marker already in it.
@@ -161,10 +183,13 @@ handleDrop: (ctx, &#123; files, pos &#125;) =&gt; &#123;
     all — which is how <code>locked()</code> works — and <code>editor.can</code> asks the same question,
     so a button greys out rather than doing nothing.
   </p>
-  <pre><code>const textLength = (node) =&gt;
-  node.text?.length ?? (node.content ?? []).reduce((n, child) =&gt; n + textLength(child), 0)
+  <Code
+    code={`const textLength = (node) =>
+  node.text?.length ?? (node.content ?? []).reduce((n, child) => n + textLength(child), 0)
 
-filterChange: (ctx) =&gt; textLength(ctx.doc) &lt;= 280</code></pre>
+filterChange: (ctx) => textLength(ctx.doc) <= 280`}
+    lang="ts"
+  />
   <p>
     <code>ctx.doc</code> is the document as it would be, not as it is, so a filter reads the proposed
     change directly rather than reconstructing it. Everything a filter needs is on
@@ -186,13 +211,16 @@ filterChange: (ctx) =&gt; textLength(ctx.doc) &lt;= 280</code></pre>
     node's own. This is how <code>imageResize()</code> works, alongside a <code>width</code> it adds
     with <code>attributes</code>.
   </p>
-  <pre><code>nodeViews: &#123;
-  image: (&#123; node, getPos, editor &#125;) =&gt; &#123;
+  <Code
+    code={`nodeViews: {
+  image: ({ node, getPos, editor }) => {
     const dom = document.createElement('span')
-    // … an &lt;img&gt; and a handle
-    return &#123; dom, update: (next) =&gt; next.type === 'image', stopEvent: (event) =&gt; event.target === handle &#125;
-  &#125;,
-&#125;</code></pre>
+    // … an <img> and a handle
+    return { dom, update: (next) => next.type === 'image', stopEvent: (event) => event.target === handle }
+  },
+}`}
+    lang="ts"
+  />
 
   <h2>Ordering</h2>
   <p>

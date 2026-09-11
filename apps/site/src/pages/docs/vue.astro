@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,7 +9,7 @@ import Docs from '../../layouts/Docs.astro'
   section="Frameworks"
   heading="Vue"
 >
-  <pre><code>npm i @matrajs/vue</code></pre>
+  <Code code={`npm i @matrajs/vue`} lang="sh" />
   <p>
     Vue is first-class here rather than a community package that lags the React one. Both
     bindings are written together, tested together and released together, against the same
@@ -16,19 +17,22 @@ import Docs from '../../layouts/Docs.astro'
   </p>
 
   <h2>An editor</h2>
-  <pre><code>&lt;script setup lang="ts"&gt;
-import &#123; starterKit &#125; from '@matrajs/core'
-import &#123; EditorContent, useEditor &#125; from '@matrajs/vue'
+  <Code
+    code={`<script setup lang="ts">
+import { starterKit } from '@matrajs/core'
+import { EditorContent, useEditor } from '@matrajs/vue'
 
-const editor = useEditor(&#123;
+const editor = useEditor({
   extensions: starterKit,
-  content: '&lt;p&gt;Hello.&lt;/p&gt;',
-&#125;)
-&lt;/script&gt;
+  content: '<p>Hello.</p>',
+})
+</script>
 
-&lt;template&gt;
-  &lt;EditorContent :editor="editor" /&gt;
-&lt;/template&gt;</code></pre>
+<template>
+  <EditorContent :editor="editor" />
+</template>`}
+    lang="ts"
+  />
   <p>
     The editor is destroyed when the component unmounts, or when the surrounding effect scope is
     stopped — so it also works outside a component, in a composable or a store. It is
@@ -43,27 +47,30 @@ const editor = useEditor(&#123;
     goes stale the moment the caret moves. <code>useEditorState</code> returns a readonly ref that
     follows both changes and selection changes.
   </p>
-  <pre><code>&lt;script setup lang="ts"&gt;
-import type &#123; Editor &#125; from '@matrajs/core'
-import &#123; useEditorState &#125; from '@matrajs/vue'
+  <Code
+    code={`<script setup lang="ts">
+import type { Editor } from '@matrajs/core'
+import { useEditorState } from '@matrajs/vue'
 
-const props = defineProps&lt;&#123; editor: Editor &#125;&gt;()
+const props = defineProps<{ editor: Editor }>()
 
-const bold = useEditorState(props.editor, (e) =&gt; e.isActive('bold'))
-const canBold = useEditorState(props.editor, (e) =&gt; e.can.toggleBold())
-const characters = useEditorState(props.editor, (e) =&gt; e.getText().length)
-&lt;/script&gt;
+const bold = useEditorState(props.editor, (e) => e.isActive('bold'))
+const canBold = useEditorState(props.editor, (e) => e.can.toggleBold())
+const characters = useEditorState(props.editor, (e) => e.getText().length)
+</script>
 
-&lt;template&gt;
-  &lt;button
+<template>
+  <button
     :aria-pressed="bold"
     :disabled="!canBold"
     @mousedown.prevent="editor.commands.toggleBold()"
-  &gt;
+  >
     Bold
-  &lt;/button&gt;
-  &lt;span&gt;&#123;&#123; characters &#125;&#125;&lt;/span&gt;
-&lt;/template&gt;</code></pre>
+  </button>
+  <span>{{ characters }}</span>
+</template>`}
+    lang="ts"
+  />
 
   <div class="note">
     <code>@mousedown.prevent</code> rather than <code>@click</code>. A click moves focus to the
@@ -78,17 +85,20 @@ const characters = useEditorState(props.editor, (e) =&gt; e.getText().length)
   </p>
 
   <h2>Focus</h2>
-  <pre><code>const focused = useEditorFocus(editor)</code></pre>
+  <Code code={`const focused = useEditorFocus(editor)`} lang="ts" />
   <p>A readonly ref · useful for showing a toolbar only while the editor has the caret.</p>
 
   <h2>Saving</h2>
-  <pre><code>&lt;script setup lang="ts"&gt;
-import &#123; onScopeDispose &#125; from 'vue'
+  <Code
+    code={`<script setup lang="ts">
+import { onScopeDispose } from 'vue'
 
-const editor = useEditor(&#123; extensions: starterKit &#125;)
+const editor = useEditor({ extensions: starterKit })
 
-onScopeDispose(editor.on('change', () =&gt; save(editor.getJSON())))
-&lt;/script&gt;</code></pre>
+onScopeDispose(editor.on('change', () => save(editor.getJSON())))
+</script>`}
+    lang="ts"
+  />
   <p>
     <code>on</code> returns its own unsubscribe function, so it hands straight to
     <code>onScopeDispose</code> with nothing in between.
@@ -100,16 +110,19 @@ onScopeDispose(editor.on('change', () =&gt; save(editor.getJSON())))
     a live document means re-parsing it on every keystroke, and the parse is what loses a selection.
     Write it yourself where you actually need it, and only in one direction.
   </p>
-  <pre><code>const model = defineModel&lt;string&gt;()
+  <Code
+    code={`const model = defineModel<string>()
 
-const editor = useEditor(&#123;
+const editor = useEditor({
   extensions: starterKit,
   content: model.value,
-&#125;)
+})
 
-onScopeDispose(editor.on('change', () =&gt; &#123;
+onScopeDispose(editor.on('change', () => {
   model.value = editor.getHTML()
-&#125;))</code></pre>
+}))`}
+    lang="ts"
+  />
 
   <div class="note">
     Setting <code>model.value</code> from outside will not push back into the editor, which is the
@@ -122,11 +135,14 @@ onScopeDispose(editor.on('change', () =&gt; &#123;
     The editor touches the DOM only when it mounts, so it renders on the server without a shim.
     Keep <code>EditorContent</code> out of the server pass and the rest works untouched:
   </p>
-  <pre><code>&lt;template&gt;
-  &lt;ClientOnly&gt;
-    &lt;EditorContent :editor="editor" /&gt;
-  &lt;/ClientOnly&gt;
-&lt;/template&gt;</code></pre>
+  <Code
+    code={`<template>
+  <ClientOnly>
+    <EditorContent :editor="editor" />
+  </ClientOnly>
+</template>`}
+    lang="html"
+  />
   <p>
     <code>useEditor</code> itself runs on the server — the editor exists before anything is on screen,
     so <code>getJSON()</code>, <code>getHTML()</code> and <code>getText()</code> all answer during

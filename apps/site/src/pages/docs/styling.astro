@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 /**
@@ -43,11 +44,14 @@ const sheets: [string, string, string][] = [
     them the way you style any prose on your site. Scope it to the editor and you are done:
   </p>
 
-  <pre><code>{`.matra-editor { outline: none; white-space: pre-wrap; }
+  <Code
+    code={`.matra-editor { outline: none; white-space: pre-wrap; }
 .matra-editor h2 { font-size: 1.5rem; margin: 1.5rem 0 .5rem; }
 .matra-editor p { margin: 0 0 .75rem; line-height: 1.6; }
 .matra-editor blockquote { border-left: 2px solid #ccc; padding-left: 1rem; }
-.matra-editor pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; }`}</code></pre>
+.matra-editor pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; }`}
+    lang="ts"
+  />
 
   <div class="note">
     <p>
@@ -93,11 +97,14 @@ const sheets: [string, string, string][] = [
     </table>
   </div>
 
-  <pre><code>{`import { placeholderCSS, taskListCSS, suggestionCSS } from '@matrajs/core'
+  <Code
+    code={`import { placeholderCSS, taskListCSS, suggestionCSS } from '@matrajs/core'
 
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(placeholderCSS + taskListCSS + suggestionCSS)
-document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]`}</code></pre>
+document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]`}
+    lang="ts"
+  />
 
   <p>
     Or, if you would rather own them, open the file and copy the rules into your own stylesheet.
@@ -117,11 +124,14 @@ document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]`}</code></
     state:
   </p>
 
-  <pre><code>{`import { activeSuggestion } from '@matrajs/core'
+  <Code
+    code={`import { activeSuggestion } from '@matrajs/core'
 
 const active = activeSuggestion(editor, 'slash')
 // null when nothing is open, or:
-// { query: 'head', range: { from: 12, to: 17 }, from: 12 }`}</code></pre>
+// { query: 'head', range: { from: 12, to: 17 }, from: 12 }`}
+    lang="ts"
+  />
 
   <p>
     The list, its position, its keyboard behaviour and its appearance are yours. That is

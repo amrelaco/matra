@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -15,27 +16,36 @@ import Docs from '../../layouts/Docs.astro'
     for a framework whose API is inferred from an array and has no ProseMirror underneath, because
     memory will confidently describe something else.
   </p>
-  <pre><code>npx -y @matrajs/mcp            # stdio · what a desktop client spawns
-npx -y @matrajs/mcp --http     # http://localhost:3333/mcp</code></pre>
+  <Code
+    code={`npx -y @matrajs/mcp            # stdio · what a desktop client spawns
+npx -y @matrajs/mcp --http     # http://localhost:3333/mcp`}
+    lang="sh"
+  />
 
   <h2>Step 1 · Connect it</h2>
   <p><strong>Claude Code</strong></p>
-  <pre><code>claude mcp add matra -- npx -y @matrajs/mcp</code></pre>
+  <Code code={`claude mcp add matra -- npx -y @matrajs/mcp`} lang="sh" />
   <p><strong>Claude Desktop</strong> · in <code>claude_desktop_config.json</code></p>
-  <pre><code>&#123;
-  "mcpServers": &#123;
-    "matra": &#123; "command": "npx", "args": ["-y", "@matrajs/mcp"] &#125;
-  &#125;
-&#125;</code></pre>
+  <Code
+    code={`{
+  "mcpServers": {
+    "matra": { "command": "npx", "args": ["-y", "@matrajs/mcp"] }
+  }
+}`}
+    lang="json"
+  />
   <p>
     <strong>Cursor</strong> · the same object under <code>"mcpServers"</code> in <code
       >.cursor/mcp.json</code
     >.
   </p>
   <p><strong>Codex</strong> · in <code>~/.codex/config.toml</code></p>
-  <pre><code>[mcp_servers.matra]
+  <Code
+    code={`[mcp_servers.matra]
 command = "npx"
-args = ["-y", "@matrajs/mcp"]</code></pre>
+args = ["-y", "@matrajs/mcp"]`}
+    lang="json"
+  />
   <p>
     <strong>Anything that speaks HTTP</strong> · run <code>npx -y @matrajs/mcp --http 3333</code
     > and point the client at <code>http://localhost:3333/mcp</code>.
@@ -72,10 +82,13 @@ args = ["-y", "@matrajs/mcp"]</code></pre>
   </p>
 
   <h2>From code</h2>
-  <pre><code>import &#123; createServer &#125; from '@matrajs/mcp'
+  <Code
+    code={`import { createServer } from '@matrajs/mcp'
 
 const server = createServer(docs)
-server.handle(&#123; jsonrpc: '2.0', id: 1, method: 'tools/list' &#125;)</code></pre>
+server.handle({ jsonrpc: '2.0', id: 1, method: 'tools/list' })`}
+    lang="ts"
+  />
   <p>
     <code>createServer</code> is the protocol without a transport: one message in, one reply out.
     Put it behind whatever transport you already run.

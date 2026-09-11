@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 const editorApi = [
@@ -261,16 +262,19 @@ const ctxApi = [
   </div>
 
   <h2>Types worth knowing</h2>
-  <pre><code>type Pos = number &amp; &#123; readonly __brand: unique symbol &#125;
-type Range = &#123; from: Pos; to: Pos &#125;
+  <Code
+    code={`type Pos = number & { readonly __brand: unique symbol }
+type Range = { from: Pos; to: Pos }
 
-interface DocNode &#123;
+interface DocNode {
   type: string
-  attrs?: Record&lt;string, unknown&gt;
+  attrs?: Record<string, unknown>
   content?: DocNode[]
   text?: string
   marks?: DocMark[]
-&#125;</code></pre>
+}`}
+    lang="ts"
+  />
   <p>
     <code>Pos</code> is branded so a raw number cannot be passed by accident. Write one with
     <code>pos()</code> rather than casting: a codebase where <code>as Pos</code> is ordinary is one
@@ -278,10 +282,13 @@ interface DocNode &#123;
   </p>
 
   <h2>Writing a position down</h2>
-  <pre><code>import &#123; pos, range &#125; from '@matrajs/core'
+  <Code
+    code={`import { pos, range } from '@matrajs/core'
 
 pos(0)         // number -> Pos
-range(1, 6)    // (number, number) -> Range</code></pre>
+range(1, 6)    // (number, number) -> Range`}
+    lang="ts"
+  />
   <p>
     <code>Pos</code> is branded so that arithmetic on one does not typecheck · these are how you write
     a literal without a cast. Not for carrying a position across an <code>await</code>: that is <code
@@ -290,12 +297,15 @@ range(1, 6)    // (number, number) -> Range</code></pre>
   </p>
 
   <h2>Functions that need no editor</h2>
-  <pre><code>import &#123; toMarkdown, fromMarkdown, tableOfContents, assignIds &#125; from '@matrajs/core'
+  <Code
+    code={`import { toMarkdown, fromMarkdown, tableOfContents, assignIds } from '@matrajs/core'
 
 toMarkdown(doc)          // DocNode  -> string
 fromMarkdown(source)     // string   -> DocNode
 tableOfContents(doc)     // DocNode  -> TocEntry[]
-assignIds(doc, options)  // DocNode  -> DocNode with stable block ids</code></pre>
+assignIds(doc, options)  // DocNode  -> DocNode with stable block ids`}
+    lang="ts"
+  />
   <p>None of these touches the DOM, so all four run on a server.</p>
 
   <style>

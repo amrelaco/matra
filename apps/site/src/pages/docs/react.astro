@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,23 +9,26 @@ import Docs from '../../layouts/Docs.astro'
   section="Frameworks"
   heading="React"
 >
-  <pre><code>npm i @matrajs/react</code></pre>
+  <Code code={`npm i @matrajs/react`} lang="sh" />
   <p>
     The engine comes with it · there is no second package, and nothing third-party behind it.
   </p>
 
   <h2>An editor</h2>
-  <pre><code>import &#123; starterKit &#125; from '@matrajs/core'
-import &#123; EditorContent, useEditor &#125; from '@matrajs/react'
+  <Code
+    code={`import { starterKit } from '@matrajs/core'
+import { EditorContent, useEditor } from '@matrajs/react'
 
-export function Editor() &#123;
-  const editor = useEditor(&#123;
+export function Editor() {
+  const editor = useEditor({
     extensions: starterKit,
-    content: '&lt;p&gt;Hello.&lt;/p&gt;',
-  &#125;)
+    content: '<p>Hello.</p>',
+  })
 
-  return &lt;EditorContent editor=&#123;editor&#125; /&gt;
-&#125;</code></pre>
+  return <EditorContent editor={editor} />
+}`}
+    lang="ts"
+  />
   <p>
     The editor is created once and destroyed on unmount. <strong>Options are read once</strong> ·
     changing them later does not recreate it, because tearing down a live document on a prop change
@@ -37,22 +41,25 @@ export function Editor() &#123;
     toolbar's active states go stale the moment the caret moves.
     <code>useEditorState</code> subscribes to both changes and selection changes.
   </p>
-  <pre><code>import &#123; useEditorState &#125; from '@matrajs/react'
+  <Code
+    code={`import { useEditorState } from '@matrajs/react'
 
-function BoldButton(&#123; editor &#125;) &#123;
-  const active = useEditorState(editor, (e) =&gt; e.isActive('bold'))
+function BoldButton({ editor }) {
+  const active = useEditorState(editor, (e) => e.isActive('bold'))
   return (
-    &lt;button
-      aria-pressed=&#123;active&#125;
-      onMouseDown=&#123;(event) =&gt; &#123;
+    <button
+      aria-pressed={active}
+      onMouseDown={(event) => {
         event.preventDefault()        // keep the caret in the editor
         editor.commands.toggleBold()
-      &#125;&#125;
-    &gt;
+      }}
+    >
       Bold
-    &lt;/button&gt;
+    </button>
   )
-&#125;</code></pre>
+}`}
+    lang="ts"
+  />
 
   <div class="note">
     <code>onMouseDown</code> with <code>preventDefault</code>, not
@@ -67,28 +74,37 @@ function BoldButton(&#123; editor &#125;) &#123;
     a code block, or the selection cannot hold that mark, and the answer is available before the user
     finds out by pressing.
   </p>
-  <pre><code>const canBold = useEditorState(editor, (e) =&gt; e.can.toggleBold())
+  <Code
+    code={`const canBold = useEditorState(editor, (e) => e.can.toggleBold())
 
-&lt;button disabled=&#123;!canBold&#125; …&gt;Bold&lt;/button&gt;</code></pre>
+<button disabled={!canBold} …>Bold</button>`}
+    lang="ts"
+  />
 
   <h2>Several changes, one undo</h2>
-  <pre><code>editor.batch((c) =&gt; &#123;
+  <Code
+    code={`editor.batch((c) => {
   c.toggleBold()
   c.toggleItalic()
-&#125;)</code></pre>
+})`}
+    lang="ts"
+  />
   <p>
     One history step, and it rolls back entirely if any command in it returns <code>false</code
     >.
   </p>
 
   <h2>Saving</h2>
-  <pre><code>useEffect(() =&gt; editor.on('change', () =&gt; save(editor.getJSON())), [editor])</code></pre>
+  <Code
+    code={`useEffect(() => editor.on('change', () => save(editor.getJSON())), [editor])`}
+    lang="ts"
+  />
   <p>
     <code>on</code> returns its own unsubscribe function, so it works as an effect cleanup directly.
   </p>
 
   <h2>Focus</h2>
-  <pre><code>const focused = useEditorFocus(editor)</code></pre>
+  <Code code={`const focused = useEditorFocus(editor)`} lang="ts" />
   <p>
     True while the editor has DOM focus · useful for showing a toolbar only while the caret is
     actually in the document.

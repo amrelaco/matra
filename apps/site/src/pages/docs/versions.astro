@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,7 +9,7 @@ import Docs from '../../layouts/Docs.astro'
   section="Paid features"
   heading="Version history"
 >
-  <pre><code>npm i @matrajs/versions</code></pre>
+  <Code code={`npm i @matrajs/versions`} lang="sh" />
 
   <p>
     Snapshots of the document, a <strong>real diff</strong> between any two of them — block pairing
@@ -23,20 +24,23 @@ import Docs from '../../layouts/Docs.astro'
   </div>
 
   <h2>Setting it up</h2>
-  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
-import &#123; localVersionStore, versions &#125; from '@matrajs/versions'
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
+import { localVersionStore, versions } from '@matrajs/versions'
 
-const editor = createEditor(&#123;
+const editor = createEditor({
   extensions: [
     ...starterKit,
-    versions(&#123;
+    versions({
       idleMs: 30_000,
       keep: 50,
       store: localVersionStore('doc-42'),
-      onChange: (state) =&gt; render(state.versions, state.diff),
-    &#125;),
+      onChange: (state) => render(state.versions, state.diff),
+    }),
   ] as const,
-&#125;)</code></pre>
+})`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Option</th><th>Type</th><th></th></tr></thead>
@@ -106,7 +110,8 @@ const editor = createEditor(&#123;
     </tbody>
   </table>
 
-  <pre><code>import &#123; versionList &#125; from '@matrajs/versions'
+  <Code
+    code={`import { versionList } from '@matrajs/versions'
 
 // Take it before the rewrite, not after. A snapshot of a document that has
 // not changed since the last one is refused — there is already a version
@@ -118,10 +123,12 @@ editor.commands.snapshotVersion('before the rewrite')
 // Newest last, so the version you just took is at the end.
 const list = versionList(editor)
 const before = list.at(-1)
-if (before) &#123;
+if (before) {
   editor.commands.previewVersion(before.id)   // show what changed
   editor.commands.restoreVersion(before.id)   // go back · one undo step
-&#125;</code></pre>
+}`}
+    lang="ts"
+  />
 
   <div class="note">
     A restore is <strong>isolated as its own undo step</strong>, whatever was typed a second
@@ -163,22 +170,28 @@ if (before) &#123;
     <code>localVersionStore(key)</code> is a <code>localStorage</code> implementation, and the interface
     is two methods if you would rather keep them on a server.
   </p>
-  <pre><code>interface VersionStore &#123;
+  <Code
+    code={`interface VersionStore {
   /** Sync, so the first render already has them. */
   load(): Version[] | null
   /** Called whenever the list changes · debouncing it is yours to decide. */
   save(versions: Version[]): void
-&#125;</code></pre>
+}`}
+    lang="ts"
+  />
 
   <h2>The diff on its own</h2>
   <p>
     The diff is exported separately, so a review screen can compare two documents without an
     editor anywhere near it — on a server, in a worker, in a test.
   </p>
-  <pre><code>import &#123; diffDocs &#125; from '@matrajs/versions'
+  <Code
+    code={`import { diffDocs } from '@matrajs/versions'
 
 const diff = diffDocs(before, after)
-// &#123; blocks, added, removed, changed, same &#125;</code></pre>
+// { blocks, added, removed, changed, same }`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Export</th><th></th></tr></thead>

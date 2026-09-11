@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 /**
@@ -23,7 +24,7 @@ import Docs from '../../layouts/Docs.astro'
     this page is ordinary <code>@matrajs/core</code> · there is no Angular-specific package to install.
   </p>
 
-  <pre><code>npm i @matrajs/core</code></pre>
+  <Code code={`npm i @matrajs/core`} lang="sh" />
 
   <h2>Why there is no @matrajs/angular</h2>
   <p>
@@ -35,7 +36,8 @@ import Docs from '../../layouts/Docs.astro'
   </p>
 
   <h2>The directive</h2>
-  <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject } from '@angular/core'
+  <Code
+    code={`import { Directive, ElementRef, OnDestroy, OnInit, inject } from '@angular/core'
 import { createEditor, starterKit } from '@matrajs/core'
 
 @Directive({ selector: '[matra]', standalone: true, exportAs: 'matra' })
@@ -50,12 +52,17 @@ export class MatraDirective implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.editor.destroy()
   }
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <h2>Using it</h2>
-  <pre><code>{`<div matra #ed="matra"></div>
+  <Code
+    code={`<div matra #ed="matra"></div>
 
-<button (click)="ed.editor.commands.toggleBold()">Bold</button>`}</code></pre>
+<button (click)="ed.editor.commands.toggleBold()">Bold</button>`}
+    lang="html"
+  />
   <p>
     <code>exportAs</code> is what makes <code>#ed</code> the directive rather than the element, so
     a toolbar anywhere in the template can reach <code>ed.editor</code> without a service.
@@ -68,7 +75,8 @@ export class MatraDirective implements OnInit, OnDestroy {
     <code>editor.on()</code> returns its own unsubscribe, and the cheapest correct wiring is a signal
     updated from it.
   </p>
-  <pre><code>{`import { Directive, ElementRef, OnDestroy, OnInit, inject, signal } from '@angular/core'
+  <Code
+    code={`import { Directive, ElementRef, OnDestroy, OnInit, inject, signal } from '@angular/core'
 import { createEditor, starterKit } from '@matrajs/core'
 
 @Directive({ selector: '[matra]', standalone: true, exportAs: 'matra' })
@@ -90,7 +98,9 @@ export class MatraDirective implements OnInit, OnDestroy {
     for (const off of this.off) off()
     this.editor.destroy()
   }
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
   <div class="note">
     <p>
       Both events, not just one. <code>selectionChange</code> covers moving the caret into bold text;

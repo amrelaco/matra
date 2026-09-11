@@ -49,6 +49,147 @@
     "CalloutType": ["'info'", "'note'", "'tip'", "'warning'", "'danger'", "'success'"],
     "TextDirection": ["'ltr'", "'rtl'"]
   },
+  "interfaces": {
+    "AudioAttrs": [
+      {
+        "name": "src",
+        "type": "string",
+        "required": true,
+        "doc": []
+      },
+      {
+        "name": "title",
+        "type": "string | null",
+        "required": false,
+        "doc": []
+      },
+      {
+        "name": "controls",
+        "type": "boolean",
+        "required": false,
+        "doc": [
+          {
+            "type": "text",
+            "text": "Show the browser's own transport. Off means the host draws its own."
+          }
+        ]
+      }
+    ],
+    "Range": [
+      {
+        "name": "from",
+        "type": "Pos",
+        "required": true,
+        "doc": []
+      },
+      {
+        "name": "to",
+        "type": "Pos",
+        "required": true,
+        "doc": []
+      }
+    ],
+    "EmbedAttrs": [
+      {
+        "name": "title",
+        "type": "string | null",
+        "required": false,
+        "doc": [
+          {
+            "type": "text",
+            "text": "Read out to assistive technology; the frame has no other name."
+          }
+        ]
+      },
+      {
+        "name": "aspect",
+        "type": "string",
+        "required": false,
+        "doc": [
+          {
+            "type": "text",
+            "text": "Width to height, as CSS `aspect-ratio` writes it. Default `16/9`."
+          }
+        ]
+      }
+    ],
+    "ImageAttrs": [
+      {
+        "name": "src",
+        "type": "string",
+        "required": true,
+        "doc": []
+      },
+      {
+        "name": "alt",
+        "type": "string | null",
+        "required": false,
+        "doc": []
+      },
+      {
+        "name": "title",
+        "type": "string | null",
+        "required": false,
+        "doc": []
+      }
+    ],
+    "LinkAttrs": [
+      {
+        "name": "href",
+        "type": "string",
+        "required": true,
+        "doc": []
+      },
+      {
+        "name": "target",
+        "type": "string | null",
+        "required": false,
+        "doc": []
+      },
+      {
+        "name": "rel",
+        "type": "string | null",
+        "required": false,
+        "doc": []
+      }
+    ],
+    "YoutubeAttrs": [
+      {
+        "name": "src",
+        "type": "string",
+        "required": true,
+        "doc": [
+          {
+            "type": "text",
+            "text": "A video id, or any YouTube URL — watch, share, embed or short."
+          }
+        ]
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false,
+        "doc": []
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "doc": []
+      },
+      {
+        "name": "start",
+        "type": "number",
+        "required": false,
+        "doc": [
+          {
+            "type": "text",
+            "text": "Seconds in."
+          }
+        ]
+      }
+    ]
+  },
   "extensions": [
     {
       "importName": "audio",

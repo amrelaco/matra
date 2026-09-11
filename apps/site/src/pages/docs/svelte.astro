@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,10 +9,11 @@ import Docs from '../../layouts/Docs.astro'
   section="Frameworks"
   heading="Svelte"
 >
-  <pre><code>npm i @matrajs/core @matrajs/svelte</code></pre>
+  <Code code={`npm i @matrajs/core @matrajs/svelte`} lang="sh" />
 
   <h2>An editor</h2>
-  <pre><code>{`<script>
+  <Code
+    code={`<script>
   import { starterKit } from '@matrajs/core'
   import { matra } from '@matrajs/svelte'
 
@@ -21,7 +23,9 @@ import Docs from '../../layouts/Docs.astro'
   })
 </script>
 
-<div use:action></div>`}</code></pre>
+<div use:action></div>`}
+    lang="ts"
+  />
 
   <p>
     <code>matra()</code> gives you three things: the <code>action</code> to put on the element, the
@@ -45,7 +49,8 @@ import Docs from '../../layouts/Docs.astro'
     somebody moves the caret with the arrow keys.
   </p>
 
-  <pre><code>{`<script>
+  <Code
+    code={`<script>
   import { starterKit } from '@matrajs/core'
   import { matra } from '@matrajs/svelte'
 
@@ -66,7 +71,9 @@ import Docs from '../../layouts/Docs.astro'
   <span>{$state.getText().length} characters</span>
 </div>
 
-<div use:action></div>`}</code></pre>
+<div use:action></div>`}
+    lang="ts"
+  />
 
   <h2>Svelte 4 and Svelte 5</h2>
   <p>
@@ -95,13 +102,16 @@ import Docs from '../../layouts/Docs.astro'
     nothing framework-shaped about it, and the paid extensions do not know Svelte exists.
   </p>
 
-  <pre><code>{`import { setContext, getContext } from 'svelte'
+  <Code
+    code={`import { setContext, getContext } from 'svelte'
 
 // in the parent
 setContext('editor', editor)
 
 // in any child
-const editor = getContext('editor')`}</code></pre>
+const editor = getContext('editor')`}
+    lang="ts"
+  />
 
   <h2>Styling</h2>
   <p>

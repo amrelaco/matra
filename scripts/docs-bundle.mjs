@@ -142,7 +142,18 @@ const absolute = (href) => (href.startsWith('/') ? `https://matrajs.com${href}` 
 function toMarkdown(html) {
   const blocks = []
   let text = html.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g, (_, code) => {
-    blocks.push(`\n\n\`\`\`\n${decode(code).replace(/\s+$/, '')}\n\`\`\`\n\n`)
+    /*
+     * Tags stripped before fencing.
+     *
+     * Code used to be plain text in the page, so it could be fenced verbatim.
+     * It is highlighted now, which means the block is a nest of styled spans —
+     * fencing that verbatim shipped `<span style="--shiki-light:#D73A49">` to
+     * the MCP server and to llms-full.txt instead of the code. Shiki puts each
+     * line on its own line of source, so removing the tags leaves the newlines
+     * where they were.
+     */
+    const text = decode(code.replace(/<[^>]+>/g, ''))
+    blocks.push(`\n\n\`\`\`\n${text.replace(/\s+$/, '')}\n\`\`\`\n\n`)
     return `${blocks.length - 1}`
   })
 

@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import sizes from '../../data/sizes.json'
 import Docs from '../../layouts/Docs.astro'
 
@@ -54,11 +55,14 @@ const starter = sizes.rungs.find((rung) => rung.id === 'starter')?.gz ?? 0
   </ul>
 
   <h2>Install</h2>
-  <pre><code>npm i @matrajs/core</code></pre>
-  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+  <Code code={`npm i @matrajs/core`} lang="sh" />
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
 
 const editor = createEditor({ extensions: starterKit, content: '<p>Hello.</p>' })
-editor.mount(document.querySelector('#editor'))`}</code></pre>
+editor.mount(document.querySelector('#editor'))`}
+    lang="ts"
+  />
   <p>
     That is a working editor. It will look like unstyled text until you write some CSS, which is
     what headless means — <a href="/docs/styling">Styling</a> covers it in a page.

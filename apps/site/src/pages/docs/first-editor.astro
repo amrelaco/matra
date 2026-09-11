@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -9,13 +10,16 @@ import Docs from '../../layouts/Docs.astro'
   heading="Your first editor"
 >
   <p>Ten lines, and the result is the editor on the front page.</p>
-  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
 
 const editor = createEditor({
   extensions: starterKit,
   content: '<p>Hello.</p>',
   element: document.querySelector('#editor'),
-})`}</code></pre>
+})`}
+    lang="ts"
+  />
   <p>
     <code>element</code> mounts it there and then. Leave it out and you get an unmounted editor to
     <code>mount</code> yourself later, which is what the framework bindings do · in React the element
@@ -41,14 +45,17 @@ const editor = createEditor({
     Not in it, on purpose: <code>typography</code> (curling quotes is a decision),
     <code>taskList</code>, tables, and everything that needs options. Add what you want.
   </p>
-  <pre><code>{`// Everything:
+  <Code
+    code={`// Everything:
 createEditor({ extensions: starterKit })
 
 // Or exactly what you want, and nothing else:
 createEditor({ extensions: [document, paragraph, text, bold, underline] })
 
 // Or the kit plus something:
-createEditor({ extensions: [...starterKit, taskList, taskItem, ...tableKit] })`}</code></pre>
+createEditor({ extensions: [...starterKit, taskList, taskItem, ...tableKit] })`}
+    lang="ts"
+  />
   <p>
     The array is the feature list. An editor built from the second line has no way to make a
     heading — no command, no shortcut, and pasting one flattens it to a paragraph. That is how
@@ -61,12 +68,15 @@ createEditor({ extensions: [...starterKit, taskList, taskItem, ...tableKit] })`}
     so <code>toggleBold</code> exists because <code>bold</code> is in the kit — not because of a declaration
     merge somewhere.
   </p>
-  <pre><code>{`const bold = document.querySelector('#bold')
+  <Code
+    code={`const bold = document.querySelector('#bold')
 
 bold.addEventListener('mousedown', (event) => {
   event.preventDefault()          // keep the caret in the editor
   editor.commands.toggleBold()
-})`}</code></pre>
+})`}
+    lang="ts"
+  />
 
   <div class="note">
     <p>
@@ -81,7 +91,8 @@ bold.addEventListener('mousedown', (event) => {
     A button that looks the same whether or not the thing it does is already done is a button
     you have to check your text to use. Ask the document:
   </p>
-  <pre><code>{`const paint = () => {
+  <Code
+    code={`const paint = () => {
   // Is it on?
   bold.setAttribute('aria-pressed', String(editor.isActive('bold')))
   h2.setAttribute('aria-pressed', String(editor.isActive('heading', { level: 2 })))
@@ -93,7 +104,9 @@ bold.addEventListener('mousedown', (event) => {
 
 editor.on('change', paint)
 editor.on('selectionChange', paint)
-paint()`}</code></pre>
+paint()`}
+    lang="ts"
+  />
   <p>
     Two different questions, and a toolbar needs both. <code>isActive</code> asks whether the thing
     is done; <code>editor.can</code> asks whether it could be. A button that answers only the first
@@ -105,9 +118,12 @@ paint()`}</code></pre>
   </p>
 
   <h2>Reading the document</h2>
-  <pre><code>{`editor.getJSON()   // plain JSON, no engine types
+  <Code
+    code={`editor.getJSON()   // plain JSON, no engine types
 editor.getHTML()   // a string
-editor.getText()   // block-separated text`}</code></pre>
+editor.getText()   // block-separated text`}
+    lang="ts"
+  />
   <p>
     Store the JSON. It is ordinary data: you can diff two revisions with any library, log it,
     and read it in a language that has never heard of this editor. HTML is for display and for
@@ -116,10 +132,13 @@ editor.getText()   // block-separated text`}</code></pre>
   </p>
 
   <h2>Reacting to changes</h2>
-  <pre><code>{`const off = editor.on('change', () => save(editor.getJSON()))
+  <Code
+    code={`const off = editor.on('change', () => save(editor.getJSON()))
 
 // later
-off()`}</code></pre>
+off()`}
+    lang="ts"
+  />
   <p>
     <code>on</code> returns its own unsubscribe, so there is nothing to name and nothing to match
     up. The events are <code>change</code>, <code>selectionChange</code>,
@@ -131,7 +150,7 @@ off()`}</code></pre>
   </p>
 
   <h2>Setting content later</h2>
-  <pre><code>{`editor.setContent(await load(id))   // JSON or an HTML string`}</code></pre>
+  <Code code={`editor.setContent(await load(id))   // JSON or an HTML string`} lang="ts" />
   <div class="note">
     <p>
       <code>setContent</code> replaces the document and <strong>clears the undo history</strong>
@@ -142,7 +161,7 @@ off()`}</code></pre>
   </div>
 
   <h2>Cleaning up</h2>
-  <pre><code>{`editor.destroy()`}</code></pre>
+  <Code code={`editor.destroy()`} lang="ts" />
   <p>
     Removes the listeners and the <code>contenteditable</code> attribute, so the element is safe to
     reuse. Every framework binding does it for you on unmount; if you are mounting by hand, a route

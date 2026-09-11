@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,7 +9,7 @@ import Docs from '../../layouts/Docs.astro'
   section="Paid features"
   heading="Collaboration"
 >
-  <pre><code>npm i @matrajs/collab</code></pre>
+  <Code code={`npm i @matrajs/collab`} lang="sh" />
 
   <p>
     The protocol is the well-trodden one. A client sends the steps it has made together with the
@@ -30,12 +31,15 @@ import Docs from '../../layouts/Docs.astro'
   </div>
 
   <h2>The client</h2>
-  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
-import &#123; collab &#125; from '@matrajs/collab'
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
+import { collab } from '@matrajs/collab'
 
-const editor = createEditor(&#123;
-  extensions: [...starterKit, collab(&#123; clientId: 'nahim-1a2b' &#125;)] as const,
-&#125;)</code></pre>
+const editor = createEditor({
+  extensions: [...starterKit, collab({ clientId: 'nahim-1a2b' })] as const,
+})`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Option</th><th>Type</th><th></th></tr></thead>
@@ -59,9 +63,12 @@ const editor = createEditor(&#123;
     <code>Authority</code> is a plain class with no server attached, so the same object works over
     a WebSocket, over HTTP polling, in a Durable Object, or in an in-memory channel in a test.
   </p>
-  <pre><code>import &#123; Authority &#125; from '@matrajs/collab'
+  <Code
+    code={`import { Authority } from '@matrajs/collab'
 
-const authority = new Authority((version) =&gt; broadcast(version))</code></pre>
+const authority = new Authority((version) => broadcast(version))`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Member</th><th></th></tr></thead>
@@ -85,30 +92,33 @@ const authority = new Authority((version) =&gt; broadcast(version))</code></pre>
 
   <h2>The loop</h2>
   <p>Two functions, and they are the whole integration.</p>
-  <pre><code>import &#123; getVersion, sendableSteps &#125; from '@matrajs/collab'
+  <Code
+    code={`import { getVersion, sendableSteps } from '@matrajs/collab'
 
 /** Send what the authority has not seen. */
-function push() &#123;
+function push() {
   const sendable = sendableSteps(editor)
   if (!sendable) return true
 
   const accepted = authority.receive(sendable.version, sendable.steps)
   if (accepted) editor.commands.confirmCollabSteps(sendable.steps.length)
   return accepted
-&#125;
+}
 
 /** Take what we missed and rebase onto it. */
-function pull() &#123;
+function pull() {
   const missing = authority.since(getVersion(editor))
   if (missing.length) editor.commands.receiveCollabSteps(missing)
-&#125;
+}
 
-editor.on('change', () =&gt; &#123;
-  if (!push()) &#123;
+editor.on('change', () => {
+  if (!push()) {
     pull()
     push()
-  &#125;
-&#125;)</code></pre>
+  }
+})`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Export</th><th></th></tr></thead>
@@ -146,27 +156,30 @@ editor.on('change', () =&gt; &#123;
 
   <h2>Remote cursors</h2>
   <p>A second extension, because presence is optional and costs a little to keep.</p>
-  <pre><code>import &#123; colorFor, remoteCursorCSS, remoteCursors &#125; from '@matrajs/collab'
+  <Code
+    code={`import { colorFor, remoteCursorCSS, remoteCursors } from '@matrajs/collab'
 
-const editor = createEditor(&#123;
+const editor = createEditor({
   extensions: [
     ...starterKit,
-    collab(&#123; clientId &#125;),
+    collab({ clientId }),
     remoteCursors(),
   ] as const,
-&#125;)
+})
 
-editor.on('selectionChange', () =&gt; &#123;
-  const &#123; from, to &#125; = editor.selection
-  socket.send(JSON.stringify(&#123;
+editor.on('selectionChange', () => {
+  const { from, to } = editor.selection
+  socket.send(JSON.stringify({
     clientId,
     anchor: from,
     head: to,
-    meta: &#123; name: 'Nahim' &#125;,
-  &#125;))
-&#125;)
+    meta: { name: 'Nahim' },
+  }))
+})
 
-socket.onmessage = (event) =&gt; editor.commands.setPresence(JSON.parse(event.data))</code></pre>
+socket.onmessage = (event) => editor.commands.setPresence(JSON.parse(event.data))`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Command or export</th><th></th></tr></thead>
@@ -197,7 +210,10 @@ socket.onmessage = (event) =&gt; editor.commands.setPresence(JSON.parse(event.da
   </table>
 
   <p>Read the cursors for an avatar row:</p>
-  <pre><code>import type &#123; RemoteCursors &#125; from '@matrajs/collab'
+  <Code
+    code={`import type { RemoteCursors } from '@matrajs/collab'
 
-const people = editor.extensionState&lt;RemoteCursors&gt;('remoteCursors')</code></pre>
+const people = editor.extensionState<RemoteCursors>('remoteCursors')`}
+    lang="ts"
+  />
 </Docs>

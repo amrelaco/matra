@@ -1,0 +1,55 @@
+---
+import { codeToHtml } from 'shiki'
+
+/**
+ * A code block, highlighted at build time.
+ *
+ * The docs shipped code as plain text, which is fine for one line and poor for
+ * twenty: a reader scanning `createEditor({ extensions: [...] })` for the part
+ * they have to change gets no help from the page at all.
+ *
+ * Shiki runs here, during the build, so nothing is shipped to do it — no
+ * highlighter, no grammar, no client script. The page gets spans with colours
+ * already on them, which is the only way to add this to a site whose whole
+ * argument is that it sends you almost nothing.
+ *
+ * Both themes are rendered into the same markup. Shiki writes the light colour
+ * as an inline `color` and the dark one as a `--shiki-dark` custom property on
+ * the same span, and the stylesheet swaps which one applies under
+ * `[data-theme="dark"]`. One copy of the code, no flash on toggle, and no
+ * second request.
+ */
+interface Props {
+  code: string
+  lang?: string
+  /** A filename or title, shown above the block the way an editor tab is. */
+  title?: string
+}
+
+const { code, lang = 'ts', title } = Astro.props
+
+const trimmed = code.replace(/^\n+/, '').replace(/\s+$/, '')
+
+let html: string
+try {
+  html = await codeToHtml(trimmed, {
+    lang,
+    themes: { light: 'github-light', dark: 'github-dark' },
+    defaultColor: false,
+    // `defaultColor: false` writes both themes as custom properties rather than
+    // picking one, which is what lets a single build serve both.
+    cssVariablePrefix: '--shiki-',
+  })
+} catch {
+  // An unknown language must not fail the build · the code still has to appear.
+  html = `<pre class="shiki"><code>${trimmed
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')}</code></pre>`
+}
+---
+
+<figure class="code-block" data-static>
+  {title && <figcaption class="code-title mono">{title}</figcaption>}
+  <div class="code-body" set:html={html} />
+</figure>

@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -13,9 +14,9 @@ import Docs from '../../layouts/Docs.astro'
     application needs nothing else · no second package, and no third-party dependency arrives
     behind it.
   </p>
-  <pre><code>npm i @matrajs/react   # or vue, svelte, solid</code></pre>
+  <Code code={`npm i @matrajs/react   # or vue, svelte, solid`} lang="sh" />
   <p>Without a framework, or with one that needs no binding, install the engine directly.</p>
-  <pre><code>npm i @matrajs/core</code></pre>
+  <Code code={`npm i @matrajs/core`} lang="sh" />
   <p>
     It ships no appearance. <a href="/docs/styling">Styling</a> is a page of its own, and worth reading
     before the first afternoon rather than after it.
@@ -23,10 +24,13 @@ import Docs from '../../layouts/Docs.astro'
 
   <h2>Framework bindings</h2>
   <p>Each one depends on <code>@matrajs/core</code> and pulls it in for you.</p>
-  <pre><code>npm i @matrajs/react   # useEditor, useEditorState, EditorContent
+  <Code
+    code={`npm i @matrajs/react   # useEditor, useEditorState, EditorContent
 npm i @matrajs/vue     # useEditor, EditorContent
 npm i @matrajs/svelte  # matra — a use: action and a store
-npm i @matrajs/solid   # createMatra — a ref and a signal</code></pre>
+npm i @matrajs/solid   # createMatra — a ref and a signal`}
+    lang="sh"
+  />
   <p>
     All four are MIT and all four are thin · the editor does not care which framework renders
     around it, and no binding re-implements anything. <strong
@@ -36,9 +40,12 @@ npm i @matrajs/solid   # createMatra — a ref and a signal</code></pre>
   </p>
 
   <h2>The paid packages</h2>
-  <pre><code>npm i @matrajs/ai        # streaming edits
+  <Code
+    code={`npm i @matrajs/ai        # streaming edits
 npm i @matrajs/collab    # authority, rebasing, remote cursors
-npm i @matrajs/versions  # snapshots, diff, restore</code></pre>
+npm i @matrajs/versions  # snapshots, diff, restore`}
+    lang="sh"
+  />
   <p>
     Installed the same way as everything else. All three are source-available under a commercial
     licence rather than MIT · free for evaluation, development, testing, teaching, personal

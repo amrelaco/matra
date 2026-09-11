@@ -161,6 +161,11 @@ const docFor = (exportName) => {
  */
 const optionsFor = (exportName) => {
   const iface = `${exportName[0].toUpperCase()}${exportName.slice(1)}Options`
+  return interfaceFor(iface)
+}
+
+/** The fields of a named interface in the emitted types, or null. */
+const interfaceFor = (iface) => {
   const start = types.indexOf(`interface ${iface} {`)
   if (start === -1) return null
   let depth = 0
@@ -186,6 +191,15 @@ const optionsFor = (exportName) => {
   }
   return { interface: iface, fields }
 }
+
+/**
+ * Every interface a command takes as an argument.
+ *
+ * `setLink(attrs: LinkAttrs)` renders as `setLink(…)` without this · with it the
+ * example can show `setLink({ href: 'https://matrajs.com' })`, which is a line
+ * somebody can run rather than one they have to look up.
+ */
+const commandInterfaces = {}
 
 /* --- command signatures ---------------------------------------------------- */
 
@@ -357,10 +371,18 @@ const describe = (exportName, def, { configurable }) => ({
   configurable,
   group: def.group ?? null,
   content: def.content ?? null,
-  commands: Object.keys(def.commands ?? {}).map((name) => ({
-    name,
-    params: commandsFor(exportName).get(name) ?? [],
-  })),
+  commands: Object.keys(def.commands ?? {}).map((name) => {
+    const params = commandsFor(exportName).get(name) ?? []
+    // Record any interface these parameters name, so a page can show a literal.
+    for (const param of params) {
+      const type = param.split(':').slice(1).join(':').trim().replace(/\[\]$/, '')
+      if (/^[A-Z]\w*$/.test(type) && !(type in commandInterfaces)) {
+        const found = interfaceFor(type)
+        if (found) commandInterfaces[type] = found.fields
+      }
+    }
+    return { name, params }
+  }),
   keys: Object.entries(def.keys ?? {}).map(([combo, command]) => ({ combo, command })),
   attrs: Object.entries(def.attrs ?? {}).map(([attr, spec]) => ({
     name: attr,
@@ -414,6 +436,7 @@ const payload = {
   },
   kits: kitsOut,
   aliases,
+  interfaces: commandInterfaces,
   extensions,
 }
 

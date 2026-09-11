@@ -14,5 +14,8 @@
     "@hugeicons/core-free-icons": "^4.3.0",
     "@matrajs/core": "workspace:^",
     "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "shiki": "3.23.0"
   }
 }

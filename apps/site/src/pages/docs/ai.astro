@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -8,7 +9,7 @@ import Docs from '../../layouts/Docs.astro'
   section="Paid features"
   heading="AI"
 >
-  <pre><code>npm i @matrajs/ai</code></pre>
+  <Code code={`npm i @matrajs/ai`} lang="sh" />
 
   <p>
     <code>@matrajs/ai</code> streams a rewrite into the selected range and keeps that range correct
@@ -31,27 +32,30 @@ import Docs from '../../layouts/Docs.astro'
     an async iterable of strings — so the key stays on your server and the provider stays yours to
     change.
   </p>
-  <pre><code>import &#123; createEditor, starterKit &#125; from '@matrajs/core'
-import &#123; ai &#125; from '@matrajs/ai'
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
+import { ai } from '@matrajs/ai'
 
-const editor = createEditor(&#123;
+const editor = createEditor({
   extensions: [
     ...starterKit,
-    ai(&#123;
-      async *stream(&#123; text, instruction, signal &#125;) &#123;
-        const response = await fetch('/api/rewrite', &#123;
+    ai({
+      async *stream({ text, instruction, signal }) {
+        const response = await fetch('/api/rewrite', {
           method: 'POST',
-          headers: &#123; 'content-type': 'application/json' &#125;,
-          body: JSON.stringify(&#123; text, instruction &#125;),
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ text, instruction }),
           signal,
-        &#125;)
+        })
 
         const stream = response.body!.pipeThrough(new TextDecoderStream())
         for await (const chunk of stream) yield chunk
-      &#125;,
-    &#125;),
+      },
+    }),
   ] as const,
-&#125;)</code></pre>
+})`}
+    lang="ts"
+  />
 
   <p>
     Each chunk you yield replaces the range with <em>everything received so far</em>, so yield
@@ -92,8 +96,11 @@ const editor = createEditor(&#123;
     </tbody>
   </table>
 
-  <pre><code>editor.commands.select(&#123; from, to &#125;)   // a rewrite needs a selection
-editor.commands.askAi('make this shorter')</code></pre>
+  <Code
+    code={`editor.commands.select({ from, to })   // a rewrite needs a selection
+editor.commands.askAi('make this shorter')`}
+    lang="ts"
+  />
 
   <div class="note">
     Chunks are applied as they arrive, so the stream is several history steps rather than one. A
@@ -103,13 +110,16 @@ editor.commands.askAi('make this shorter')</code></pre>
 
   <h2>Status, for spinners and toasts</h2>
   <p><code>onStatus</code> is called on every transition, with the session as it stands.</p>
-  <pre><code>ai(&#123;
+  <Code
+    code={`ai({
   stream,
-  onStatus: (session) =&gt; &#123;
+  onStatus: (session) => {
     setBusy(session.status === 'streaming')
     if (session.status === 'error') toast(session.error!.message)
-  &#125;,
-&#125;)</code></pre>
+  },
+})`}
+    lang="ts"
+  />
 
   <table>
     <thead><tr><th>Field</th><th>Type</th><th></th></tr></thead>

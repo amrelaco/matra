@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 /**
@@ -64,13 +65,16 @@ const bindings: [string, string, string][] = [
   <h2>Everything else is three calls</h2>
   <p>Create it, mount it into an element, destroy it when the element goes away.</p>
 
-  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
 
 const editor = createEditor({ extensions: starterKit, content: '<p>Hello</p>' })
 editor.mount(document.querySelector('#editor'))
 
 // later
-editor.destroy()`}</code></pre>
+editor.destroy()`}
+    lang="ts"
+  />
 
   <p>
     That is the whole of it. <code>destroy()</code> removes the listeners and the
@@ -91,7 +95,8 @@ editor.destroy()`}</code></pre>
     An action, which is exactly the shape Svelte has for this. Stores rather than runes, so the
     same package works in Svelte 4 and 5.
   </p>
-  <pre><code>{`<script>
+  <Code
+    code={`<script>
   import { starterKit } from '@matrajs/core'
   import { matra } from '@matrajs/svelte'
 
@@ -104,14 +109,17 @@ editor.destroy()`}</code></pre>
 <button onclick={() => editor.commands.toggleBold()}
         aria-pressed={$state.isActive('bold')}>Bold</button>
 
-<div use:action></div>`}</code></pre>
+<div use:action></div>`}
+    lang="ts"
+  />
 
   <h2>Solid</h2>
   <p>
     A signal rather than an external store · Solid's reactivity is not a render loop, so
     everything reading <code>state()</code> re-runs and nothing else does.
   </p>
-  <pre><code>{`import { starterKit } from '@matrajs/core'
+  <Code
+    code={`import { starterKit } from '@matrajs/core'
 import { createMatra } from '@matrajs/solid'
 
 export function Editor() {
@@ -127,7 +135,9 @@ export function Editor() {
       <div ref={mount} />
     </>
   )
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <h2>Angular</h2>
   <p>
@@ -151,12 +161,15 @@ export function Editor() {
     needs, in any framework:
   </p>
 
-  <pre><code>{`const off = editor.on('selectionChange', () => {
+  <Code
+    code={`const off = editor.on('selectionChange', () => {
   boldButton.setAttribute('aria-pressed', String(editor.isActive('bold')))
 })
 
 // on teardown
-off()`}</code></pre>
+off()`}
+    lang="ts"
+  />
 
   <h2>Server rendering</h2>
   <p>

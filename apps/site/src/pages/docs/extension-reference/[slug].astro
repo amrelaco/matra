@@ -1,4 +1,5 @@
 ---
+import Code from '../../../components/Code.astro'
 import api from '../../../data/extensions-api.json'
 import Docs from '../../../layouts/Docs.astro'
 
@@ -65,9 +66,46 @@ const primary = e.commands.find((c) => /^(set|toggle|insert|add)/.test(c.name)) 
 
 const aliases = (api as { aliases?: Record<string, string[]> }).aliases ?? {}
 
+/**
+ * A believable value for a string argument, chosen by what it is called.
+ *
+ * `setLink('…')` is a placeholder a reader has to decode; `setLink('https://
+ * matrajs.com')` is a line they can run. The names come from the same `.d.ts`
+ * the signature does, so this is matching on the author's own word for it.
+ */
+const STRING_SAMPLES: [RegExp, string][] = [
+  [/src/i, "'https://example.com/media'"],
+  [/href|url/i, "'https://matrajs.com'"],
+  [/emoji/i, "'💡'"],
+  [/query|search|term/i, "'needle'"],
+  [/reading|furigana/i, "'かんじ'"],
+  [/lang|language/i, "'ts'"],
+  [/id$/i, "'block-1'"],
+  [/name|label|title/i, "'Untitled'"],
+  [/text|content|comment|body/i, "'Looks good to me'"],
+  [/class/i, "'is-highlighted'"],
+]
+const sampleString = (name: string): string => {
+  for (const [pattern, value] of STRING_SAMPLES) if (pattern.test(name)) return value
+  return "'…'"
+}
+
 /** A value to show for a parameter · a literal beats a type name in an example. */
+type Field = { name: string; type: string; required: boolean }
+const interfaces = (api as { interfaces?: Record<string, Field[]> }).interfaces ?? {}
+
 const argFor = (param: string): string => {
   const type = param.split(':').slice(1).join(':').trim()
+  // An object argument shows its required fields, so the example is a literal
+  // rather than the name of a type the reader then has to go and look up.
+  const shape = interfaces[type]
+  if (shape) {
+    const required = shape.filter((f) => f.required)
+    const fields = (required.length ? required : shape.slice(0, 1)).map(
+      (f) => `${f.name}: ${argFor(`${f.name}: ${f.type}`)}`,
+    )
+    return `{ ${fields.join(', ')} }`
+  }
   // `HeadingLevel` becomes 2, not the word HeadingLevel. The second member,
   // where there is one, because the first is usually the default anyway.
   const alias = aliases[type]
@@ -76,7 +114,8 @@ const argFor = (param: string): string => {
   if (/^-?\d/.test(type)) return type.split('|')[0].trim()
   if (type.startsWith('number')) return '1'
   if (type.startsWith('boolean')) return 'true'
-  if (type.startsWith('string')) return "'…'"
+  if (type.startsWith('string'))
+    return sampleString(param.split(':')[0].replace('?', '').trim())
   return '…'
 }
 const exampleCall = primary
@@ -112,6 +151,14 @@ const buttonExample = [
     : []),
 ].join('\n')
 
+const cssExample = e.css
+  ? `import { ${e.css} } from '@matrajs/core'
+
+const style = document.createElement('style')
+style.textContent = ${e.css}
+document.head.append(style)`
+  : ''
+
 /** Everything else in the same kits · what a reader is likely to want next. */
 const siblings = e.kits.length
   ? all
@@ -130,16 +177,14 @@ const siblings = e.kits.length
     <span class="tag">{KIND_LABEL[e.kind]}</span>
     {e.configurable && <span class="tag">takes options</span>}
     {e.kits.map((k) => <span class="tag soft">in {k}</span>)}
-    {e.gz != null && <span class="tag soft">{e.gz} kB gzipped</span>}
+    {e.gz != null && <span class="tag soft">{e.gz < 0.05 ? '<0.1' : e.gz} kB gzipped</span>}
   </p>
 
   {
     e.doc.length ? (
       e.doc.map((block) =>
         block.type === 'code' ? (
-          <pre>
-            <code set:text={block.text} />
-          </pre>
+          <Code code={block.text} lang={block.lang ?? 'ts'} />
         ) : (
           <p set:text={block.text} />
         ),
@@ -153,14 +198,14 @@ const siblings = e.kits.length
   <p>
     One package for every extension · there is no <code>@matrajs/{e.importName}</code> to install.
   </p>
-  <pre><code>npm i @matrajs/core</code></pre>
+  <Code code="npm i @matrajs/core" lang="sh" />
 
   <h2>2 · Add it to the editor</h2>
   <p>
     Import it and put it in the <code>extensions</code> array. That array is the whole feature list:
     what is not in it is not in your bundle and not in the document's schema.
   </p>
-  <pre><code set:text={setup} /></pre>
+  <Code code={setup} />
   {
     e.kits.length > 0 && (
       <div class="note">
@@ -177,9 +222,7 @@ const siblings = e.kits.length
     exampleCall ? (
       <>
         <p>Run a command, and give focus back · a click on a button takes it away.</p>
-        <pre>
-          <code set:text={`${exampleCall}\neditor.focus()`} />
-        </pre>
+        <Code code={`${exampleCall}\neditor.focus()`} />
       </>
     ) : (
       <p>Nothing to call · this one works once it is in the array. {summary}</p>
@@ -203,9 +246,7 @@ const siblings = e.kits.length
     primary && (
       <>
         <p>Wired to a button{stateful ? ', with the pressed state kept in step' : ''}:</p>
-        <pre>
-          <code set:text={buttonExample} />
-        </pre>
+        <Code code={buttonExample} />
         {stateful && (
           <div class="note">
             <p>
@@ -325,15 +366,7 @@ const siblings = e.kits.length
           This one needs CSS to look right, and ships the minimum as a string rather than a file
           · nothing loads unless you load it, and you can ignore it and write your own.
         </p>
-        <pre>
-          <code
-            set:text={`import { ${e.css} } from '@matrajs/core'
-
-const style = document.createElement('style')
-style.textContent = ${e.css}
-document.head.append(style)`}
-          />
-        </pre>
+        <Code code={cssExample} />
       </>
     ) : null
   }

@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 /** Taken from the extensions themselves, not from memory. */
@@ -139,12 +140,15 @@ const rules = [
   </div>
 
   <h2>Binding your own</h2>
-  <pre><code>const spoiler: MarkDef&lt;&#123; toggleSpoiler: Command &#125;&gt; = &#123;
+  <Code
+    code={`const spoiler: MarkDef<{ toggleSpoiler: Command }> = {
   kind: 'mark',
   name: 'spoiler',
-  commands: &#123; toggleSpoiler: (ctx) =&gt; ctx.toggleMark('spoiler') &#125;,
-  keys: &#123; 'Mod-Shift-S': 'toggleSpoiler' &#125;,
-&#125;</code></pre>
+  commands: { toggleSpoiler: (ctx) => ctx.toggleMark('spoiler') },
+  keys: { 'Mod-Shift-S': 'toggleSpoiler' },
+}`}
+    lang="ts"
+  />
   <p>
     A key can name a command or be a function. Later extensions win a conflict, so ordering the
     array is how you override a built-in binding.

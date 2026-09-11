@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import api from '../../data/extensions-api.json'
 import Docs from '../../layouts/Docs.astro'
 
@@ -58,14 +59,17 @@ const summary = (e: (typeof extensions)[number]) => {
     it on by importing it. That is the difference from an editor where every extension is its own
     package.
   </p>
-  <pre><code>{`npm install @matrajs/core`}</code></pre>
+  <Code code={`npm install @matrajs/core`} lang="sh" />
   <p>Then pass only the extensions you want. A table and nothing else:</p>
-  <pre><code>{`import { createEditor, document, paragraph, text, tableKit } from '@matrajs/core'
+  <Code
+    code={`import { createEditor, document, paragraph, text, tableKit } from '@matrajs/core'
 
 const editor = createEditor({
   extensions: [document, paragraph, text, ...tableKit],
   element: document.querySelector('#editor'),
-})`}</code></pre>
+})`}
+    lang="ts"
+  />
   <div class="note">
     <p>
       <code>document</code>, <code>paragraph</code> and <code>text</code> are the floor. Every document

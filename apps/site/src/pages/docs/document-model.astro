@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 ---
 
@@ -12,7 +13,8 @@ import Docs from '../../layouts/Docs.astro'
     Your document is plain JSON. Not a class, not an engine object · a tree of nodes you can
     log, diff, store and send over the wire.
   </p>
-  <pre><code>{`{ type: 'doc', content: [
+  <Code
+    code={`{ type: 'doc', content: [
   { type: 'heading', attrs: { level: 1 },
     content: [{ type: 'text', text: 'Title' }] },
   { type: 'paragraph', content: [
@@ -20,7 +22,9 @@ import Docs from '../../layouts/Docs.astro'
     { type: 'text', text: 'bold', marks: [{ type: 'bold' }] },
     { type: 'text', text: ' text.' },
   ] },
-] }`}</code></pre>
+] }`}
+    lang="json"
+  />
 
   <p>
     That is the whole format. <code>editor.getJSON()</code> hands it to you and
@@ -67,14 +71,17 @@ import Docs from '../../layouts/Docs.astro'
     <li>A mark costs <strong>nothing</strong>. Bold text is the same width as plain text.</li>
   </ul>
 
-  <pre><code>{`<p>hi</p>
+  <Code
+    code={`<p>hi</p>
 
 0  1  2  3
 │  h  i  │
 │           └─ 3 · after the closing border
 │        └──── 2 · after "i", still inside
 │  └─────────── 1 · the start of the text
-└────────────── 0 · before the paragraph`}</code></pre>
+└────────────── 0 · before the paragraph`}
+    lang="html"
+  />
 
   <p>
     So a document holding one paragraph of "hi" has a size of 4, and its content spans 0 to 3.
@@ -96,11 +103,14 @@ import Docs from '../../layouts/Docs.astro'
     not decoration: a transaction that would produce an invalid document is <em>refused</em>,
     and the command that asked for it returns <code>false</code>.
   </p>
-  <pre><code>{`const editor = createEditor({ extensions: [document, paragraph, text, bold] })
+  <Code
+    code={`const editor = createEditor({ extensions: [document, paragraph, text, bold] })
 
 editor.setContent('<h1>A heading</h1><p>Some <em>italic</em>.</p>')
 editor.getHTML()
-// '<p>A heading</p><p>Some italic.</p>'`}</code></pre>
+// '<p>A heading</p><p>Some italic.</p>'`}
+    lang="ts"
+  />
   <p>
     The heading became a paragraph and the emphasis was dropped, because there is no node or
     mark in that schema to hold them. A node can also name the marks it accepts —
@@ -132,10 +142,13 @@ editor.getHTML()
     Because it is ordinary data, you can persist it anywhere, compare two revisions with any
     diff library, and read it on a server without loading an editor at all.
   </p>
-  <pre><code>{`import { toMarkdown } from '@matrajs/core'
+  <Code
+    code={`import { toMarkdown } from '@matrajs/core'
 
 // On a server, in a worker, in a test · no DOM anywhere.
-const markdown = toMarkdown(JSON.parse(row.body))`}</code></pre>
+const markdown = toMarkdown(JSON.parse(row.body))`}
+    lang="ts"
+  />
   <p>
     <code>toMarkdown</code> walks the JSON. It never touches a DOM, which is why it runs on a server
     with no jsdom in sight and why it is in the benchmark rather than in a caveat.

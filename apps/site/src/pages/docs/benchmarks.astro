@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import measured from '../../data/sizes.json'
 import Docs from '../../layouts/Docs.astro'
 
@@ -229,15 +230,18 @@ const sizes = [
 
   <h2>Run it yourself</h2>
   <p>The harness is in the repository, under <code>bench/browser</code>.</p>
-  <pre><code># from a scratch directory
-npm i @tiptap/core @tiptap/starter-kit @tiptap/pm \
-      lexical @lexical/rich-text @lexical/html \
+  <Code
+    code={`# from a scratch directory
+npm i @tiptap/core @tiptap/starter-kit @tiptap/pm \\
+      lexical @lexical/rich-text @lexical/html \\
       slate slate-react slate-dom slate-history react react-dom esbuild
 cp -r matra/packages/core/dist matra-dist
-cp matra/bench/browser/&#123;bench.src.js,index.html&#125; .
-npx esbuild bench.src.js --bundle --format=esm --outfile=bench.js \
+cp matra/bench/browser/{bench.src.js,index.html} .
+npx esbuild bench.src.js --bundle --format=esm --outfile=bench.js \\
   --define:process.env.NODE_ENV='"production"'
-python3 -m http.server 8899</code></pre>
+python3 -m http.server 8899`}
+    lang="ts"
+  />
   <p>
     Reload two or three times and take the median of the runs as well. If you get different
     numbers, they are your numbers · that is rather the point of shipping the harness.

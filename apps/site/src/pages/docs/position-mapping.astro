@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 /**
@@ -33,9 +34,12 @@ const cases: [string, string, string, string][] = [
     number you were holding is still a valid position; it just points at different text.
   </p>
 
-  <pre><code>{`hello world        XXXXXhello world
+  <Code
+    code={`hello world        XXXXXhello world
       ↑                       ↑
-      7 · "world"             7 · "ello world"`}</code></pre>
+      7 · "world"             7 · "ello world"`}
+    lang="ts"
+  />
 
   <p>
     That is fine when you act immediately — nothing happened in between. It stops being fine the
@@ -50,13 +54,16 @@ const cases: [string, string, string, string][] = [
     same <em>text</em> rather than at the same number.
   </p>
 
-  <pre><code>{`const at = ctx.mark()
+  <Code
+    code={`const at = ctx.mark()
 const { from, to } = ctx.selection
 
 for await (const chunk of stream) {
   // Not from and to · they are two seconds old.
   ctx.replace(at.mapRange({ from, to }), chunk)
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <p>
     Between one chunk and the next the person may have typed, pasted, or pressed undo. The
@@ -104,13 +111,16 @@ for await (const chunk of stream) {
     </p>
   </div>
 
-  <pre><code>{`const target = at.mapRange({ from, to })
+  <Code
+    code={`const target = at.mapRange({ from, to })
 
 if (target.from === target.to) {
   // What we were rewriting is gone. Drop the answer rather than paste it
   // somewhere nobody asked for.
   return false
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <h2>A complete example</h2>
   <p>
@@ -118,7 +128,8 @@ if (target.from === target.to) {
     <code>@matrajs/ai</code> in miniature:
   </p>
 
-  <pre><code>{`const rewrite: Command<[instruction: string]> = (ctx, instruction) => {
+  <Code
+    code={`const rewrite: Command<[instruction: string]> = (ctx, instruction) => {
   const { from, to } = ctx.selection
   if (from === to) return false          // nothing selected
 
@@ -136,7 +147,9 @@ if (target.from === target.to) {
   })()
 
   return true                            // the request started
-}`}</code></pre>
+}`}
+    lang="ts"
+  />
 
   <p>
     Note what is <em>not</em> here: no locking the editor, no disabling input, no "please wait". The

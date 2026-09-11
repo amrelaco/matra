@@ -1,4 +1,5 @@
 ---
+import Code from '../../components/Code.astro'
 import Docs from '../../layouts/Docs.astro'
 
 /**
@@ -22,16 +23,19 @@ import Docs from '../../layouts/Docs.astro'
     exist for React, Vue, Svelte and Solid only wrap what is on this page.
   </p>
 
-  <pre><code>npm i @matrajs/core</code></pre>
+  <Code code={`npm i @matrajs/core`} lang="sh" />
 
   <h2>An editor</h2>
-  <pre><code>{`import { createEditor, starterKit } from '@matrajs/core'
+  <Code
+    code={`import { createEditor, starterKit } from '@matrajs/core'
 
 const editor = createEditor({
   extensions: starterKit,
   content: '<p>Hello.</p>',
   element: document.querySelector('#editor'),
-})`}</code></pre>
+})`}
+    lang="ts"
+  />
   <p>
     <code>element</code> mounts it immediately. Leave it out and you get an unmounted editor to
     <code>editor.mount(el)</code> yourself later, which is what the bindings do when the element does
@@ -43,7 +47,8 @@ const editor = createEditor({
     A <code>&lt;script type="module"&gt;</code> and a CDN is enough. Every editor on this site is
     exactly that.
   </p>
-  <pre><code>{`<div id="editor"></div>
+  <Code
+    code={`<div id="editor"></div>
 <script type="module">
   import { createEditor, starterKit } from 'https://esm.sh/@matrajs/core'
 
@@ -52,7 +57,9 @@ const editor = createEditor({
     content: '<p>Hello.</p>',
     element: document.querySelector('#editor'),
   })
-</script>`}</code></pre>
+</script>`}
+    lang="html"
+  />
 
   <h2>A toolbar</h2>
   <p>
@@ -60,7 +67,8 @@ const editor = createEditor({
     and <code>editor.isActive()</code> reads the answer out of the document rather than out of a variable
     you have to keep in step.
   </p>
-  <pre><code>{`const bold = document.querySelector('#bold')
+  <Code
+    code={`const bold = document.querySelector('#bold')
 
 bold.addEventListener('click', () => {
   editor.commands.toggleBold()
@@ -69,7 +77,9 @@ bold.addEventListener('click', () => {
 
 const off = editor.on('selectionChange', () => {
   bold.setAttribute('aria-pressed', String(editor.isActive('bold')))
-})`}</code></pre>
+})`}
+    lang="ts"
+  />
   <div class="note">
     <p>
       <code>editor.focus()</code> after a command, always. A click on a button moves focus to the
@@ -78,17 +88,23 @@ const off = editor.on('selectionChange', () => {
   </div>
 
   <h2>Reading it back</h2>
-  <pre><code>{`editor.getJSON()   // the document · store this
+  <Code
+    code={`editor.getJSON()   // the document · store this
 editor.getHTML()   // markup
-toMarkdown(editor.getJSON())`}</code></pre>
+toMarkdown(editor.getJSON())`}
+    lang="ts"
+  />
   <p>
     Store the JSON, not the HTML. HTML has to be parsed back through the schema on the way in,
     and anything the schema does not recognise is dropped · JSON round-trips exactly.
   </p>
 
   <h2>Tearing it down</h2>
-  <pre><code>{`off()             // any listener you registered
-editor.destroy()  // the editor, its view and its plugins`}</code></pre>
+  <Code
+    code={`off()             // any listener you registered
+editor.destroy()  // the editor, its view and its plugins`}
+    lang="ts"
+  />
   <p>
     <code>destroy()</code> leaves the element where it was and safe to mount into again. Not calling
     it on a page that swaps editors in and out is the one leak worth watching for.
@@ -100,10 +116,13 @@ editor.destroy()  // the editor, its view and its plugins`}</code></pre>
     <a href="/docs/extension-reference"><code>renderToHTML</code></a> skips the editor entirely ·
     both run in Node, in a worker and at the edge.
   </p>
-  <pre><code>{`import { renderToHTML, starterKit } from '@matrajs/core'
+  <Code
+    code={`import { renderToHTML, starterKit } from '@matrajs/core'
 
 // no editor, no DOM, no schema build
-const html = renderToHTML(storedJson, starterKit)`}</code></pre>
+const html = renderToHTML(storedJson, starterKit)`}
+    lang="ts"
+  />
   <div class="note">
     <p>
       One condition on a server: <strong>load JSON or Markdown, not an HTML string</strong>.
@@ -118,8 +137,11 @@ const html = renderToHTML(storedJson, starterKit)`}</code></pre>
     Commands are inferred from the extensions you pass, so this is a compile error rather than a
     silent no-op at run time — with no generics to thread and nothing to declare.
   </p>
-  <pre><code>{`const editor = createEditor({ extensions: [document, paragraph, text] })
+  <Code
+    code={`const editor = createEditor({ extensions: [document, paragraph, text] })
 
 editor.commands.toggleHeading(2)
-//              ^ no extension defines this`}</code></pre>
+//              ^ no extension defines this`}
+    lang="ts"
+  />
 </Docs>

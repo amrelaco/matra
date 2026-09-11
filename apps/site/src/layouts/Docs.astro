@@ -164,55 +164,59 @@ const schema = [
     <aside class="docs-side">
       <nav aria-label="Documentation">
         {
-          nav.map(([group, items]) => (
-            <div class="docs-group">
-              <div class="docs-group-name mono">{group}</div>
-              {items.map(([label, href]) => (
-                <>
-                  <a
-                    href={href}
-                    class={href === here ? 'on' : ''}
-                    aria-current={href === here ? 'page' : undefined}
-                  >
-                    {label}
-                  </a>
-                </>
-              ))}
-            </div>
-          ))
-        }
-
-        <div class="docs-group">
-          <div class="docs-group-name mono">Extensions</div>
-          <a
-            href={EXT_BASE}
-            class={EXT_BASE === here ? 'on' : ''}
-            aria-current={EXT_BASE === here ? 'page' : undefined}
-          >
-            All {extensions.length}
-          </a>
-          {
-            extGroups.map((sub) => (
-              <details class="docs-sub" open={sub.items.some(([, h]) => h === here)}>
-                <summary>
-                  <span>{sub.title}</span>
-                  <span class="docs-sub-count">{sub.items.length}</span>
-                </summary>
-                <div class="docs-sub-list">
-                  {sub.items.map(([subLabel, subHref]) => (
+          nav.map(([group, items], groupIndex) => (
+            <>
+              <div class="docs-group">
+                <div class="docs-group-name mono">{group}</div>
+                {items.map(([label, href]) => (
+                  <>
                     <a
-                      href={subHref}
-                      class={subHref === here ? 'on' : ''}
-                      aria-current={subHref === here ? 'page' : undefined}
+                      href={href}
+                      class={href === here ? 'on' : ''}
+                      aria-current={href === here ? 'page' : undefined}
                     >
-                      {subLabel}
+                      {label}
                     </a>
+                  </>
+                ))}
+              </div>
+              {/* Extensions sit second, right after installing · it is what
+                someone does next, and the list is too long to be a footnote at
+                the bottom of everything else. */}
+              {groupIndex === 0 && (
+                <div class="docs-group">
+                  <div class="docs-group-name mono">Extensions</div>
+                  <a
+                    href={EXT_BASE}
+                    class={EXT_BASE === here ? 'on' : ''}
+                    aria-current={EXT_BASE === here ? 'page' : undefined}
+                  >
+                    All {extensions.length}
+                  </a>
+                  {extGroups.map((sub) => (
+                    <details class="docs-sub" open={sub.items.some(([, h]) => h === here)}>
+                      <summary>
+                        <span>{sub.title}</span>
+                        <span class="docs-sub-count">{sub.items.length}</span>
+                      </summary>
+                      <div class="docs-sub-list">
+                        {sub.items.map(([subLabel, subHref]) => (
+                          <a
+                            href={subHref}
+                            class={subHref === here ? 'on' : ''}
+                            aria-current={subHref === here ? 'page' : undefined}
+                          >
+                            {subLabel}
+                          </a>
+                        ))}
+                      </div>
+                    </details>
                   ))}
                 </div>
-              </details>
-            ))
-          }
-        </div>
+              )}
+            </>
+          ))
+        }
       </nav>
     </aside>
 
@@ -293,6 +297,48 @@ const schema = [
         toc.appendChild(link)
       }
 
+      /*
+       * The sidebar keeps its scroll position across pages.
+       *
+       * Every page is its own document, so the sidebar was rebuilt at the top
+       * each time · clicking the fortieth extension scrolled the list back to
+       * the first one, and finding the next extension meant scrolling down
+       * again from the beginning. Stored per tab and restored before paint, so
+       * the only thing that moves the sidebar is the reader moving it.
+       */
+      const side = document.querySelector('.docs-side')
+      if (side) {
+        const KEY = 'matra:docs-side-scroll'
+        const saved = Number(sessionStorage.getItem(KEY) ?? '0')
+        /*
+         * Applied more than once on purpose. Setting `scrollTop` before the
+         * sidebar has its final height clamps to whatever it measures at that
+         * instant — a restore of 600 landed at 217 — and the height moves again
+         * when the display font arrives. Re-applying costs nothing and is the
+         * difference between landing where you left and landing near it.
+         */
+        const restore = () => {
+          if (saved > 0 && Math.abs(side.scrollTop - saved) > 1) side.scrollTop = saved
+        }
+        restore()
+        requestAnimationFrame(restore)
+        window.addEventListener('load', restore, { once: true })
+        document.fonts?.ready.then(restore)
+        let pending = false
+        side.addEventListener(
+          'scroll',
+          () => {
+            if (pending) return
+            pending = true
+            requestAnimationFrame(() => {
+              pending = false
+              sessionStorage.setItem(KEY, String(side.scrollTop))
+            })
+          },
+          { passive: true },
+        )
+      }
+
       const aside = toc.closest('.docs-toc')
       if (headings.length === 0) aside?.setAttribute('hidden', '')
       else aside?.removeAttribute('hidden')
@@ -361,7 +407,11 @@ const schema = [
             button.textContent = 'copy'
           }, 1400)
         })
-        block.appendChild(button)
+        // A highlighted block scrolls sideways inside its own body, so the
+        // button goes on the figure around it · otherwise it slides out of
+        // view with the code.
+        const anchor = block.closest('.code-block') ?? block
+        anchor.appendChild(button)
       }
     }
 
