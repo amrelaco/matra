@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { createEditor } from './editor'
-import { focus, search, starterKit } from './extensions'
+import { focus, placeholder, search, starterKit } from './extensions'
 import type { Pos } from './types'
 
 const mount = <T extends { mount(el: HTMLElement): void }>(editor: T) => {
@@ -66,6 +66,40 @@ describe('an inline decoration', () => {
     expect(element.querySelectorAll('.matra-search-match').length).toBe(0)
     editor.setContent('<p>hello world</p>')
     expect(element.querySelectorAll('.matra-search-match').length).toBe(1)
+    editor.destroy()
+  })
+})
+
+describe('a node decoration inside a nested block', () => {
+  it('lands on the one node its range spans, not on its ancestors', () => {
+    const editor = createEditor({
+      extensions: [...starterKit, focus()] as const,
+      content: '<ul><li><p>alpha</p></li></ul>',
+    })
+    const element = mount(editor)
+    editor.commands.select(3 as Pos)
+    const focused = element.querySelectorAll('.has-focus')
+    expect(focused.length).toBe(1)
+    expect(focused[0]?.tagName).toBe('P')
+    editor.destroy()
+  })
+
+  it('shows one placeholder on an empty list paragraph, not a ghost per ancestor', () => {
+    const editor = createEditor({
+      extensions: [
+        ...starterKit,
+        placeholder({ text: 'Type here', everyBlock: true }),
+      ] as const,
+      content: '<ol><li><p>one</p></li><li><p></p></li></ol>',
+    })
+    const element = mount(editor)
+    // The caret in the empty second item's paragraph.
+    editor.commands.select(10 as Pos)
+    const marked = element.querySelectorAll('.matra-empty-block')
+    expect(marked.length).toBe(1)
+    expect(marked[0]?.tagName).toBe('P')
+    expect(element.querySelector('ol')?.hasAttribute('data-placeholder')).toBe(false)
+    expect(element.querySelectorAll('li[data-placeholder]').length).toBe(0)
     editor.destroy()
   })
 })

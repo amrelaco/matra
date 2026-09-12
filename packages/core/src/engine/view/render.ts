@@ -329,7 +329,13 @@ export class Renderer {
     for (let i = 0; i < scope.length; i++) {
       const item = scope[i] as Decoration
       if (item.type !== 'node') continue
-      if (item.to <= pos || item.from >= end) continue
+      // A node decoration belongs to the one node its range exactly spans.
+      // Matching on overlap painted every ancestor of that node too: a
+      // placeholder on an empty list paragraph landed on the paragraph, the
+      // item and the list, three ghosts stacked over real text. An extension
+      // that wants the ancestors marked says so with one spec per ancestor,
+      // which is what `focus({ ancestors: true })` already does.
+      if (item.from !== pos || item.to !== end) continue
       if (dom.nodeType === 1) applyAttrs(dom as HTMLElement, item.attrs)
       applied.push(item)
     }
@@ -759,7 +765,11 @@ function nodeDecorationsOver(
 ): readonly Decoration[] {
   if (!items.length) return NO_DECORATIONS
   const out: Decoration[] = []
-  for (const item of findIn(items, from, to)) if (item.type === 'node') out.push(item)
+  // Exact spans only, mirroring `decorate`: what the patch loop compares
+  // against `drawnOn` has to be what `decorate` would actually draw.
+  for (const item of findIn(items, from, to)) {
+    if (item.type === 'node' && item.from === from && item.to === to) out.push(item)
+  }
   return out
 }
 

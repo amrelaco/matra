@@ -2,6 +2,27 @@
 
 All packages share one version number and are released together.
 
+## 1.1.2 · 2026-09-12
+
+**A node decoration lands on the node its range spans, and nowhere else.** The
+renderer applied a node decoration to every element its range overlapped, and
+a range always overlaps every ancestor of its own node. The visible version:
+`placeholder({ everyBlock: true })` on an empty list paragraph put its prompt
+on the paragraph, the item and the list, three ghosts stacked over real
+content, and the caret looked lost underneath them. An extension that wants
+the ancestors marked says so with one spec per ancestor, which is what
+`focus({ ancestors: true })` has done all along; the renderer now agrees with
+it, in the build path and the patch path both.
+
+**A trailing space is visible the moment it is typed.** The document kept the
+space and the screen did not show it until the next character landed, because
+default rendering collapses trailing whitespace and the view never said
+otherwise. It now sets `white-space: pre-wrap` (and `overflow-wrap:
+break-word`) on the editable element, only when the host has not chosen a
+white-space of its own; the check reads computed style, so a stylesheet choice
+counts as choosing. The opening comment of `whitespace.test.ts` had described
+this exact symptom while testing only the document half of it.
+
 ## 1.1.1 — 2026-09-08
 
 **`blockColor` · colour on the block, the way Notion means it.** `textStyle`

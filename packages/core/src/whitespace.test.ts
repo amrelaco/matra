@@ -132,3 +132,21 @@ describe('formatting whitespace is not content', () => {
     expect(editor.getJSON().content?.[0]?.content?.length).toBe(2)
   })
 })
+
+describe('the view keeps whitespace visible', () => {
+  it('sets pre-wrap on the editable element, so a trailing space has width', () => {
+    const { element } = mount('<p>word</p>')
+    expect(element.style.whiteSpace).toBe('pre-wrap')
+    expect(element.style.overflowWrap).toBe('break-word')
+  })
+
+  it('leaves a white-space the host already chose', () => {
+    const element = document.createElement('div')
+    element.style.whiteSpace = 'break-spaces'
+    document.body.appendChild(element)
+    const editor = createEditor({ extensions: starterKit, content: '<p>word</p>' })
+    editor.mount(element)
+    expect(element.style.whiteSpace).toBe('break-spaces')
+    editor.destroy()
+  })
+})

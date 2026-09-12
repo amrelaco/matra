@@ -71,6 +71,21 @@ export class EditorView {
     this.dom.classList.add('matra-editor')
     this.dom.setAttribute('role', 'textbox')
     this.dom.setAttribute('aria-multiline', 'true')
+    /*
+      Trailing and repeated spaces are real content, and default rendering
+      collapses them — a space typed at the end of a line is in the document
+      but not on the screen until the next character lands, which reads as the
+      space key not working. `pre-wrap` is fidelity, not styling, so it is set
+      here; only when the host has not chosen a white-space of its own, read
+      computed so a stylesheet choice counts as choosing. Long unbroken runs
+      wrap rather than overflow for the same reason.
+    */
+    const styles = this.dom.ownerDocument.defaultView?.getComputedStyle(this.dom)
+    const whiteSpace = styles?.whiteSpace
+    if (!whiteSpace || whiteSpace === 'normal' || whiteSpace === 'nowrap') {
+      this.dom.style.whiteSpace = 'pre-wrap'
+      this.dom.style.overflowWrap = 'break-word'
+    }
 
     this.render(this.collectDecorations())
     this.listen()
