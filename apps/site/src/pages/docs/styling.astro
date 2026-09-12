@@ -55,9 +55,12 @@ const sheets: [string, string, string][] = [
 
   <div class="note">
     <p>
-      <code>white-space: pre-wrap</code> is not optional. HTML collapses runs of whitespace and drops
-      a trailing one, so without it pressing space at the end of a line does nothing visible until
-      the next character arrives — which reads as a dropped keystroke.
+      Since 1.1.2 the editor sets <code>white-space: pre-wrap</code> on its own element for you, because
+      HTML collapses runs of whitespace and drops a trailing one · without it, pressing space at the
+      end of a line does nothing visible until the next character arrives, which reads as a dropped
+      keystroke. That is fidelity rather than styling, which is why it is the one appearance Matra
+      does set. Say it yourself and yours wins: the editor only applies it when the computed value
+      is still <code>normal</code>.
     </p>
     <p>
       It is set twice on purpose. A <code>pre</code> carries the browser's own

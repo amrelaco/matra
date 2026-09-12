@@ -1,6 +1,6 @@
 {
-  "version": "1.1.1",
-  "tests": 880,
+  "version": "1.1.5",
+  "tests": 886,
   "adversarial": 68,
   "extensions": 82
 }

@@ -2,7 +2,32 @@
 
 All packages share one version number and are released together.
 
-## 1.1.2 · 2026-09-12
+## 1.1.5 · 2026-09-12
+
+*1.1.2 to 1.1.4 were `@matrajs/mcp` on its own, carrying regenerated
+documentation to the MCP registry. Publishing the rest at 1.1.2 would have left
+core behind mcp and made the line at the top of this file false, so the whole
+set moves to 1.1.5 and shares a number again.*
+
+
+**`renderToHTML(doc, extensions)` · a stored document to HTML with no editor.**
+Generic rather than a switch over the built-ins: every element comes from the
+extension's own `toDOM`, the same function the editor draws with, so an
+extension written this afternoon renders on a server without touching core and
+the two cannot disagree about what a callout looks like. `createEditor().
+getHTML()` already worked without a DOM; this skips the schema build as well and
+is 2.8× faster over 500 documents. A parity suite renders eight documents both
+ways and compares them byte for byte.
+
+**`contentElement` on a parse rule · where a node's content actually is.** A
+selector, or a function returning the element holding it. Without it the matched
+element's own children are the content, which is wrong for any tag that wraps
+its content beside something else.
+
+**Two new nodes.** `audio` is a block with the source checked the way an image's
+is. `ruby` annotates CJK text — the base is editable content and the reading is
+an attribute, which is only possible because of `contentElement`: `<ruby>` holds
+both, so parsing all of it puts the reading inside the word it annotates.
 
 **A node decoration lands on the node its range spans, and nowhere else.** The
 renderer applied a node decoration to every element its range overlapped, and
