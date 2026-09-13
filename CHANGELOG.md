@@ -2,6 +2,17 @@
 
 All packages share one version number and are released together.
 
+## 1.1.6 · 2026-09-13
+
+**A command that throws inside a batch is refused, not rethrown.** `run` has
+always caught a throwing command, logged it and returned false — the contract is
+that a command reports success as a boolean, and one that throws must not take
+the editor down with it or leave a half-built transaction behind. `batch` had no
+such guard, so the same failure escaped to the caller: typing `/head` inside a
+list item and choosing Heading 1 threw "that replacement would break the schema"
+out of the editor instead of declining the command. `batch` now behaves as `run`
+does, and the batch returns false with the document untouched.
+
 ## 1.1.5 · 2026-09-12
 
 *1.1.2 to 1.1.4 were `@matrajs/mcp` on its own, carrying regenerated
