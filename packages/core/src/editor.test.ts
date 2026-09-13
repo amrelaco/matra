@@ -63,6 +63,35 @@ describe('commands', () => {
     expect(ok).toBe(false)
     expect(editor.getJSON()).toEqual(before)
   })
+
+  it('refuses a batch whose command throws, instead of throwing itself', () => {
+    const grenade: ExtensionDef<{ explode: Command }> = {
+      kind: 'extension',
+      name: 'grenade',
+      commands: {
+        explode: () => {
+          throw new Error('boom')
+        },
+      },
+    }
+    const editor = createEditor({
+      extensions: [...base, grenade] as const,
+      content: '<p>hello world</p>',
+    })
+    const before = editor.getJSON()
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let ok = true
+    expect(() => {
+      ok = editor.batch((c) => {
+        c.select({ from: 1 as Pos, to: 6 as Pos })
+        c.toggleBold()
+        c.explode()
+      })
+    }).not.toThrow()
+    expect(ok).toBe(false)
+    expect(editor.getJSON()).toEqual(before)
+    spy.mockRestore()
+  })
 })
 
 describe('async position mapping', () => {

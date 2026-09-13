@@ -449,7 +449,16 @@ export function createEditor<const T extends readonly AnyDef[]>(
       for (const [name, command] of Object.entries(rawCommands)) {
         staged[name] = (...args: unknown[]) => {
           if (failed) return false
-          const ok = command(ctx, ...args)
+          let ok = false
+          try {
+            ok = command(ctx, ...args)
+          } catch (error) {
+            // The contract `run` already enforces, enforced here too: a
+            // command reports success as a boolean, and one that throws is
+            // refused rather than allowed to escape the batch with a
+            // half-built transaction behind it.
+            console.error('Matra: a command threw and was refused', error)
+          }
           if (!ok) failed = true
           return ok
         }
