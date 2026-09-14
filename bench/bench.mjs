@@ -146,16 +146,35 @@ function pass() {
   bench('getJSON', 50, () => big.getJSON())
   bench('getText', 50, () => big.getText())
 
+  /*
+   * Ten operations per measured call, not one.
+   *
+   * A single insert or mark costs about a fifth of a calibration unit, and a
+   * fifth of a unit is under what a shared CI vCPU moves by between two
+   * identical runs: `mark` read +112 and +97 per cent on a runner while the
+   * same commit measured +16 on a laptop, and every other figure was green in
+   * the same run. Widening the gate was the wrong answer twice — the figure
+   * was too small to be a measurement at all.
+   *
+   * Ten of them lands each at roughly the magnitude of `keystroke`, which has
+   * never been unstable. The same work is timed; only the resolution changes.
+   */
+  const PER_CALL = 10
+
   const typing = createEditor({ extensions: starterKit, content: small })
-  bench('insert', 2000, () => {
-    typing.commands.select(1)
-    typing.commands.insert('x')
+  bench('insert', 200, () => {
+    for (let i = 0; i < PER_CALL; i++) {
+      typing.commands.select(1)
+      typing.commands.insert('x')
+    }
   })
 
   const marking = createEditor({ extensions: starterKit, content: small })
-  bench('mark', 2000, () => {
-    marking.commands.select({ from: 1, to: 20 })
-    marking.commands.toggleBold()
+  bench('mark', 200, () => {
+    for (let i = 0; i < PER_CALL; i++) {
+      marking.commands.select({ from: 1, to: 20 })
+      marking.commands.toggleBold()
+    }
   })
 
   const el = w.document.createElement('div')
@@ -197,8 +216,8 @@ const LABELS = {
   getHTML: 'getHTML (2000 paragraphs)',
   getJSON: 'getJSON (2000 paragraphs)',
   getText: 'getText (2000 paragraphs)',
-  insert: 'insert one character',
-  mark: 'toggle bold over a range',
+  insert: 'insert a character, ten times',
+  mark: 'toggle bold over a range, ten times',
   keystroke: 'keystroke, mounted (500 paragraphs)',
 }
 
