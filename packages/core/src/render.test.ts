@@ -226,3 +226,70 @@ describe('the server and the editor agree', () => {
     })
   }
 })
+
+/*
+ * The guarantees SECURITY.md makes, asserted against the renderer.
+ *
+ * `renderToHTML` shipped in 1.1.5 with its own copy of these rules and broke
+ * five of them within two releases: it emitted `onclick`, `srcdoc`, a
+ * protocol-relative `href`, an unchecked `data`, and `target="_blank"` with no
+ * `rel`. It goes through `engine/model/safe-attrs.ts` now — the same gate the
+ * DOM path uses — and these hold it there.
+ *
+ * The node spreads its own attrs, which is what `image` and `youtube` do, so
+ * this is the realistic shape rather than a contrived one.
+ */
+describe('renderToHTML refuses what the DOM path refuses', () => {
+  const widget = {
+    kind: 'node',
+    name: 'widget',
+    group: 'block',
+    atom: true,
+    attrs: {
+      onclick: { default: null },
+      onerror: { default: null },
+      srcdoc: { default: null },
+      href: { default: null },
+      data: { default: null },
+      target: { default: null },
+      rel: { default: null },
+    },
+    toDOM: (n: DocNode) => ['a', { ...n.attrs }],
+  } as unknown as AnyDef
+  const kit = [...starterKit, widget]
+  const render = (attrs: Record<string, unknown>) =>
+    renderToHTML({ type: 'doc', content: [{ type: 'widget', attrs }] }, kit)
+
+  it('never sets an executable attribute', () => {
+    expect(render({ onclick: 'alert(1)' })).toBe('<a></a>')
+    expect(render({ onerror: 'alert(1)' })).toBe('<a></a>')
+  })
+
+  it('never sets srcdoc', () => {
+    expect(render({ srcdoc: '<script>alert(1)</script>' })).toBe('<a></a>')
+  })
+
+  it('refuses a protocol-relative URL', () => {
+    expect(render({ href: '//evil.example' })).toBe('<a></a>')
+  })
+
+  it('scheme-checks every URL attribute, not just href', () => {
+    expect(render({ data: 'data:text/html,<script>alert(1)</script>' })).toBe('<a></a>')
+    expect(render({ href: 'javascript:alert(1)' })).toBe('<a></a>')
+    expect(render({ href: 'vbscript:alert(1)' })).toBe('<a></a>')
+  })
+
+  it('always pairs target=_blank with noopener noreferrer', () => {
+    expect(render({ href: 'https://x.test', target: '_blank' })).toBe(
+      '<a href="https://x.test" target="_blank" rel="noopener noreferrer"></a>',
+    )
+    // A document that supplies its own rel does not get to drop the guard.
+    expect(render({ href: 'https://x.test', target: '_blank', rel: 'author' })).toContain(
+      'noopener',
+    )
+  })
+
+  it('still renders what is legitimate', () => {
+    expect(render({ href: 'https://matrajs.com' })).toBe('<a href="https://matrajs.com"></a>')
+  })
+})

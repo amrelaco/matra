@@ -2,6 +2,26 @@
 
 All packages share one version number and are released together.
 
+## 1.1.8 · 2026-09-14
+
+**Security · `renderToHTML` now passes through the same gate the editor does.**
+It shipped in 1.1.5 with its own copy of the attribute rules, and a second copy
+of a rule is a copy that drifts. Five guarantees SECURITY.md states plainly were
+false for that path: it emitted `on*` handlers and `srcdoc`, allowed a
+protocol-relative `href`, left the `data` attribute unchecked, and wrote
+`target="_blank"` with no `rel="noopener noreferrer"`.
+
+Nothing reached the editor — the DOM path was always correct — so this affects
+only HTML produced by `renderToHTML` from a document containing hostile
+attributes, which needs a custom node whose `toDOM` spreads `node.attrs` to be
+reachable at all. If you render stored documents on a server with
+`renderToHTML`, upgrade.
+
+The fix is deletion rather than repair: the copy is gone and the renderer calls
+`engine/model/safe-attrs.ts`, which is what the document meant by "the last gate
+is the rendering path". Six tests now assert each guarantee against the
+renderer, so the two paths cannot drift apart again silently.
+
 ## 1.1.7 · 2026-09-14
 
 **`setRuby` and `unsetRuby` work.** Neither did in 1.1.6, and no test caught it
