@@ -2,6 +2,22 @@
 
 All packages share one version number and are released together.
 
+## 1.1.7 · 2026-09-14
+
+**`setRuby` and `unsetRuby` work.** Neither did in 1.1.6, and no test caught it
+because the tests built the node in JSON rather than calling the commands.
+`setRuby` used `wrapIn`, which wraps a block range in a block node — ruby is an
+inline node holding inline text, so it returned false for every selection. It
+reads the selected text and puts it back inside a ruby instead.
+
+`unsetRuby` walked up from the caret looking for a ruby ancestor and found none
+at any position in the document, for a reason worth stating plainly: **a caret
+cannot be placed inside a ruby.** A selection snaps to the nearest textblock and
+an inline node is not one. The extension's own comment claimed the base was
+editable in place; it is not, and the comment now says so. The base stays
+content rather than an attribute because `getText`, search and a word count all
+see it as the text it is, which an attribute would hide.
+
 ## 1.1.6 · 2026-09-13
 
 **A command that throws inside a batch is refused, not rethrown.** `run` has

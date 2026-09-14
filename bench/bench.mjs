@@ -241,8 +241,22 @@ if (record) {
  * the noise than the regression because a CI runner is a shared vCPU and will
  * be less steady than the laptop these were taken on · if it turns out to
  * fire on a green build, widen it here rather than deleting the step.
+ *
+ * It did fire on green builds, every push for a week, and on a different
+ * metric each time — mark at +112 on CI, keystroke at +26 and parseLarge at
+ * +20 locally, all on code that changed none of those paths. A bisect put a
+ * step at the `contentElement` commit and then dissolved it: removing that
+ * field again moved the figure by 3 per cent, inside the spread. So the step
+ * was noise and there was no regression to find.
+ *
+ * Widened to 1.35 accordingly, which is the instruction above rather than a
+ * departure from it. The margin is thinner than 1.2 gave on the machine those
+ * notes were taken on: the deliberate regression that calibrated this read
+ * +43, so it still fires, but there is less room than the author intended. If
+ * it fires on green again, the answer is a steadier harness rather than a
+ * wider number — at some width the gate stops being one.
  */
-const TOLERANCE = 1.2
+const TOLERANCE = 1.35
 const IMPROVED = 0.9
 
 /*
@@ -253,8 +267,15 @@ const IMPROVED = 0.9
  * what two identical runs differ by — and a gate that fails on the weather
  * is a gate that gets deleted. Below the floor a figure is reported and not
  * judged; above it the ratio decides, as before.
+ *
+ * Raised from 0.1 to 0.2 after it fired on green builds for a week. Three
+ * consecutive runs of identical code read insert at 0.23, 0.23, 0.31 and mark
+ * at 0.26, 0.28, 0.36 — swings of 0.10 and 0.14 units, both of which cleared a
+ * 0.1 floor and read as +47 and +62 per cent against baselines of 0.21 and
+ * 0.22. At 0.2 those two are judged only on a change large enough to be real:
+ * a doubling still fires, the weather does not.
  */
-const FLOOR = 0.1
+const FLOOR = 0.2
 
 if (check) {
   let baseline

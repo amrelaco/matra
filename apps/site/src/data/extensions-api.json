@@ -1,5 +1,5 @@
 {
-  "measured": "2026-09-13",
+  "measured": "2026-09-14",
   "package": "@matrajs/core",
   "counts": {
     "extensions": 83,
@@ -3136,7 +3136,11 @@
         },
         {
           "type": "text",
-          "text": "The base is content, so it stays real editable text with marks and spellcheck intact and a caret can sit inside it. The reading is an attribute: one short string that is never formatted, and modelling it as a second child would let a caret wander into the annotation and a paste drop a paragraph in it."
+          "text": "The base is content rather than an attribute, so `getText`, search and a word count all see 漢字 as the text it is. It is not editable in place, and that is an engine limit rather than a choice: a selection snaps to the nearest textblock, an inline node is not one, so no caret can be put inside a ruby. `setRuby` and `unsetRuby` replace the node instead, which is what a furigana control does anyway."
+        },
+        {
+          "type": "text",
+          "text": "The reading is an attribute: one short string that is never formatted, and modelling it as a second child would let a paste drop a paragraph into an annotation."
         },
         {
           "type": "text",

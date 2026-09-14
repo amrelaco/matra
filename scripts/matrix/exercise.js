@@ -344,6 +344,48 @@ const CHECKS = [
     },
   },
   {
+    name: 'audio',
+    covers: ['audio'],
+    run: (t) => {
+      t.set('<p>track</p>')
+      t.sel(6)
+      t.cmd('insertAudio', { src: 'https://example.com/take.mp3', title: 'Take 1' })
+      must(t.html().includes('<audio'), `audio: ${t.html()}`)
+      must(t.html().includes('src="https://example.com/take.mp3"'), `src: ${t.html()}`)
+      must(t.html().includes('controls'), `controls: ${t.html()}`)
+      must(t.dom.querySelector('audio') !== null, 'audio not drawn')
+      // A source the browser would not fetch safely is declined, not stored.
+      t.refuse('insertAudio', { src: 'javascript:alert(1)' })
+      must(!t.html().includes('javascript:'), `unsafe src stored: ${t.html()}`)
+    },
+  },
+  {
+    name: 'ruby',
+    covers: ['ruby'],
+    run: (t) => {
+      t.set('<p>\u6f22\u5b57</p>')
+      t.sel(1, 3)
+      t.cmd('setRuby', '\u304b\u3093\u3058')
+      must(t.html().includes('<ruby>'), `ruby: ${t.html()}`)
+      must(t.html().includes('<rt>\u304b\u3093\u3058</rt>'), `reading: ${t.html()}`)
+      // The base is content, so it survives as text rather than as an attribute.
+      must(t.html().includes('\u6f22\u5b57<rp>'), `base: ${t.html()}`)
+      // And reading it back does not fold the annotation into the word · the
+      // bug `contentElement` exists to prevent.
+      t.set(t.html())
+      must(
+        !t.html().includes('\u6f22\u5b57\u304b\u3093\u3058'),
+        `reading folded in: ${t.html()}`,
+      )
+      // Put the caret inside the annotated word · `unsetRuby` answers for the
+      // ruby the caret is in, the way every other unset command does.
+      t.sel(2)
+      t.cmd('unsetRuby')
+      must(!t.html().includes('<ruby>'), `unset: ${t.html()}`)
+      must(t.html().includes('\u6f22\u5b57'), `base lost on unset: ${t.html()}`)
+    },
+  },
+  {
     name: 'alignment, indent, direction, line height',
     covers: ['textAlign', 'indent', 'textDirection', 'lineHeight'],
     run: (t) => {
