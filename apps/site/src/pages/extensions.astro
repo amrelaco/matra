@@ -358,6 +358,16 @@ const directory: {
         use: "editor.commands.insertImage({ src: '/cat.png' })",
       },
       {
+        name: 'audio',
+        what: 'A sound file as a block, with the src checked like an image',
+        use: "editor.commands.insertAudio({ src: '/take.mp3' })",
+      },
+      {
+        name: 'ruby',
+        what: 'Furigana · a reading printed above CJK text',
+        use: "editor.commands.setRuby('かんじ')  // over a selection",
+      },
+      {
         name: 'callout',
         what: 'A Notion-style callout, with a type and an emoji',
         use: "editor.commands.toggleCallout('warning')",
